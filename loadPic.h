@@ -28,8 +28,10 @@ typedef enum {
 } Component;
 
 typedef enum {
-	DC = 0,	
-	AC = 1
+	DC0 = 0,	
+	DC1 = 1,
+	AC0 = 2,
+	AC1 = 3
 } TableClass;
 
 typedef struct {
@@ -44,12 +46,9 @@ typedef struct {
 
 typedef struct {
 	TableClass tClass;
-	uint8_t precision;
+	uint8_t codeLen[16];
 	int dht_len;
-	union {
-		uint8_t* table8;
-		uint16_t* table16;
-	};
+	uint8_t* table8;
 } DHT_struct;	
 
 typedef struct {
@@ -99,9 +98,8 @@ void readTableInfo(FILE* fptr, Img* image) {
 					i_dqt++;
 					break;
 				case DHT:		
-					image->DHTs[i_dht].dht_len = read_2bytes - 3;
-					image->DHTs[i_dht].tClass = (TableClass)((read_byte << 4) & 0xF0);
-					image->DHTs[i_dht].precision = ((read_byte >> 4) & 0x0F);
+					image->DHTs[i_dht].dht_len = read_2bytes - 19;  // 3(length field + type) + 16(code length)
+					image->DHTs[i_dht].tClass = (TableClass)read_byte;
 					i_dht++;
 					break;
 				}
@@ -140,10 +138,7 @@ void freeTable(Img* image) {
 	free(image->DQTs);
 
 	for ( int i = 0 ; i < image->num_DHT ; ++i ) {
-		if ( image->DHTs[i].precision == 0 )
-			free(image->DHTs[i].table8);
-		else if ( image->DHTs[i].precision == 1 )
-			free(image->DHTs[i].table16);
+		free(image->DHTs[i].table8);
 	}	
 	free(image->DHTs);
 }	
@@ -159,16 +154,11 @@ void allocTable(Img* image) {
 	}	
 
 	for ( int i = 0 ; i < image->num_DHT ; ++i ) {
-		if ( image->DHTs[i].precision == 0 )
-			image->DHTs[i].table8 = (uint8_t*)malloc(image->DHTs[i].dht_len * sizeof(uint8_t));
-		else if ( image->DHTs[i].precision == 1 )
-			image->DHTs[i].table16 = (uint16_t*)malloc(image->DHTs[i].dht_len * sizeof(uint16_t));
-		else
-			printf("undefined size!\n");
+		image->DHTs[i].table8 = (uint8_t*)malloc(image->DHTs[i].dht_len * sizeof(uint8_t));
 	}	
 }	 
 
-// use DQT, DHT macro to distinguish which table will be filled in
+// use DQT, DHT macro to distinguish in which table will be filled 
 void bufferRead(FILE* fptr, Img* image, uint8_t type, int index) {
 	size_t readSize;
 	int precision;	
@@ -176,13 +166,12 @@ void bufferRead(FILE* fptr, Img* image, uint8_t type, int index) {
 		readSize = image->DQTs[index].dqt_len;
 		precision = image->DQTs[index].precision;
 		if ( precision == 0 ) fread(image->DQTs[index].table8, 1, readSize, fptr );
-		else fread(image->DQTs[index].table16, readSize, 1, fptr );
+		else fread(image->DQTs[index].table16, 1, readSize, fptr );
 	}	
 	else if ( type == DHT ){
 		readSize = image->DHTs[index].dht_len;
-		precision = image->DQTs[index].precision;
-		if ( precision == 0 ) fread(image->DHTs[index].table8, 1, readSize, fptr );
-		else fread(image->DHTs[index].table16, readSize, 1, fptr );
+		fread(image->DHTs[index].codeLen, 1, 16, fptr);
+		fread(image->DHTs[index].table8, 1, readSize, fptr ); 
 	}	
 }	
 
@@ -230,13 +219,15 @@ void printDebug(Img* image) {
 	}
 	for ( int i = 0 ; i < image->num_DHT ; ++i ) {
 		printf("DHT LEN: %d\n", image->DHTs[i].dht_len);
+		int sum = 0;
+		for ( int k = 0 ; k < 16 ; ++k ) {
+			sum += image->DHTs[i].codeLen[k];
+		}
+		if ( sum != image->DHTs[i].dht_len ) {
+			printf( "sum != image->DHTs[i].dht_len\n");
+		}	
 		for ( int j = 0 ; j < image->DHTs[i].dht_len ; ++j ) {
-			if (image->DHTs[i].precision == 0) {
-				printf("%d ", image->DHTs[i].table8[j]);
-			}
-			else if (image->DHTs[i].precision == 1) {
-				printf("%d ", image->DHTs[i].table16[j]);
-			}
+			printf("%d ", image->DHTs[i].table8[j]);
 			if ( j % 8 == 7 ) printf("\n");
 		}	
 		printf("\n");
@@ -266,108 +257,7 @@ void imageProcess(const char filePath[]) {
 	fclose(fptr);
 }	
 
-/*
-void findTableLen(FILE* fptr, Img* image) {
-	int i_dqt = 0;
-	int i_dht = 0;
-	size_t size_read;
-	uint8_t marker = 0;
-	uint16_t temp = 0;
-	while ((size_read = fread(&marker, 1, 1, fptr)) > 0) {
-		if ( marker == 0xFF ) {
-			fread(&marker, 1, 1, fptr);
-			if (marker == DQT) {
-				fread(&temp, 1, 2, fptr);		
-				image->imgHeader.dqt_len[i_dqt++] = littleToBigEndian16(temp);
-			}		
-			if (marker == DHT) {
-				fread(&temp, 1, 2, fptr);		
-				image->imgHeader.dht_len[i_dht++] = littleToBigEndian16(temp);
-			}		
-		}		
-	}		
-	rewind(fptr);
-}
-void freeTable(Img* image) {
-	for ( int i = 0 ; i < image->imgHeader.num_dqt ; ++i )
-		free(image->imgData.dqt_tables[i]);
-	for ( int i = 0 ; i < image->imgHeader.num_dht ; ++i )
-		free(image->imgData.dht_tables[i]);
-	free(image->imgData.dqt_tables);	
-	free(image->imgData.dht_tables);	
-	free(image->imgHeader.dqt_len);
-	free(image->imgHeader.dht_len);
-}		
-
-void allocTable(Img* image) {
-	image->imgData.dqt_tables = (uint8_t**)malloc(image->imgHeader.num_dqt * sizeof(uint8_t*));	
-	image->imgData.dht_tables = (uint8_t**)malloc(image->imgHeader.num_dht * sizeof(uint8_t*));	
-	for ( int i = 0 ; i < image->imgHeader.num_dqt ; ++i ) {
-		image->imgData.dqt_tables[i] = (uint8_t*)malloc(image->imgHeader.dqt_len[i] * sizeof(uint8_t));
-	}		
-	for ( int i = 0 ; i < image->imgHeader.num_dht ; ++i ) {
-		image->imgData.dht_tables[i] = (uint8_t*)malloc(image->imgHeader.dht_len[i] * sizeof(uint8_t));
-	}		
-}		
-
-void readTable(FILE* fptr, Img* image) {
-	int i_dqt = 0;
-	int i_dht = 0;
-	size_t size_read;
-	uint8_t marker = 0;
-	uint8_t precision, a_byte;
-	uint16_t temp = 0;
-	while ((size_read = fread(&marker, 1, 1, fptr)) > 0) {
-		if ( marker == 0xFF ) {
-			fread(&marker, 1, 1, fptr);
-			fread(&temp, 1, 2, fptr);		// read table length
-			for ( int i = 0 ; i < temp ; ++i ) {
-				fread(&a_byte, 1, 1, fptr);
-				if ( marker == DQT ) 
-					image->imgData.dqt_tables[i_dqt][i] = a_byte;
-				if ( marker == DHT )
-					image->imgData.dht_tables[i_dht][i] = a_byte;
-			}	
-			printf("\n");
-			if ( marker == DQT ) i_dqt++;
-			else i_dht++;
-		}		
-	}		
-}		
-void getJPEGMarker(const char filePath[]) {
-	FILE* fptr = fopen(filePath, "rb");
-	if (!fptr) {
-		printf("File does not exist\n");
-		return;
-	}		
-
-	Img image;
-
-	int iter = 0;
-	uint8_t buffer[BUFSIZE];
-	uint8_t last_byte = 0;
-	size_t size_read;
-
-	rewind(fptr);
-
-	image.imgHeader.dqt_len = (int*)malloc(image.imgHeader.num_dqt * sizeof(int));
-	image.imgHeader.dht_len = (int*)malloc(image.imgHeader.num_dht * sizeof(int));
-	image.imgData.tableType = (int*)malloc(image.imgHeader.num_dqt * sizeof(int));
-
-	findTableLen(fptr, &image);
-
-	for ( int i = 0 ; i < image.imgHeader.num_dqt ; ++i )
-		printf("dqt_len: %d\n", image.imgHeader.dqt_len[i]);
-	for ( int i = 0 ; i < image.imgHeader.num_dht ; ++i )
-		printf("dht_len: %d\n", image.imgHeader.dht_len[i]);
-
-	allocTable(&image);
-	readTable(fptr, &image);
-	freeTable(&image);
-
-	printf("=====================================================\n");
-}		
-	*/	   
+/* ===============================bmp read=============================== */
 void loadImgLabel(const char filePath[], DataSet* dataset) {
 	FILE* fptr = fopen(filePath, "rb");
 	if (!fptr) {
