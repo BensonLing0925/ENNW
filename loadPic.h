@@ -39,11 +39,6 @@ uint16_t byteConcat(uint8_t byte1, uint8_t byte2) {
 	return (byte1 << 8 | byte2);
 }		
 
-typedef struct HufTable {
-    int bitLen;
-    int val;
-    char* bitStr;
-} HufTable;    
 
 char* intToBit(int val, int bitLen) {
     char* result = (char*)malloc(bitLen+1);
@@ -62,9 +57,11 @@ void symTobits(Img* image) {
         size_t tableSize = image->DHTs[i_dht].dht_len;
         HufTable table[tableSize];
         i_huf = 0;
+        int changed = 0;
         for ( int height = 1 ; height <= 16 ; ++height ) {
             int num_height = image->DHTs[i_dht].codeLen[height-1];
             while ( num_height != 0 ) {
+                changed = 1;
                 table[i_huf].bitLen = height; 
                 table[i_huf].val = image->DHTs[i_dht].table8[i_huf];
                 table[i_huf].bitStr = intToBit(baseVal, height);
@@ -73,9 +70,15 @@ void symTobits(Img* image) {
                 num_height--;
                 i_huf++;
             }    
-            baseVal = (baseVal+1)*2;
+            if (changed) {
+                baseVal = (baseVal+1)*2;
+            }    
         }    
-        // build Tree, save root
+        Node* root = buildTrie(table, tableSize);
+        image->DHTs[i_dht].root = root;
+        // printTrie(image->DHTs[i_dht].root);
+        // printf("===============================\n");
+        freeTrie(root);
         for ( size_t tSize = 0 ; tSize < tableSize ; ++tSize )
             free(table[tSize].bitStr);
     }
@@ -225,12 +228,11 @@ void printDebug(Img* image) {
 	for ( int i = 0 ; i < image->num_DHT ; ++i ) {
 		printf("DHT LEN: %d\n", image->DHTs[i].dht_len);
 		int sum = 0;
-		for ( int k = 0 ; k < 16 ; ++k ) {
-			sum += image->DHTs[i].codeLen[k];
-		}
-		if ( sum != image->DHTs[i].dht_len ) {
-			printf( "sum != image->DHTs[i].dht_len\n");
-		}	
+        printf("DHT codeLen: \n");
+        for ( int m = 0 ; m < 16 ; ++m ) {
+            printf("%d ",image->DHTs[i].codeLen[m]);
+        }    
+        printf("\n");
 		for ( int j = 0 ; j < image->DHTs[i].dht_len ; ++j ) {
 			printf("%d ", image->DHTs[i].table8[j]);
 			if ( j % 8 == 7 ) printf("\n");
@@ -253,8 +255,8 @@ void imageProcess(const char filePath[]) {
 	readMarkers(fptr, &image);
 	image.DQTs = (DQT_struct*)malloc(image.num_DQT * sizeof(DQT_struct));
 	image.DHTs = (DHT_struct*)malloc(image.num_DHT * sizeof(DHT_struct));
-	readTableInfo(fptr, &image);
 
+	readTableInfo(fptr, &image);
 	allocTable(&image);
 	readTables(fptr, &image);
     symTobits(&image);
