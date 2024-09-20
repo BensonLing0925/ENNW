@@ -2,6 +2,7 @@
 #include <stdint.h>
 #include <stdlib.h>
 #include "structDef.h"
+#include "Trie.h"
 
 #define BUFSIZE 2048
 #define FILELEN 256
@@ -22,45 +23,6 @@ const uint8_t DHT_MARKER[2] = { 0xFF, 0xC4 };
 const uint8_t SOI_MARKER[2] = { 0xFF, 0xD8 };
 const uint8_t EOI_MARKER[2] = { 0xFF, 0xD9 };
 
-typedef enum {
-	LUMINANCE = 0,	
-	CHROMINANCE = 1
-} Component;
-
-typedef enum {
-	DC0 = 0,	
-	DC1 = 1,
-	AC0 = 2,
-	AC1 = 3
-} TableClass;
-
-typedef struct {
-	Component component;	
-	uint8_t precision;
-	int dqt_len;
-	union {
-		uint8_t* table8;
-		uint16_t* table16;
-	};
-} DQT_struct;
-
-typedef struct {
-	TableClass tClass;
-	uint8_t codeLen[16];
-	int dht_len;
-	uint8_t* table8;
-} DHT_struct;	
-
-typedef struct {
-	int pic_width;
-	int pic_height;
-	uint8_t*** picture;
-	int num_DQT;
-	int num_DHT;
-	DQT_struct* DQTs;
-	DHT_struct* DHTs;
-} Img;	
-
 uint32_t littleToBigEndian32(uint32_t little) {
 	return ((little >> 24) & 0x000000FF) |
 		   ((little >> 8)  & 0x0000FF00) |
@@ -76,6 +38,49 @@ uint16_t littleToBigEndian16(uint16_t little) {
 uint16_t byteConcat(uint8_t byte1, uint8_t byte2) {
 	return (byte1 << 8 | byte2);
 }		
+
+typedef struct HufTable {
+    int bitLen;
+    int val;
+    char* bitStr;
+} HufTable;    
+
+char* intToBit(int val, int bitLen) {
+    char* result = (char*)malloc(bitLen+1);
+    for ( int i = 0 ; i < bitLen ; ++i ) {
+        result[bitLen-1-i] = (val&(1<<i)) ? '1':'0';
+    }    
+    result[bitLen] = '\0';
+    return result;
+}    
+
+void symTobits(Img* image) {
+    int i_huf = 0;
+    int baseVal = 0;
+    for ( int i_dht = 0 ; i_dht < image->num_DHT ; ++i_dht ) {
+        baseVal = 0;
+        size_t tableSize = image->DHTs[i_dht].dht_len;
+        HufTable table[tableSize];
+        i_huf = 0;
+        for ( int height = 1 ; height <= 16 ; ++height ) {
+            int num_height = image->DHTs[i_dht].codeLen[height-1];
+            while ( num_height != 0 ) {
+                table[i_huf].bitLen = height; 
+                table[i_huf].val = image->DHTs[i_dht].table8[i_huf];
+                table[i_huf].bitStr = intToBit(baseVal, height);
+                if (num_height != 1)
+                    baseVal++;
+                num_height--;
+                i_huf++;
+            }    
+            baseVal = (baseVal+1)*2;
+        }    
+        // build Tree, save root
+        for ( size_t tSize = 0 ; tSize < tableSize ; ++tSize )
+            free(table[tSize].bitStr);
+    }
+
+}    
 
 void readTableInfo(FILE* fptr, Img* image) {
 	size_t size_read;
@@ -252,6 +257,7 @@ void imageProcess(const char filePath[]) {
 
 	allocTable(&image);
 	readTables(fptr, &image);
+    symTobits(&image);
 	printDebug(&image);
 	freeTable(&image);
 	fclose(fptr);
