@@ -1,0 +1,14 @@
+Learning Rate: 0.03
+Activation: ReLU
+Regularization: L1
+Regularization rate: 0
+Test loss: 0.057 ~ 0.056
+
+Regenerate test loss: 0.09
+
+inputs: X1, X2, X1^2, X2^2, X1*X2
+hidden: 4, 3
+output: 2
+ReLU
+Learning rate: 0.0001
+Regularization: L1

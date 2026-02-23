@@ -1,0 +1,175 @@
+#ifndef STRUCTDEF
+#define STRUCTDEF
+
+typedef double** Double2D;
+
+#define MAX_CHILD 2  // bitwise Trie, only 0 and 1
+#define MAX_HEIGHT 16  // JPEG at most height of 16, each height represent one bit
+                       
+typedef struct {
+	int num_weight;
+	double* weights;
+	double bias;
+	double output;
+	double delta;
+} Neuron;	
+
+typedef struct {
+	int num_neurons;
+    int input_dim;
+    int has_bias;
+	Neuron* neurons;
+	double* outputs;
+} Layer;		
+
+typedef struct {
+	int layer_count;
+	Layer* layers;
+} Network;		
+
+typedef struct {
+	int answer;
+	double** picture;	
+} Sample; 
+
+typedef struct {
+	Sample* samples;
+	int num_sample;
+	int rows;
+	int cols;
+} DataSet;	
+
+typedef enum {
+	INT_TYPE,
+	FLOAT_TYPE,
+	DOUBLE_TYPE
+} DataType;
+
+typedef struct {
+	DataType type;
+	union {
+		int* intData;
+		float* floatData;
+		double* doubleData;
+	};		
+	size_t dataSize;
+} DataPointer; 	
+
+typedef enum {
+	MAX_POOL,
+	AVG_POOL
+} PoolingType;	
+
+typedef struct {
+	int input_rows;
+	int input_cols;
+    int in_channels;
+	int num_filter;
+	int filter_size;   // assume square
+    int stride_h;
+    int stride_w;
+    int padding_h;
+    int padding_w;
+    int has_bias;
+    double* biases;
+	Double2D* filters;
+	Double2D* filtered_pics;
+	Double2D* pooled_pics;
+	int pooling_size;  // assume square and max pooling
+	PoolingType pType;
+} Conv2D;		
+
+typedef struct {
+    uint32_t layer_type;
+    uint32_t layer_index;
+    union {
+        struct Conv2D* conv;
+        struct Layer* layer;
+    } u_layer;
+    uint32_t dtype;
+} LayerMeta;
+
+typedef struct {
+    int has_conv;
+    int num_total_layer;
+    struct LayerMeta* layers_meta;
+} Model;
+
+typedef struct {
+	char* filePath;	
+	char* xlabel;
+	char* ylabel;
+	char* title;
+	DataPointer xdata;
+	DataPointer ydata;
+} PlotInfo;	
+
+typedef enum {
+	LUMINANCE = 0,	
+	CHROMINANCE = 1
+} Component;
+
+typedef enum {
+	DC0 = 0,	
+	DC1 = 1,
+	AC0 = 2,
+	AC1 = 3
+} TableClass;
+
+struct Node {
+    struct Node* children[MAX_CHILD];
+    char bitVal[MAX_HEIGHT];
+    int val;
+    int bitLen;
+};    
+
+typedef struct Node Node;
+
+typedef struct HufTable {
+    int bitLen;
+    int val;
+    char* bitStr;
+} HufTable;    
+
+typedef struct {
+	Component component;	
+	uint8_t precision;
+	int dqt_len;
+	union {
+		uint8_t* table8;
+		uint16_t* table16;
+	};
+} DQT_struct;
+
+typedef struct {
+	TableClass tClass;
+	uint8_t codeLen[16];
+	int dht_len;
+	uint8_t* table8;
+    Node* root;
+} DHT_struct;	
+
+typedef struct {
+    uint8_t id;
+    uint8_t vertFactor;
+    uint8_t horzFactor;
+    Component component;
+} CompInfo;    
+
+typedef struct {
+    uint8_t precision;
+    uint8_t num_component;
+    CompInfo* compInfo;         // num_component * sizeof(compInfo)
+} SOF_struct; 
+
+typedef struct {
+	int pic_width;
+	int pic_height;
+	uint8_t*** picture;
+	int num_DQT;
+	int num_DHT;
+    SOF_struct SOF_info;
+	DQT_struct* DQTs;
+	DHT_struct* DHTs;
+} Img;	
+#endif
