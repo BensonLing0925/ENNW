@@ -1,0 +1,395 @@
+#include <stdio.h>
+#include <stdlib.h>
+#include <time.h>
+#include <math.h>
+#include <float.h>
+#include "matrixOps.h" 
+#include "loadPic.h"
+#include "convolution.h"
+#include "../config/config.h"
+#include "output.h"
+
+#define TRAIN 1
+#define TEST 2
+
+double** oneHot(DataSet* dataset, int outSize); 
+void freeSamples(Sample* samples, int num_sample, size_t firstD);
+void freeNetwork(Network* network);
+Neuron* create_Neuron(int weightCnt);
+Layer* create_Layer(int neuronCnt, int num_inputs_for_neurons); 
+Network* create_Network(int* layers, uint64_t input_size, int num_layer );
+int forward_propagation(Network* network, double* inputs, uint64_t input_size, int ansIdx, double* loss);
+void backward_propagation(Network *network, double *expected, double learning_rate, double* inputs, uint64_t input_size);
+void testCase2();
+DataSet* readData();
+
+int main(int argc, char* argv[]) {
+
+    if (argc != 2) {
+        printf("usage: nn.exe \"path_to_json_config_file\"");
+        return 0;
+    }
+
+	DataSet* dataset = (DataSet*)malloc(sizeof(DataSet));
+    
+    struct arena a;
+    arena_init(&a);
+	
+    struct Config c;
+    config_init(&c);
+    if (load_json(argv[1], &a, &c) != 0)
+        return -1;
+
+    loadImgFile(c.imgPath, dataset, -1);
+    loadImgLabel(c.imgLabelPath, dataset);
+
+    if (c.seed == -1)
+	    srand(time(NULL));
+    else
+        srand(c.seed);
+
+	printf("num_sample: %d, rows: %d, cols: %d\n", dataset->num_sample, dataset->rows, dataset->cols);
+
+	int* idx_ans = (int*)malloc(dataset->num_sample * sizeof(int));
+	for ( int i = 0 ; i < dataset->num_sample ; ++i ) {
+		idx_ans[i] = dataset->samples[i].answer;	
+	}		
+	double** answers = oneHot(dataset, 10);
+
+	int num_filter = 10;
+	int picSize = 28;
+	int kernSize = 3;
+	int fmapSize = picSize - kernSize + 1;
+	int pSize = 2;
+
+	int pooledSize = fmapSize / pSize;
+    uint64_t input_size = pooledSize * pooledSize * num_filter;
+	int layers[] = {100, 50, 10};
+	Network* network = create_Network(layers, input_size, 3);
+
+	int train_correct = 0;
+	int batch_num = 500;
+	int epoch = 0;
+    unsigned int max_iter = c.max_iter;
+    double lr = c.lr;
+	double lossArr[max_iter];
+	clock_t start = clock();	
+	for ( int iter = 0 ; iter < max_iter ; ++iter ) {
+		int currentPos = (batch_num * epoch)%dataset->num_sample;
+		double loss = 0.0;
+		for ( int n = currentPos ; n < (currentPos + batch_num ) ; ++n ) {
+			Conv2D* conv = (Conv2D*)malloc(sizeof(Conv2D));
+			initConv2D(conv, 10, 3, 2, 28, 28, MAX_POOL);
+			allocConv(conv);
+			manualKernal(conv);
+			double** flat_pics = alloc2DArr(num_filter, pooledSize * pooledSize); 
+			for ( int i = 0 ; i < conv->num_filter ; ++i ) {
+				conv->filtered_pics[i] = convolute( dataset->samples[n%(dataset->num_sample)].picture, conv->input_rows, conv->input_cols,
+										conv->filters[i], conv->filter_size, conv->filter_size);
+				conv->pooled_pics[i] = pooling(conv->filtered_pics[i], fmapSize, pSize);
+				flat_pics[i] = flatten(conv->pooled_pics[i], pooledSize, pooledSize);
+				reLU_pic(flat_pics, num_filter, pooledSize * pooledSize);
+			}
+			double* inputs = flatten(flat_pics, pooledSize * pooledSize, num_filter);
+			int train_predict = forward_propagation(network, inputs, input_size, idx_ans[n%(dataset->num_sample)], &loss);
+			if ( train_predict == idx_ans[n%(dataset->num_sample)] ) {
+				train_correct++;
+			}		
+			backward_propagation(network, answers[n%(dataset->num_sample)], lr, inputs, input_size);
+			freeConv(conv);
+			free2DArr(flat_pics, num_filter);
+			free(inputs);
+		}
+		loss /= batch_num;
+		lossArr[epoch] = loss;
+		epoch++;
+		printf("#Iteration: %d\n", iter);
+		printf("correct prediction: %d\n", train_correct);
+		printf("wrong prediction: %d\n", batch_num - train_correct);
+		printf("percentage:%lf%\n", ((double)train_correct/(double)(batch_num)) * 100);
+		printf("batch loss:%lf%\n", loss);
+		train_correct = 0;
+	}
+	double end = clock();	
+    // return 0;
+	/*
+	printf("final result:\n");
+	printf("correct prediction: %d\n", train_correct);
+	printf("wrong prediction: %d\n", dataset->num_sample - train_correct);
+	printf("percentage:%lf%\n", ((double)train_correct/(double)(dataset->num_sample)) * 100);
+	*/
+	printf("time spent: %lf\n", ((double)end - (double)start)/CLOCKS_PER_SEC);
+
+	int xArr[epoch];
+	for ( int i = 0 ; i < epoch ; ++i ) {
+		xArr[i] = i+1;
+	}		
+
+	free2DArr(answers, dataset->num_sample);
+	freeSamples(dataset->samples, dataset->num_sample, dataset->rows);
+	free(dataset);
+	free(idx_ans);
+    arena_destroy(&a);
+
+	PlotInfo* plot = (PlotInfo*)malloc(sizeof(PlotInfo));
+	initPlot("C:\\Users\\Benson Ling\\Desktop\\CNN\\MNIST\\plot1.gp",
+			 "Epoch", 
+			 "Loss",
+			 "Training", plot); 
+
+	plot->xdata.type = INT_TYPE;
+	plot->xdata.dataSize = epoch;
+	plot->ydata.dataSize = epoch;
+	plot->ydata.type = DOUBLE_TYPE;
+	plot->xdata.intData = xArr;
+	plot->ydata.doubleData = lossArr;
+
+	writeData(*plot);
+	freePlt(plot);
+
+	
+	printf("=========================test=========================\n");
+
+	DataSet* t_dataset = (DataSet*)malloc(sizeof(DataSet));
+	
+	loadImgFile("C:\\Users\\Benson Ling\\Desktop\\CNN\\src\\MNIST\\t10k-images-idx3-ubyte\\t10k-images-idx3-ubyte",
+			    t_dataset, -1);
+
+	printf("num_sample: %d, rows: %d, cols: %d\n", t_dataset->num_sample, t_dataset->rows, t_dataset->cols);
+
+	loadImgLabel("C:\\Users\\Benson Ling\\Desktop\\CNN\\src\\MNIST\\t10k-labels-idx1-ubyte\\t10k-labels-idx1-ubyte",
+				 t_dataset);
+
+	int correct = 0;
+	double** t_answers = oneHot(t_dataset, 10);
+	int* t_idx_ans = (int*)malloc(t_dataset->num_sample * sizeof(int));
+	for ( int i = 0 ; i < t_dataset->num_sample ; ++i ) {
+		t_idx_ans[i] = t_dataset->samples[i].answer;	
+	}		
+
+	double t_loss = 0.0;
+	for ( int n = 0 ; n < t_dataset->num_sample ; ++n ) {
+		Conv2D* t_conv = (Conv2D*)malloc(sizeof(Conv2D));
+		initConv2D(t_conv, 10, 3, 2, 28, 28, MAX_POOL);
+		allocConv(t_conv);
+		manualKernal(t_conv);
+		double** flat_pics = alloc2DArr(num_filter, pooledSize * pooledSize); 
+		for ( int i = 0 ; i < num_filter ; ++i ) {
+				t_conv->filtered_pics[i] = convolute( t_dataset->samples[n].picture, t_conv->input_rows, t_conv->input_cols, t_conv->filters[i], t_conv->filter_size, t_conv->filter_size);
+				t_conv->pooled_pics[i] = pooling(t_conv->filtered_pics[i], fmapSize, pSize);
+			flat_pics[i] = flatten(t_conv->pooled_pics[i], pooledSize, pooledSize);
+			reLU_pic(flat_pics, num_filter, pooledSize * pooledSize);
+		}
+		double* inputs = flatten(flat_pics, pooledSize * pooledSize, num_filter);
+		int predict = forward_propagation(network, inputs, input_size, t_idx_ans[n], &t_loss);
+		if ( predict == t_idx_ans[n] ) {
+			correct++;
+		}		
+		freeConv(t_conv);
+		free2DArr(flat_pics, num_filter);
+		free(inputs);
+	}
+
+	t_loss /= t_dataset->num_sample;
+	printf("final result:\n");
+	printf("correct prediction: %d\n", correct);
+	printf("wrong prediction: %d\n", t_dataset->num_sample - correct);
+	printf("percentage:%lf%\n", ((double)correct/(double)(t_dataset->num_sample)) * 100);
+	printf("average loss:%lf%\n", t_loss);
+
+	free(t_idx_ans);
+	free2DArr(t_answers, t_dataset->num_sample);
+	freeSamples(t_dataset->samples, t_dataset->num_sample, t_dataset->rows);
+	free(t_dataset);
+	freeNetwork(network);
+}
+
+void freeNetwork(Network* network) {
+	for ( int i = 0; i < network->layer_count ; ++i ) {
+		Layer* layer = &(network->layers[i]);
+		for ( int j = 0 ; j < layer->num_neurons ; ++j ) {
+			Neuron* neuron = &(layer->neurons[j]);
+			free(neuron->weights);
+		}
+		free(layer->neurons);
+		free(layer->outputs);
+	}	
+	free(network->layers);
+	free(network);
+}		
+
+Neuron* create_Neuron(int weightCnt) {
+	Neuron* neuron = (Neuron*)malloc(sizeof(Neuron));
+	neuron->num_weight = weightCnt;
+	neuron->weights = (double*)malloc(weightCnt * sizeof(double));
+	for ( int i = 0 ; i < weightCnt ; ++i ) {
+		neuron->weights[i] = ((double) rand() * 2 / RAND_MAX + (-1)) * 0.01;   // -0.01 to 0.01
+	}		
+	neuron->bias = 1;
+	neuron->output = 0.0;
+	neuron->delta = 0.0;
+	return neuron;
+}		
+
+Layer* create_Layer(int neuronCnt, int num_inputs_for_neurons) {
+	Layer* layer = (Layer*)malloc(sizeof(Layer));
+	layer->num_neurons = neuronCnt;
+	layer->outputs = (double*)malloc(neuronCnt * sizeof(double));
+	layer->neurons = (Neuron*)malloc(neuronCnt * sizeof(Neuron));
+    layer->input_dim = num_inputs_for_neurons;
+    layer->has_bias = 1;     // default have bias
+	for ( int i = 0 ; i < neuronCnt ; ++i ) {
+		layer->neurons[i] = *create_Neuron(num_inputs_for_neurons);		
+	}		
+	return layer;
+}		
+
+Network* create_Network(int* layers, uint64_t input_size, int num_layer ) {
+	Network* network = (Network*)malloc(sizeof(Network));
+	network->layer_count = num_layer;
+	network->layers = (Layer*)malloc(num_layer * sizeof(Layer));
+
+	for ( int i = 0 ; i < num_layer ; ++i ) {
+		// layers[0] is the input of the neural network	
+		int num_inputs = (i == 0) ? input_size : layers[i-1];	
+		network->layers[i] = *create_Layer(layers[i], num_inputs);
+	}		
+
+	return network;
+}		
+
+int forward_propagation(Network* network, double* inputs, uint64_t input_size, int ansIdx, double* loss) {
+	
+	for ( int i = 0; i < network->layer_count ; ++i ) {
+		Layer* layer = &(network->layers[i]);
+		for ( int j = 0 ; j < layer->num_neurons ; ++j ) {
+			Neuron* neuron = &(layer->neurons[j]);
+			double sum = neuron->bias;
+            if (i == 0) {
+                for ( uint64_t input_i = 0 ; input_i < input_size ; ++input_i ) {
+                    sum += neuron->weights[input_i] * inputs[input_i];
+                }
+            }
+            else {
+                for ( int k = 0 ; k < neuron->num_weight ; ++k ) {
+                    sum += neuron->weights[k] * network->layers[i-1].outputs[k]; 
+                }		
+            }
+			// neuron->output = reLU(sum);
+			if ( i < network->layer_count - 1 ) {
+				neuron->output = reLU(sum);
+			}		
+			else {
+				neuron->output = sum;
+			}
+			layer->outputs[j] = neuron->output;
+		}		
+	}		
+	Layer* output_layer = &(network->layers[network->layer_count-1]);
+	softMax(output_layer->outputs, output_layer->num_neurons);
+	*loss += crossEntropyLoss(ansIdx, output_layer->outputs);
+
+	int answer = findMax(output_layer->num_neurons, output_layer->outputs);
+	return answer;
+}		
+
+void backward_propagation(Network *network, double *expected, double learning_rate,
+                          double* inputs, uint64_t input_size) {
+    Layer* output_layer = &network->layers[network->layer_count - 1];
+
+    /* output delta: softmax + cross entropy */
+    for (int j = 0; j < output_layer->num_neurons; ++j) {
+        Neuron* neuron = &output_layer->neurons[j];
+        double output = output_layer->outputs[j];
+        neuron->delta = (output - expected[j]);
+    }
+
+    /* hidden deltas */
+    for (int i = network->layer_count - 2; i >= 0; --i) {
+        Layer *layer = &network->layers[i];
+        Layer *next_layer = &network->layers[i + 1];
+
+        for (int j = 0; j < layer->num_neurons; ++j) {
+            double error = 0.0;
+            for (int k = 0; k < next_layer->num_neurons; ++k) {
+                error += next_layer->neurons[k].weights[j] * next_layer->neurons[k].delta;
+            }
+            layer->neurons[j].delta = error * reLU_diff(layer->neurons[j].output);
+        }
+    }
+
+    /* update */
+    for (int i = 0; i < network->layer_count; ++i) {
+        Layer *layer = &network->layers[i];
+
+        for (int j = 0; j < layer->num_neurons; ++j) {
+            Neuron *neuron = &layer->neurons[j];
+
+            if (i == 0) {
+                if ((uint64_t)neuron->num_weight != input_size) {
+                    printf("[ERROR] input_size mismatch in layer 0: %d vs %llu\n",
+                           neuron->num_weight, (unsigned long long)input_size);
+                    return;
+                }
+                for (int k = 0; k < neuron->num_weight; ++k) {
+                    neuron->weights[k] -= learning_rate * neuron->delta * inputs[k];
+                }
+            } else {
+                for (int k = 0; k < neuron->num_weight; ++k) {
+                    neuron->weights[k] -= learning_rate * neuron->delta * network->layers[i - 1].outputs[k];
+                }
+            }
+
+            if (layer->has_bias) {
+                neuron->bias -= learning_rate * neuron->delta;
+            }
+        }
+    }
+}
+
+void freeSamples(Sample* samples, int num_sample, size_t firstD) {
+	for ( int i = 0 ; i < num_sample ; ++i ) {
+		free2DArr(samples[i].picture, firstD);
+	}		
+	free(samples);
+}		
+	
+DataSet* readData(int options) {
+		
+	FILE* fptr;
+	if ( options == TRAIN ) {
+		fptr = fopen("C:\\Users\\Benson Ling\\Desktop\\CNN\\dataset.txt", "r");
+	}
+	else if ( options == TEST ) {
+		fptr = fopen("C:\\Users\\Benson Ling\\Desktop\\CNN\\testcase.txt", "r");
+	}		
+	int num_sample, firstD, secondD;
+	int temp;
+	fscanf(fptr, "%d\n%d%d", &num_sample, &firstD, &secondD);
+	DataSet* dataset = (DataSet*)malloc(sizeof(DataSet));
+	Sample* samples = (Sample*)malloc(num_sample * sizeof(Sample));	
+	dataset->samples = samples;
+	dataset->num_sample = num_sample;
+	for ( int i = 0 ; i < num_sample ; ++i ) {
+		fscanf(fptr, "%d", &samples[i].answer);
+		samples[i].picture = alloc2DArr(firstD, secondD);
+		for ( int j = 0 ; j < firstD ; ++j ) {
+			for ( int k = 0 ; k < secondD ; ++k ) {	
+				fscanf(fptr, "%d,", &temp);
+				samples[i].picture[j][k] = (double)temp;
+			}
+		}		
+	}
+	//printOut(samples, num_sample);
+	//freeSamples(samples, num_sample, firstD);
+	fclose(fptr);
+	return dataset;
+}		
+
+double** oneHot(DataSet* dataset, int outSize) {
+	double** answers = alloc2DArr(dataset->num_sample, outSize);
+	for ( int i = 0 ; i < dataset->num_sample ; ++i ) {
+		answers[i][dataset->samples[i].answer] = 1.0;	
+	}
+	return answers;
+}		

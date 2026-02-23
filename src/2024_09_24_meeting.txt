@@ -1,0 +1,9 @@
+Tensorflow 2.6
+Python Don't use version after 3.9
+Use anaconda, can switch Python version
+
+
+GPU => GeForce RTX 3060
+Compute Capability => 3.6
+
+Download GeForce Game Ready Version: 560.81

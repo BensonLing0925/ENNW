@@ -1,0 +1,59 @@
+// hidden layers: sigmoid, output layer: SoftMax + cross-Entropy
+layers = 3
+{1690, 50, 10}
+Learning Rate = 0.01
+correct prediction: 786
+wrong prediction: 9214
+percentage: 7.86%
+
+layers = 4
+{1690, 50, 20, 10}
+Learning Rate = 0.01
+correct prediction: 805 
+wrong prediction: 9195
+percentage: 8.05%
+
+layers = 4
+{1690, 100, 50, 10}
+Learning Rate = 0.01
+correct prediction: 786
+wrong prediction: 9214
+percentage: 7.86%
+
+layers = 4
+{1690, 100, 50, 10}
+Learning Rate = 0.3
+correct prediction: 784
+wrong prediction: 9216
+percentage: 7.84%
+
+// Applying reLU at input and forward and backward propagation
+layers = 4
+{1690, 100, 50, 10}
+Learning Rate = 0.3
+correct prediction: 842
+wrong prediction: 9157
+percentage: 8.43%
+
+
+// run for 20 minutes, too slow
+layers = 8
+{1690, 800, 600, 500, 250, 100, 50, 10}
+Learning Rate = 0.001
+correct prediction: 980
+wrong prediction: 9020
+percentage: 9.8000%
+
+layers = 4
+{1690, 100, 50, 10}
+* Learning Rate: 0.01                         // gradient problem?
+batch size = 500
+iteration = 100
+* weights initialization = +- 0.01            // smaller better?
+correct prediction: 9647
+wrong prediction: 353
+percentage: 96.470000%
+average loss: 0.121840
+training time spent: 51.617 sec
+
+
