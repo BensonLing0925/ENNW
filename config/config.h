@@ -17,6 +17,7 @@ struct Config {
     char* imgPath;
     char* imgLabelPath;
     unsigned int max_iter;
+    char* save_path;
 };
 
 void config_init(struct Config* c);

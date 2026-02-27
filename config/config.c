@@ -9,6 +9,7 @@ void config_init(struct Config* c) {
     c->imgPath = NULL;
     c->imgLabelPath = NULL;
     c->max_iter = 100;
+    c->save_path = NULL;
 }
 
 static char* read_entire_file_arena(const char* path, struct arena* a) {
@@ -59,6 +60,7 @@ int load_json(const char* path, struct arena* a,struct Config* c) {
     const cJSON* imgPath = NULL;
     const cJSON* imgLabelPath = NULL;
     const cJSON* max_iter = NULL;
+    const cJSON* save_path = NULL;
     int ret = -1;
 
     mode = cJSON_GetObjectItemCaseSensitive(json, "mode");
@@ -96,8 +98,10 @@ int load_json(const char* path, struct arena* a,struct Config* c) {
     }
 
     imgLabelPath = cJSON_GetObjectItemCaseSensitive(json, "imgLabelPath");
-    if (cJSON_IsString(imgLabelPath) && (imgLabelPath->valuestring != NULL))
+    if (cJSON_IsString(imgLabelPath) && (imgLabelPath->valuestring != NULL)) {
         c->imgLabelPath = arena_strdup(a, imgLabelPath->valuestring);
+        printf("raw imgLabelPath: [%s]\n", imgLabelPath->valuestring);
+    }
     else {
         perror("Error while reading JSON element \"imgLabelPath\": invalid option");
         goto cleanup;
@@ -112,6 +116,15 @@ int load_json(const char* path, struct arena* a,struct Config* c) {
     else {
         printf("Invalid option for \"max_iter\", using default value: %d", c->max_iter);
         goto cleanup;
+    }
+
+    save_path = cJSON_GetObjectItemCaseSensitive(json, "save_path");
+    if (cJSON_IsString(save_path) && (save_path->valuestring != NULL)) {
+        c->save_path = arena_strdup(a, save_path->valuestring);
+        printf("raw save_path:    [%s]\n", save_path->valuestring);
+    }
+    else {
+        printf("[REMINDER] Not saving model weights\n");
     }
 
     ret = 0;

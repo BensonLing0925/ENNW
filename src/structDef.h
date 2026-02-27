@@ -3,10 +3,12 @@
 
 typedef double** Double2D;
 
+#include <stdint.h>
+
 #define MAX_CHILD 2  // bitwise Trie, only 0 and 1
 #define MAX_HEIGHT 16  // JPEG at most height of 16, each height represent one bit
                        
-typedef struct {
+typedef struct Neuron {
 	int num_weight;
 	double* weights;
 	double bias;
@@ -14,7 +16,7 @@ typedef struct {
 	double delta;
 } Neuron;	
 
-typedef struct {
+typedef struct Layer {
 	int num_neurons;
     int input_dim;
     int has_bias;
@@ -22,9 +24,9 @@ typedef struct {
 	double* outputs;
 } Layer;		
 
-typedef struct {
+typedef struct Network {
 	int layer_count;
-	Layer* layers;
+	Layer* layers; // to point to individual Layer
 } Network;		
 
 typedef struct {
@@ -60,12 +62,12 @@ typedef enum {
 	AVG_POOL
 } PoolingType;	
 
-typedef struct {
-	int input_rows;
-	int input_cols;
+typedef struct Conv2D {
     int in_channels;
 	int num_filter;
 	int filter_size;   // assume square
+    int kernel_h;
+    int kernel_w;
     int stride_h;
     int stride_w;
     int padding_h;
@@ -79,19 +81,23 @@ typedef struct {
 	PoolingType pType;
 } Conv2D;		
 
-typedef struct {
+typedef struct LayerMeta {
     uint32_t layer_type;
     uint32_t layer_index;
     union {
         struct Conv2D* conv;
-        struct Layer* layer;
+        // struct Layer* layer;
+        struct Network* network;
     } u_layer;
     uint32_t dtype;
 } LayerMeta;
 
-typedef struct {
+typedef struct Model {
     int has_conv;
-    int num_total_layer;
+    int num_total_layers;
+    int init_input_c;
+    int init_input_h;
+    int init_input_w;
     struct LayerMeta* layers_meta;
 } Model;
 

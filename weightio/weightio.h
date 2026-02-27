@@ -2,16 +2,36 @@
 #define WEIGHTIO_H
 
 #include <stdint.h>
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
 
-#define NETWORK_DTYPE_F32 1u
-#define NETWORK_DTYPE_F64 2u
+#define FIXED_HEADER_SIZE 68u
+
+#define LAYER_DTYPE_F32 1u
+#define LAYER_DTYPE_F64 2u
 
 #define LAYER_FC 1u
 #define LAYER_CONV2D 2u
 #define LAYER_POOL 3u
 
+#define FC_CHAIN 1u
+
+#define WEIGHT_OK 0
+#define WEIGHT_ERR_IO 1
+#define WEIGHT_ERR_MAGIC 2
+#define WEIGHT_ERR_VERSION 3
+#define WEIGHT_ERR_DTYPE 4
+#define WEIGHT_ERR_FORMAT 5
+#define WEIGHT_ERR_OOM 6
+#define WEIGHT_FAIL_READ 7
+#define WEIGHT_UNKNOWN_LAYER_TYPE 8
+
+
+
 struct Conv2D;
 struct Network;
+struct Model;
 
 struct Binary_Header {
     char magic[4]; 
@@ -24,6 +44,12 @@ struct Binary_Header {
     uint32_t input_w;
     uint32_t input_c;   // (gray scale for now)
     uint32_t reserved[8]; // reserved
+};
+
+struct Binary_Net_Layer_Meta {
+    uint32_t network_type;
+    uint32_t fc_layer_count;
+    uint32_t reserved[2];
 };
 
 struct Binary_FC_Layer_Meta {
@@ -55,12 +81,12 @@ struct Binary_Layer_Meta {
     uint64_t param_count;
     uint64_t payload_bytes;
     union {
-        struct Binary_FC_Layer_Meta fc_layer_meta;
+        struct Binary_Net_Layer_Meta net_layer_meta;
         struct Binary_Conv2D_Layer_Meta conv2d_layer_meta;
     } u_layer;
 };
 
-int save_weight(struct Network* net);
-int load_weight(const char* weight_path);
+int save_weight(const char* path, struct Model* model);
+int load_weight(const char* weight_path, struct Model* m);
 
 #endif

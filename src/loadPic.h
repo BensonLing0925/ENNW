@@ -249,7 +249,7 @@ void printDebug(Img* image) {
 	}
 	for ( int i = 0 ; i < image->num_DHT ; ++i ) {
 		printf("DHT LEN: %d\n", image->DHTs[i].dht_len);
-		int sum = 0;
+		// int sum = 0;
         printf("DHT codeLen: \n");
         for ( int m = 0 ; m < 16 ; ++m ) {
             printf("%d ",image->DHTs[i].codeLen[m]);
