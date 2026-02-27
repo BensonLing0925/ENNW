@@ -21,11 +21,12 @@ SRC_DIR    := src
 CFG_DIR    := config
 CJSON_DIR  := $(CFG_DIR)/cJSON
 MEM_DIR    := mem
+WEIGHTIO_DIR	:= weightio
 
 TARGET := nn$(EXEEXT)
 
 # ---- Include paths ----
-INCLUDES := -I$(SRC_DIR) -I$(CFG_DIR) -I$(CJSON_DIR) -I$(MEM_DIR)
+INCLUDES := -I$(SRC_DIR) -I$(CFG_DIR) -I$(CJSON_DIR) -I$(MEM_DIR) -I$(WEIGHTIO_DIR)
 
 # ---- Common flags ----
 CFLAGS_COMMON := -Wall -Wextra $(INCLUDES)
@@ -50,7 +51,8 @@ LDLIBS ?= -lm
 # 1) Your CNN / main and other app sources (C23)
 SRC_C23 := $(wildcard $(SRC_DIR)/*.c) \
            $(CFG_DIR)/config.c \
-           $(MEM_DIR)/arena.c
+           $(MEM_DIR)/arena.c \
+		   $(WEIGHTIO_DIR)/weightio.c
 
 # 2) cJSON source (compile as C89)
 SRC_C89 := $(CJSON_DIR)/cJSON.c

@@ -22,14 +22,14 @@ void free2DArr(double** freeArr, size_t firstD) {
 double*** alloc3DArr(size_t firstD, size_t secondD, size_t thirdD) {
 
 	double*** re = (double***)calloc(firstD, sizeof(double**));
-	for ( int i = 0 ; i < firstD ; ++i ) {
+	for ( size_t i = 0 ; i < firstD ; ++i ) {
 		re[i] = alloc2DArr(secondD, thirdD);
 	}		
 	return re;
 }		
 
 void free3DArr(double*** freeArr, size_t firstD, size_t secondD) {
-	for ( int i = 0 ; i < firstD ; ++i ) {
+	for ( size_t i = 0 ; i < firstD ; ++i ) {
 		free2DArr(freeArr[i], secondD);
 	}		
 	free(freeArr);
@@ -55,7 +55,7 @@ void reLU_pic( double** pic, int picRow, int picCol ) {
 int findMax(size_t outSize, double* prob) {
 	double max = -99999;
 	int index = -1;
-	for ( int i = 0 ; i < outSize ; ++i ) {
+	for ( size_t i = 0 ; i < outSize ; ++i ) {
 		if (prob[i] > max) {
 			index = i;
 			max = prob[i];
@@ -78,7 +78,7 @@ double* flatten(double** input, int colSize, int rowSize) {
 
 // bias is added, n is the size that dose not add bias
 double dotProd(size_t n, double* w, double* input, double b) {
-	int i = 0;
+	size_t i = 0;
 	double result = 0;
 	for ( i = 0 ; i < n ; ++i ) {
 		result += (w[i] * input[i]);

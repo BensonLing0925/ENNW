@@ -3,10 +3,13 @@
 #include <time.h>
 #include <math.h>
 #include <float.h>
+#include <inttypes.h>
 #include "matrixOps.h" 
+#include "structDef.h"
 #include "loadPic.h"
 #include "convolution.h"
 #include "../config/config.h"
+#include "../weightio/weightio.h"
 #include "output.h"
 
 #define TRAIN 1
@@ -22,6 +25,11 @@ int forward_propagation(Network* network, double* inputs, uint64_t input_size, i
 void backward_propagation(Network *network, double *expected, double learning_rate, double* inputs, uint64_t input_size);
 void testCase2();
 DataSet* readData();
+
+int layer_meta_set() {
+
+
+}
 
 int main(int argc, char* argv[]) {
 
@@ -67,37 +75,94 @@ int main(int argc, char* argv[]) {
 	int layers[] = {100, 50, 10};
 	Network* network = create_Network(layers, input_size, 3);
 
+    // declare entire architecture of model
+    struct Model model;
+    model.has_conv = 1;
+    model.num_total_layers = 2;    // 1 conv + 1 fc (Network)
+    model.init_input_c = 1;
+    model.init_input_h = picSize;
+    model.init_input_w = picSize;
+    model.layers_meta = (struct LayerMeta*)arena_alloc(&a, sizeof(struct LayerMeta) * model.num_total_layers);    // create LayerMetas
+
+    // set each layer type in model (Modulize in the future)
+    model.layers_meta[0].layer_type = LAYER_CONV2D;
+    model.layers_meta[0].layer_index = 0;
+    model.layers_meta[0].dtype = LAYER_DTYPE_F64;
+
+    model.layers_meta[1].layer_type = LAYER_FC; // network
+    model.layers_meta[1].layer_index = 1;
+    model.layers_meta[1].dtype = LAYER_DTYPE_F64;
+
+    // layer index to track
+    int cur_fc_layer_index = 0;
+
+    // create a 2D convolution layer
+    Conv2D* conv = (Conv2D*)malloc(sizeof(Conv2D));
+    initConv2D(conv, 10, 3, 2, MAX_POOL);
+    allocConv(conv, picSize, picSize);  // square for this case
+    manualKernal(conv); // load filter (or kernel) into convolution layer
+
+    // set LayerMetas
+    for ( int i = 0 ; i < model.num_total_layers ; ++i ) {
+        struct LayerMeta* current_layer_meta = &model.layers_meta[i];
+        // provide layer information
+        if (current_layer_meta->layer_type == LAYER_CONV2D) {
+            model.layers_meta[i].u_layer.conv = conv;
+        }
+        if (current_layer_meta->layer_type == LAYER_FC) {
+            model.layers_meta[i].u_layer.network = network;
+        }
+    }
+
 	int train_correct = 0;
 	int batch_num = 500;
 	int epoch = 0;
     unsigned int max_iter = c.max_iter;
     double lr = c.lr;
 	double lossArr[max_iter];
+
+    /* runtime size context */
+    int current_pic_h = picSize;
+    int current_pic_w = picSize;
+    int pooled_img_size = fmapSize / pSize;
+
 	clock_t start = clock();	
-	for ( int iter = 0 ; iter < max_iter ; ++iter ) {
+	for ( uint32_t iter = 0 ; iter < max_iter ; ++iter ) {
 		int currentPos = (batch_num * epoch)%dataset->num_sample;
 		double loss = 0.0;
+
 		for ( int n = currentPos ; n < (currentPos + batch_num ) ; ++n ) {
-			Conv2D* conv = (Conv2D*)malloc(sizeof(Conv2D));
-			initConv2D(conv, 10, 3, 2, 28, 28, MAX_POOL);
-			allocConv(conv);
-			manualKernal(conv);
 			double** flat_pics = alloc2DArr(num_filter, pooledSize * pooledSize); 
+            /* runtime tensor */
+            Double2D* filtered_pics = malloc(sizeof(struct Double2D*) * conv->num_filter);
+            Double2D* pooled_pics = malloc(sizeof(struct Double2D*) * conv->num_filter);
+
 			for ( int i = 0 ; i < conv->num_filter ; ++i ) {
+				filtered_pics[i] = convolute( dataset->samples[n%(dataset->num_sample)].picture, current_pic_h, current_pic_w,
+										conv->filters[i], conv->filter_size, conv->filter_size);
+				pooled_pics[i] = pooling(filtered_pics[i], fmapSize, pSize);
+				flat_pics[i] = flatten(pooled_pics[i], pooledSize, pooledSize);
+				reLU_pic(flat_pics, num_filter, pooledSize * pooledSize);
+
+                /*
 				conv->filtered_pics[i] = convolute( dataset->samples[n%(dataset->num_sample)].picture, conv->input_rows, conv->input_cols,
 										conv->filters[i], conv->filter_size, conv->filter_size);
 				conv->pooled_pics[i] = pooling(conv->filtered_pics[i], fmapSize, pSize);
 				flat_pics[i] = flatten(conv->pooled_pics[i], pooledSize, pooledSize);
 				reLU_pic(flat_pics, num_filter, pooledSize * pooledSize);
+                */
 			}
 			double* inputs = flatten(flat_pics, pooledSize * pooledSize, num_filter);
+            // send into FC layers
 			int train_predict = forward_propagation(network, inputs, input_size, idx_ans[n%(dataset->num_sample)], &loss);
 			if ( train_predict == idx_ans[n%(dataset->num_sample)] ) {
 				train_correct++;
 			}		
 			backward_propagation(network, answers[n%(dataset->num_sample)], lr, inputs, input_size);
-			freeConv(conv);
 			free2DArr(flat_pics, num_filter);
+            // freeConvPics(conv); // only free pooled pics and filtered pics
+            free3DArr(filtered_pics, conv->num_filter, fmapSize);
+            free3DArr(pooled_pics, conv->num_filter, pooledSize);
 			free(inputs);
 		}
 		loss /= batch_num;
@@ -106,8 +171,8 @@ int main(int argc, char* argv[]) {
 		printf("#Iteration: %d\n", iter);
 		printf("correct prediction: %d\n", train_correct);
 		printf("wrong prediction: %d\n", batch_num - train_correct);
-		printf("percentage:%lf%\n", ((double)train_correct/(double)(batch_num)) * 100);
-		printf("batch loss:%lf%\n", loss);
+		printf("percentage:%lf\n", ((double)train_correct/(double)(batch_num)) * 100);
+		printf("batch loss:%lf\n", loss);
 		train_correct = 0;
 	}
 	double end = clock();	
@@ -129,6 +194,10 @@ int main(int argc, char* argv[]) {
 	freeSamples(dataset->samples, dataset->num_sample, dataset->rows);
 	free(dataset);
 	free(idx_ans);
+
+    if (c.save_path)
+        save_weight(c.save_path, &model);
+
     arena_destroy(&a);
 
 	PlotInfo* plot = (PlotInfo*)malloc(sizeof(PlotInfo));
@@ -148,6 +217,7 @@ int main(int argc, char* argv[]) {
 	freePlt(plot);
 
 	
+    /*
 	printf("=========================test=========================\n");
 
 	DataSet* t_dataset = (DataSet*)malloc(sizeof(DataSet));
@@ -170,7 +240,7 @@ int main(int argc, char* argv[]) {
 	double t_loss = 0.0;
 	for ( int n = 0 ; n < t_dataset->num_sample ; ++n ) {
 		Conv2D* t_conv = (Conv2D*)malloc(sizeof(Conv2D));
-		initConv2D(t_conv, 10, 3, 2, 28, 28, MAX_POOL);
+		initConv2D(t_conv, 10, 3, 2, MAX_POOL);
 		allocConv(t_conv);
 		manualKernal(t_conv);
 		double** flat_pics = alloc2DArr(num_filter, pooledSize * pooledSize); 
@@ -194,14 +264,15 @@ int main(int argc, char* argv[]) {
 	printf("final result:\n");
 	printf("correct prediction: %d\n", correct);
 	printf("wrong prediction: %d\n", t_dataset->num_sample - correct);
-	printf("percentage:%lf%\n", ((double)correct/(double)(t_dataset->num_sample)) * 100);
-	printf("average loss:%lf%\n", t_loss);
+	printf("percentage:%lf\n", ((double)correct/(double)(t_dataset->num_sample)) * 100);
+	printf("average loss:%lf\n", t_loss);
 
 	free(t_idx_ans);
 	free2DArr(t_answers, t_dataset->num_sample);
 	freeSamples(t_dataset->samples, t_dataset->num_sample, t_dataset->rows);
 	free(t_dataset);
 	freeNetwork(network);
+    */
 }
 
 void freeNetwork(Network* network) {
@@ -327,7 +398,7 @@ void backward_propagation(Network *network, double *expected, double learning_ra
 
             if (i == 0) {
                 if ((uint64_t)neuron->num_weight != input_size) {
-                    printf("[ERROR] input_size mismatch in layer 0: %d vs %llu\n",
+                    printf("[ERROR] input_size mismatch in layer 0: %d vs %" PRIu64 "\n",
                            neuron->num_weight, (unsigned long long)input_size);
                     return;
                 }

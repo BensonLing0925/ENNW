@@ -5,9 +5,7 @@
 #include "../mem/arena.h"
 
 void initConv2D(Conv2D* conv, int num_filter, int fSize, int pSize,
-				int input_rows, int input_cols, PoolingType pType) {
-	conv->input_rows = input_rows;
-	conv->input_cols = input_cols;
+				PoolingType pType) {
     conv->in_channels = 1;
 	conv->num_filter = num_filter;
 	conv->filter_size = fSize;
@@ -20,9 +18,9 @@ void initConv2D(Conv2D* conv, int num_filter, int fSize, int pSize,
     conv->has_bias = 0;
 }		
 
-void allocConv(Conv2D* conv) {
-	int fPicRowSize = conv->input_rows - conv->filter_size + 1;   
-	int fPicColSize = conv->input_cols - conv->filter_size + 1;   
+void allocConv(Conv2D* conv, int input_rows, int input_cols) {
+	int fPicRowSize = input_rows - conv->filter_size + 1;   
+	int fPicColSize = input_cols - conv->filter_size + 1;   
 	int pooled_size = fPicRowSize / conv->pooling_size;
 	conv->filters = alloc3DArr(conv->num_filter, conv->filter_size, conv->filter_size);
 	conv->filtered_pics = alloc3DArr(conv->num_filter, fPicRowSize, fPicColSize);
@@ -107,13 +105,9 @@ void manualKernal(Conv2D* conv) {
 }		
 
 void freeConv(Conv2D* conv) {
-	int fPicRowSize = conv->input_rows - conv->filter_size + 1;   
-	int pooled_size = fPicRowSize / conv->pooling_size;
 	free3DArr(conv->filters, conv->num_filter, conv->filter_size);
-	free3DArr(conv->filtered_pics, conv->num_filter, fPicRowSize);
-	free3DArr(conv->pooled_pics, conv->num_filter, pooled_size);
-	free(conv);
-}		
+    free(conv);
+}
 
 // assume picture and filter are square
 // stride = 1
