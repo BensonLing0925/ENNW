@@ -1,10 +1,12 @@
+#ifndef NNUTILS_H
+#define NNUTILS_H
 #include <stdlib.h>
+
 #include <math.h>
 #include <float.h>
 #include <stdio.h>
+#include "nn_utils.h"
 #include "../mem/arena.h"
-#ifndef MATRIXOPS
-#define MATRIXOPS
 
 double** alloc2DArr(size_t firstD, size_t secondD) {
 	double** re = (double**)calloc(firstD, sizeof(double*));
@@ -184,16 +186,4 @@ void partialHidOut(size_t errSize, size_t hiddenSize, double* errTerm, double* h
 		}
 	}
 }
-/*
-void updateWeight( double** partial_weight, double** weight, size_t firstD, 
-			       size_t secondD ) {
-	for ( size_t i = 0 ; i < firstD ; ++i )
-		for ( size_t j = 0 ; j < secondD ; ++j )
-			weight[i][j] -= LEARNRATE * partial_weight[i][j];	
-}
-double gradDescent(double weight, double singleLDW) {
-	return weight - ( LEARNRATE * singleLDW );
-}
-*/
-
 #endif

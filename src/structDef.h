@@ -27,6 +27,8 @@ typedef struct Layer {
 typedef struct Network {
 	int layer_count;
 	Layer* layers; // to point to individual Layer
+    uint32_t network_type;
+    uint32_t input_size;
 } Network;		
 
 typedef struct {
@@ -65,19 +67,17 @@ typedef enum {
 typedef struct Conv2D {
     int in_channels;
 	int num_filter;
-	int filter_size;   // assume square
     int kernel_h;
     int kernel_w;
     int stride_h;
     int stride_w;
     int padding_h;
     int padding_w;
+    int pooling_h;
+    int pooling_w;
     int has_bias;
     double* biases;
 	Double2D* filters;
-	Double2D* filtered_pics;
-	Double2D* pooled_pics;
-	int pooling_size;  // assume square and max pooling
 	PoolingType pType;
 } Conv2D;		
 

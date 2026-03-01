@@ -4,6 +4,6 @@
 	"lr": 0.01,
 	"imgPath": "C:\\Users\\Benson Ling\\Desktop\\CNN\\src\\MNIST\\train-images-idx3-ubyte\\train-images-idx3-ubyte",
 	"imgLabelPath": "C:\\Users\\Benson Ling\\Desktop\\CNN\\src\\MNIST\\train-labels-idx1-ubyte\\train-labels-idx1-ubyte",
-	"max_iter": 100,
+	"max_iter": 50,
 	"save_path": "C:\\Users\\Benson Ling\\Desktop\\CNN\\weights"
 }

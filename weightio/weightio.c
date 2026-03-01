@@ -1,8 +1,8 @@
-#include "../src/structDef.h"
 #include "weightio.h"
 #include "../mem/arena.h"
-
-#define MAX_NETWORK_NUM 1
+#include "../src/modules/fc/fc.h"
+#include "../src/modules/conv/conv.h"
+#include "../src/structDef.h"
 
 int header_create(struct Binary_Header* bh, struct Model* model) {
 
@@ -58,7 +58,7 @@ uint64_t conv2d_param_calculate(const struct Conv2D* conv) {
         printf("[WARNING] Conv2D is NULL\n");
         return 0;
     }
-    uint64_t param_count = (uint64_t) (conv->num_filter) * (uint64_t) (conv->filter_size) * (uint64_t) (conv->filter_size) * (uint64_t) (conv->in_channels);
+    uint64_t param_count = (uint64_t) (conv->num_filter) * (uint64_t) (conv->kernel_h) * (uint64_t) (conv->kernel_w) * (uint64_t) (conv->in_channels);
     return param_count;
 }
 
@@ -89,6 +89,7 @@ int net_layer_meta_create(struct Binary_Layer_Meta* blm, struct LayerMeta* net_l
     struct Network* net = net_lm->u_layer.network;
     meta->network_type = FC_CHAIN;
     meta->fc_layer_count = net->layer_count;
+    meta->input_size = net->input_size;
 
     return 0;
 }
@@ -111,8 +112,8 @@ int conv2d_layer_meta_create(struct Binary_Layer_Meta* blm, struct LayerMeta* lm
     struct Conv2D* lm_conv = lm->u_layer.conv;
     meta->num_filter = lm_conv->num_filter;
     meta->in_channels = lm_conv->in_channels;
-    meta->kernel_h = lm_conv->filter_size; //assume square for now
-    meta->kernel_w = lm_conv->filter_size;
+    meta->kernel_h = lm_conv->kernel_h; //assume square for now
+    meta->kernel_w = lm_conv->kernel_w;
     meta->stride_h = lm_conv->stride_h;
     meta->stride_w = lm_conv->stride_w;
     meta->padding_h = lm_conv->padding_h;
@@ -125,8 +126,8 @@ int conv2d_layer_meta_create(struct Binary_Layer_Meta* blm, struct LayerMeta* lm
     else
         meta->pooling_type = 0;
     // assume pooling square for now
-    meta->pooling_h = lm_conv->pooling_size;
-    meta->pooling_w = lm_conv->pooling_size;
+    meta->pooling_h = lm_conv->pooling_h;
+    meta->pooling_w = lm_conv->pooling_w;
     memset(meta->reserved, 0, sizeof(meta->reserved));
     return 0;
 }
@@ -185,19 +186,19 @@ static int write_f64(FILE* fp, double v) {
 }
 
 static int read_bytes(FILE* fp, void* ptr, size_t n) {
-    return fread(ptr, 1, n, fp) == n ? 0 : -1;
+    return (fread(ptr, 1, n, fp) == n) ? 0 : -1;
 }
 
-static int read_u32(FILE *fp, uint32_t v) {
-    return read_bytes(fp, &v, sizeof(v));
+static int read_u32(FILE* fp, uint32_t* v) {
+    return read_bytes(fp, v, sizeof(*v));
 }
 
-static int read_u64(FILE *fp, uint64_t v) {
-    return read_bytes(fp, &v, sizeof(v));
+static int read_u64(FILE* fp, uint64_t* v) {
+    return read_bytes(fp, v, sizeof(*v));
 }
 
-static int read_f64(FILE* fp, double v) {
-    return read_bytes(fp, &v, sizeof(v));
+static int read_f64(FILE* fp, double* v) {
+    return read_bytes(fp, v, sizeof(*v));
 }
 
 int header_write(FILE* fptr, const struct Binary_Header* bh) {
@@ -253,6 +254,7 @@ int net_meta_write(FILE* fptr,
 
     if (write_u32(fptr, net_blm->network_type)   < 0) return -1;
     if (write_u32(fptr, net_blm->fc_layer_count) < 0) return -1;
+    if (write_u32(fptr, net_blm->input_size) < 0) return -1;
     if (write_bytes(fptr, net_blm->reserved, sizeof(net_blm->reserved)) < 0) return -1;
 
     for (uint32_t i = 0; i < net_blm->fc_layer_count; ++i) {
@@ -350,8 +352,8 @@ int conv2d_payload_write(FILE* fptr, const struct Conv2D* conv) {
     for ( int i = 0 ; i < conv->num_filter ; ++i ) {
         const Double2D current_filter = conv->filters[i];
         // assuming square for now
-        int filter_height = conv->filter_size;
-        int filter_width = conv->filter_size;
+        int filter_height = conv->kernel_h;
+        int filter_width = conv->kernel_w;
         for ( int filter_h = 0 ; filter_h < filter_height ; ++filter_h ) {
             for ( int filter_w = 0 ; filter_w < filter_width ; ++filter_w ) {
                 if (write_f64(fptr, current_filter[filter_h][filter_w]) < 0) goto write_fail;
@@ -418,7 +420,6 @@ save_fail:
     return -1;
 }
 
-/*
 int header_check(FILE* fptr, struct Model* model) {
 
     char magic[4];
@@ -444,7 +445,7 @@ int header_check(FILE* fptr, struct Model* model) {
 
     uint32_t dtype;
     if (read_u32(fptr, &dtype)  < 0) goto read_fail;
-    if (dtype != 1) {
+    if (dtype != 2) {
         return -WEIGHT_ERR_DTYPE;
     }
 
@@ -476,9 +477,9 @@ read_fail:
     return -WEIGHT_FAIL_READ;
 }
 
-int layer_common_header_check(FILE* fptr, uint32_t* layer_type) {
-    if (read_u32(fptr, &layer_type) < 0)    goto read_fail;
-    if (layer_type >= 3) {
+int layer_common_header_check(FILE* fptr, uint32_t* layer_type, struct PayloadEntry* payload_entry) {
+    if (read_u32(fptr, layer_type) < 0)    goto read_fail;
+    if (*layer_type >= 3) {
         perror("[ERROR] Unknown layer_type at \"layer_common_header_check\"");
         return -WEIGHT_UNKNOWN_LAYER_TYPE;
     }
@@ -494,10 +495,13 @@ int layer_common_header_check(FILE* fptr, uint32_t* layer_type) {
     uint64_t param_count;
     if (read_u64(fptr, &param_count) < 0)   goto read_fail;
     // check param_count is equal to layer's supposed param_count
+    printf("layer_common_header_check param_count: %I64u\n", param_count);
 
     uint64_t payload_bytes;
     if (read_u64(fptr, &payload_bytes) < 0) goto read_fail;
-    
+    payload_entry->payload_bytes = payload_bytes;
+    printf("layer_common_header_check payload_bytes: %I64u\n", param_count * sizeof(double));
+
     return 0;
 
 read_fail:
@@ -510,42 +514,42 @@ int conv_meta_load(FILE* fptr, struct LayerMeta* layer, struct arena* a) {
     layer->layer_type = LAYER_CONV2D;
 
     uint32_t num_filter;
-    if (read_u32(fptr, &num_filter) < 0)    goto read_fail;
+    if (read_u32(fptr, &num_filter) < 0)    return -1;
 
     uint32_t in_channels;
-    if (read_u32(fptr, &in_channels) < 0)    goto read_fail;
+    if (read_u32(fptr, &in_channels) < 0)    return -1;
 
     uint32_t kernel_h;
-    if (read_u32(fptr, &kernel_h) < 0)    goto read_fail;
+    if (read_u32(fptr, &kernel_h) < 0)    return -1;
 
     uint32_t kernel_w;
-    if (read_u32(fptr, &kernel_w) < 0)    goto read_fail;
+    if (read_u32(fptr, &kernel_w) < 0)    return -1;
 
     uint32_t stride_h;
-    if (read_u32(fptr, &stride_h) < 0)    goto read_fail;
+    if (read_u32(fptr, &stride_h) < 0)    return -1;
 
     uint32_t stride_w;
-    if (read_u32(fptr, &stride_w) < 0)    goto read_fail;
+    if (read_u32(fptr, &stride_w) < 0)    return -1;
 
     uint32_t padding_h;
-    if (read_u32(fptr, &padding_h) < 0)    goto read_fail;
+    if (read_u32(fptr, &padding_h) < 0)    return -1;
 
     uint32_t padding_w;
-    if (read_u32(fptr, &padding_w) < 0)    goto read_fail;
+    if (read_u32(fptr, &padding_w) < 0)    return -1;
 
     uint32_t has_bias;
-    if (read_u32(fptr, &has_bias) < 0)    goto read_fail;
+    if (read_u32(fptr, &has_bias) < 0)    return -1;
 
     uint32_t pooling_type;
-    if (read_u32(fptr, &pooling_type) < 0)    goto read_fail;
+    if (read_u32(fptr, &pooling_type) < 0)    return -1;
 
     uint32_t pooling_h;
-    if (read_u32(fptr, &pooling_h) < 0)    goto read_fail;
+    if (read_u32(fptr, &pooling_h) < 0)    return -1;
 
     uint32_t pooling_w;
-    if (read_u32(fptr, &pooling_w) < 0)    goto read_fail;
+    if (read_u32(fptr, &pooling_w) < 0)    return -1;
 
-    layer->u_layer.conv = (struct Conv2D*)arena_alloc(a, sizeof(Conv2D));
+    layer->u_layer.conv = (struct Conv2D*)arena_alloc(a, sizeof(struct Conv2D));
     struct Conv2D* conv = layer->u_layer.conv;
     conv->num_filter = num_filter;
     conv->in_channels = in_channels;
@@ -562,31 +566,149 @@ int conv_meta_load(FILE* fptr, struct LayerMeta* layer, struct arena* a) {
     else if (pooling_type == 2) {
         conv->pType = AVG_POOL;
     }
-    conv->padding_h = padding_h;
-    conv->padding_w = padding_w;
+    conv->pooling_h = pooling_h;
+    conv->pooling_w = pooling_w;
+
+    fseek(fptr, 4 * sizeof(uint32_t), SEEK_CUR);
+    return 0;
 }
 
-// Current version (v1), each fc layer have takes 40 bytes (common header + fc specific)
-// fc layer have size 16 bytes, fc specific have size 24 bytes
-int fc_layer_count_peek(FILE* ptr, int num_total_layers, int* cur_index) {
-    int ret = 0;
-    for ( int i = *cur_index; i < num_total_layers ; ++i ) {
-        fseek(fptr, 24, SEEK_CUR); 
-        uint32_t layer_type;
-        if (read_u32(fptr, &layer_type) < 0) goto read_fail;
-        if (layer_type == LAYER_FC) ret++;
-        else {
-            break;
+int net_meta_peek(FILE* fptr, int* layers, uint32_t fc_layer_count) {
+
+    uint64_t pos = ftell(fptr);
+
+    for ( uint32_t i = 0 ; i < fc_layer_count ; ++i ) {
+        uint32_t num_neurons;
+        if (read_u32(fptr, &num_neurons) < 0)    return -1;
+        fseek(fptr, 3 * sizeof(uint32_t), SEEK_CUR);
+        layers[i] = num_neurons;
+    }
+
+    fseek(fptr, pos, SEEK_SET);
+    return 0;
+}
+
+int fc_meta_load(FILE* fptr, struct Layer* layer) {
+
+    uint32_t num_neurons;
+    if (read_u32(fptr, &num_neurons) < 0)    return -1;
+
+    uint32_t input_dim;
+    if (read_u32(fptr, &input_dim) < 0)    return -1;
+
+    uint32_t has_bias;
+    if (read_u32(fptr, &has_bias) < 0)    return -1;
+
+    // reserved
+    fseek(fptr, sizeof(uint32_t), SEEK_CUR);
+
+    layer->num_neurons = num_neurons;
+    layer->input_dim = input_dim;
+    layer->has_bias = has_bias;
+
+    return 0;
+}
+
+int net_meta_load(FILE* fptr, struct LayerMeta* lm, struct arena* a) {
+    lm->layer_type = LAYER_FC;
+
+    uint32_t network_type;
+    if (read_u32(fptr, &network_type) < 0)    goto read_fail;
+
+    uint32_t fc_layer_count;
+    if (read_u32(fptr, &fc_layer_count) < 0)    goto read_fail;
+
+    uint32_t input_size;
+    if (read_u32(fptr, &input_size) < 0)    goto read_fail;
+
+    fseek(fptr, 2 * sizeof(uint32_t), SEEK_CUR);
+
+    int* layers = malloc(sizeof(int) * fc_layer_count);
+    if (net_meta_peek(fptr, layers, fc_layer_count) < 0) goto read_fail;
+    struct Network* network = create_Network(layers, input_size, fc_layer_count, a);
+    network->network_type = network_type;
+    network->layer_count = fc_layer_count;
+    network->input_size = input_size;
+    lm->u_layer.network = network;
+
+    for ( uint32_t i = 0 ; i < fc_layer_count ; ++i ) {
+        if (fc_meta_load(fptr, &network->layers[i]) < 0) goto read_fail;
+    }
+
+    free(layers);
+    return 0;
+
+read_fail:
+    fclose(fptr);
+    free(layers);
+    return -1;
+}
+
+int load_conv_weight(FILE* fptr, struct Conv2D* conv) {
+    conv->filters = alloc3DArr(conv->num_filter, conv->kernel_h, conv->kernel_w);
+    for ( int i = 0 ; i < conv->num_filter ; ++i ) {
+        for ( int j = 0 ; j < conv->kernel_h ; ++j ) {
+            for ( int k = 0 ; k < conv->kernel_w ; ++k ) {
+                double weight;
+                if (read_f64(fptr, &weight) < 0) return -1;
+                conv->filters[i][j][k] = weight;
+            }
         }
     }
-    *cur_index = i - 1; 
-    return ret;
+    return 0;
 }
 
-struct Model* model_alloc_from_weight_file(FILE* fptr, struct arena* a) {
+int load_net_weight(FILE* fptr, struct Network* network) {
+    int layer_count = network->layer_count;
+    for ( int i = 0 ; i < layer_count ; ++i ) {
+        struct Layer* layer = &network->layers[i]; 
+        uint32_t has_bias = layer->has_bias;
+        for ( int j = 0 ; j < layer->num_neurons ; ++j ) {
+            struct Neuron* neuron = &layer->neurons[j];
+            for ( int k = 0 ; k < neuron->num_weight ; ++k ) {
+                double weight;
+                if (read_f64(fptr, &weight) < 0) return -1;
+                neuron->weights[k] = weight;
+            }
+            if (has_bias) {
+                double bias;
+                if (read_f64(fptr, &bias) < 0) return -1;
+                neuron->bias = bias;
+            }
+        }
+    }
+    return 0;
+}
+
+int load_weight(FILE* fptr, struct Model* model, struct PayloadEntry* payload_entry) {
+
+    if (!model) {
+        perror("[ERROR] model is NULL at \"load_weight\"");
+        return -1;
+    }
+
+    for ( int i = 0 ; i < model->num_total_layers ; ++i ) {
+        if (payload_entry[i].layer_type == LAYER_CONV2D) {
+            if (load_conv_weight(fptr, model->layers_meta[i].u_layer.conv) < 0) return -1;
+        }
+        if (payload_entry[i].layer_type == LAYER_FC) {
+            if (load_net_weight(fptr, model->layers_meta[i].u_layer.network) < 0) return -1;
+        }
+    }
+
+    fclose(fptr);
+    return 0;
+}
+
+struct Model* model_load(const char* path, struct arena* a) {
+
+    FILE* fptr = fopen(path, "rb");
+    if (!fptr) {
+        perror("[ERROR] fopen at \"model_load\"");
+        goto read_fail;
+    }
+    
     struct Model* model = arena_alloc(a, sizeof(struct Model)); 
-    model->networks = arena_alloc(a, sizeof(struct Network*) * MAX_NETWORK_NUM);
-    create_Network();
 
     if (header_check(fptr, model)   < 0) goto read_fail;
     model->layers_meta = arena_alloc(a, sizeof(struct LayerMeta) * model->num_total_layers);
@@ -594,59 +716,44 @@ struct Model* model_alloc_from_weight_file(FILE* fptr, struct arena* a) {
     // skip reserved space
     fseek(fptr, 8 * sizeof(uint32_t), SEEK_CUR);
 
-    int contiguous_index = 0;
+    // temporary payload map
+    struct PayloadEntry* payload_entry = malloc(sizeof(struct PayloadEntry) * model->num_total_layers);
+
     // skip param check for now
     for ( int i = 0 ; i < model->num_total_layers ; ++i ) {
         uint32_t layer_type;
-        if (layer_common_header_check(fptr, &layer_type) < 0) goto read_fail;
+        if (layer_common_header_check(fptr, &layer_type, &payload_entry[i]) < 0) goto read_fail;
+        model->layers_meta[i].layer_index = i;
+        model->layers_meta[i].dtype = LAYER_DTYPE_F64;
         if (layer_type == LAYER_CONV2D) {
-            model->layers_meta[i].layer_index = i;
+            model->layers_meta[i].layer_type = LAYER_CONV2D;
+            payload_entry[i].layer_type = LAYER_CONV2D;
             if (conv_meta_load(fptr, &model->layers_meta[i], a) < 0) goto read_fail;
-            fseek(fptr, 4 * sizeof(uint32_t), SEEK_CUR);
         }
         if (layer_type == LAYER_FC) {
-            uint64_t cur_file_pos = ftell(fptr);
-            int cur_num_fc_layer = fc_layer_count_peek(fptr, model->num_total_layers, &i) + 1;   // we detect it here first
-            // allocate using struct Network
-            // problem: how do we access this pointer outside this function?
-            fseek(fptr, cur_file_pos, SEEK_SET);
-            if (fc_meta_load(fptr, &model->layers_meta[i]) < 0) goto read_fail;
+            model->layers_meta[i].layer_type = LAYER_FC;
+            payload_entry[i].layer_type = LAYER_FC;
+            if (net_meta_load(fptr, &model->layers_meta[i], a) < 0) goto read_fail;
         }
     }
+
+    long int pos = ftell(fptr);
+    uint64_t offset = pos;
+    for ( int i = 0 ; i < model->num_total_layers ; ++i ) {
+        payload_entry[i].payload_offset = pos;
+        pos += payload_entry[i].payload_bytes;
+    }
+
+    if (load_weight(fptr, model, payload_entry) < 0) goto read_fail;
 
     return model;
 
 read_fail:
     fclose(fptr);
-    perror("[ERROR] read fail at \"model_alloc_from_weight_file\"");
+    perror("[ERROR] read fail at \"model_load\"");
     return NULL;
 }
 
-// model need to be properly allocated by caller
-// load_weight only load, won't allocate
-int load_weight(const char* path, struct Model* model) {
 
-    if (!model) {
-        perror("[ERROR] model is NULL at \"load_weight\"");
-        return -1;
-    }
-
-
-
-    fclose(fptr);
-}
-
-int model_load(const char* path, struct arena* a) {
-    FILE* fptr = fopen(path, "rb");
-    if (!fptr) {
-        perror("[ERROR] fopen at \"model_load\"");
-        goto load_fail;
-    }
-    
 
     
-load_fail:
-    fclose(fptr);
-    return -1;
-}
-*/
