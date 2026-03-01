@@ -4,10 +4,9 @@
 #include <math.h>
 #include <float.h>
 #include <inttypes.h>
-#include "matrixOps.h" 
-#include "structDef.h"
-#include "loadPic.h"
-#include "convolution.h"
+#include "modules/fc/fc.h"
+#include "modules/conv/conv.h"
+#include "nn_utils/nn_utils.h"
 #include "../config/config.h"
 #include "../weightio/weightio.h"
 #include "output.h"
@@ -17,12 +16,12 @@
 
 double** oneHot(DataSet* dataset, int outSize); 
 void freeSamples(Sample* samples, int num_sample, size_t firstD);
-void freeNetwork(Network* network);
-Neuron* create_Neuron(int weightCnt);
-Layer* create_Layer(int neuronCnt, int num_inputs_for_neurons); 
-Network* create_Network(int* layers, uint64_t input_size, int num_layer );
-int forward_propagation(Network* network, double* inputs, uint64_t input_size, int ansIdx, double* loss);
-void backward_propagation(Network *network, double *expected, double learning_rate, double* inputs, uint64_t input_size);
+// void freeNetwork(Network* network);
+// Neuron* create_Neuron(int weightCnt, struct arena* a);
+// Layer* create_Layer(int neuronCnt, int num_inputs_for_neurons, struct arena* a); 
+// Network* create_Network(int* layers, uint64_t input_size, int num_layer, struct arena* a );
+// int forward_propagation(Network* network, double* inputs, uint64_t input_size, int ansIdx, double* loss);
+// void backward_propagation(Network *network, double *expected, double learning_rate, double* inputs, uint64_t input_size);
 void testCase2();
 DataSet* readData();
 
@@ -72,8 +71,12 @@ int main(int argc, char* argv[]) {
 
 	int pooledSize = fmapSize / pSize;
     uint64_t input_size = pooledSize * pooledSize * num_filter;
+
+    // set network type
 	int layers[] = {100, 50, 10};
-	Network* network = create_Network(layers, input_size, 3);
+	Network* network = create_Network(layers, input_size, 3, &a);
+    network->input_size = input_size;
+    network->network_type = FC_CHAIN;
 
     // declare entire architecture of model
     struct Model model;
@@ -134,23 +137,15 @@ int main(int argc, char* argv[]) {
 		for ( int n = currentPos ; n < (currentPos + batch_num ) ; ++n ) {
 			double** flat_pics = alloc2DArr(num_filter, pooledSize * pooledSize); 
             /* runtime tensor */
-            Double2D* filtered_pics = malloc(sizeof(struct Double2D*) * conv->num_filter);
-            Double2D* pooled_pics = malloc(sizeof(struct Double2D*) * conv->num_filter);
+            Double2D* filtered_pics = malloc(sizeof(Double2D) * conv->num_filter);
+            Double2D* pooled_pics = malloc(sizeof(Double2D) * conv->num_filter);
 
 			for ( int i = 0 ; i < conv->num_filter ; ++i ) {
 				filtered_pics[i] = convolute( dataset->samples[n%(dataset->num_sample)].picture, current_pic_h, current_pic_w,
-										conv->filters[i], conv->filter_size, conv->filter_size);
+										conv->filters[i], conv->kernel_h, conv->kernel_w);
 				pooled_pics[i] = pooling(filtered_pics[i], fmapSize, pSize);
 				flat_pics[i] = flatten(pooled_pics[i], pooledSize, pooledSize);
 				reLU_pic(flat_pics, num_filter, pooledSize * pooledSize);
-
-                /*
-				conv->filtered_pics[i] = convolute( dataset->samples[n%(dataset->num_sample)].picture, conv->input_rows, conv->input_cols,
-										conv->filters[i], conv->filter_size, conv->filter_size);
-				conv->pooled_pics[i] = pooling(conv->filtered_pics[i], fmapSize, pSize);
-				flat_pics[i] = flatten(conv->pooled_pics[i], pooledSize, pooledSize);
-				reLU_pic(flat_pics, num_filter, pooledSize * pooledSize);
-                */
 			}
 			double* inputs = flatten(flat_pics, pooledSize * pooledSize, num_filter);
             // send into FC layers
@@ -200,6 +195,7 @@ int main(int argc, char* argv[]) {
 
     arena_destroy(&a);
 
+    /*
 	PlotInfo* plot = (PlotInfo*)malloc(sizeof(PlotInfo));
 	initPlot("C:\\Users\\Benson Ling\\Desktop\\CNN\\MNIST\\plot1.gp",
 			 "Epoch", 
@@ -215,13 +211,18 @@ int main(int argc, char* argv[]) {
 
 	writeData(*plot);
 	freePlt(plot);
-
+    */
 	
-    /*
 	printf("=========================test=========================\n");
 
 	DataSet* t_dataset = (DataSet*)malloc(sizeof(DataSet));
-	
+    struct arena t_a;	
+    arena_init(&t_a); 
+
+    struct Model* t_model = model_load("C:\\Users\\Benson Ling\\Desktop\\CNN\\weights", &t_a);
+
+    save_weight("C:\\Users\\Benson Ling\\Desktop\\CNN\\weight_files\\after_weight", t_model);
+
 	loadImgFile("C:\\Users\\Benson Ling\\Desktop\\CNN\\src\\MNIST\\t10k-images-idx3-ubyte\\t10k-images-idx3-ubyte",
 			    t_dataset, -1);
 
@@ -237,14 +238,37 @@ int main(int argc, char* argv[]) {
 		t_idx_ans[i] = t_dataset->samples[i].answer;	
 	}		
 
+    struct Conv2D* t_conv = t_model->layers_meta[0].u_layer.conv;
+    struct Network* t_network = t_model->layers_meta[1].u_layer.network;
+
 	double t_loss = 0.0;
+
+    double** t_flat_pics = alloc2DArr(num_filter, pooledSize * pooledSize); 
+    /* runtime tensor */
+    Double2D* t_filtered_pics = malloc(sizeof(Double2D) * t_conv->num_filter);
+    Double2D* t_pooled_pics = malloc(sizeof(Double2D) * t_conv->num_filter);
+
 	for ( int n = 0 ; n < t_dataset->num_sample ; ++n ) {
-		Conv2D* t_conv = (Conv2D*)malloc(sizeof(Conv2D));
-		initConv2D(t_conv, 10, 3, 2, MAX_POOL);
-		allocConv(t_conv);
-		manualKernal(t_conv);
-		double** flat_pics = alloc2DArr(num_filter, pooledSize * pooledSize); 
-		for ( int i = 0 ; i < num_filter ; ++i ) {
+        for ( int i = 0 ; i < t_conv->num_filter ; ++i ) {
+            t_filtered_pics[i] = convolute( t_dataset->samples[n%(t_dataset->num_sample)].picture, current_pic_h, current_pic_w,
+                                    t_conv->filters[i], t_conv->kernel_h, t_conv->kernel_w);
+            t_pooled_pics[i] = pooling(t_filtered_pics[i], fmapSize, pSize);
+            t_flat_pics[i] = flatten(t_pooled_pics[i], pooledSize, pooledSize);
+            reLU_pic(t_flat_pics, num_filter, pooledSize * pooledSize);
+        }
+        double* inputs = flatten(t_flat_pics, pooledSize * pooledSize, num_filter);
+        // send into FC layers
+        int predict = forward_propagation(t_network, inputs, input_size, t_idx_ans[n%(t_dataset->num_sample)], &t_loss);
+        if ( predict == t_idx_ans[n%(t_dataset->num_sample)] ) {
+            correct++;
+        }		
+        free(inputs);
+    }
+
+    free2DArr(t_flat_pics, num_filter);
+    free3DArr(t_filtered_pics, t_conv->num_filter, fmapSize);
+    free3DArr(t_pooled_pics, t_conv->num_filter, pooledSize);
+            /*
 				t_conv->filtered_pics[i] = convolute( t_dataset->samples[n].picture, t_conv->input_rows, t_conv->input_cols, t_conv->filters[i], t_conv->filter_size, t_conv->filter_size);
 				t_conv->pooled_pics[i] = pooling(t_conv->filtered_pics[i], fmapSize, pSize);
 			flat_pics[i] = flatten(t_conv->pooled_pics[i], pooledSize, pooledSize);
@@ -258,7 +282,7 @@ int main(int argc, char* argv[]) {
 		freeConv(t_conv);
 		free2DArr(flat_pics, num_filter);
 		free(inputs);
-	}
+        */
 
 	t_loss /= t_dataset->num_sample;
 	printf("final result:\n");
@@ -271,151 +295,9 @@ int main(int argc, char* argv[]) {
 	free2DArr(t_answers, t_dataset->num_sample);
 	freeSamples(t_dataset->samples, t_dataset->num_sample, t_dataset->rows);
 	free(t_dataset);
-	freeNetwork(network);
-    */
-}
 
-void freeNetwork(Network* network) {
-	for ( int i = 0; i < network->layer_count ; ++i ) {
-		Layer* layer = &(network->layers[i]);
-		for ( int j = 0 ; j < layer->num_neurons ; ++j ) {
-			Neuron* neuron = &(layer->neurons[j]);
-			free(neuron->weights);
-		}
-		free(layer->neurons);
-		free(layer->outputs);
-	}	
-	free(network->layers);
-	free(network);
-}		
-
-Neuron* create_Neuron(int weightCnt) {
-	Neuron* neuron = (Neuron*)malloc(sizeof(Neuron));
-	neuron->num_weight = weightCnt;
-	neuron->weights = (double*)malloc(weightCnt * sizeof(double));
-	for ( int i = 0 ; i < weightCnt ; ++i ) {
-		neuron->weights[i] = ((double) rand() * 2 / RAND_MAX + (-1)) * 0.01;   // -0.01 to 0.01
-	}		
-	neuron->bias = 1;
-	neuron->output = 0.0;
-	neuron->delta = 0.0;
-	return neuron;
-}		
-
-Layer* create_Layer(int neuronCnt, int num_inputs_for_neurons) {
-	Layer* layer = (Layer*)malloc(sizeof(Layer));
-	layer->num_neurons = neuronCnt;
-	layer->outputs = (double*)malloc(neuronCnt * sizeof(double));
-	layer->neurons = (Neuron*)malloc(neuronCnt * sizeof(Neuron));
-    layer->input_dim = num_inputs_for_neurons;
-    layer->has_bias = 1;     // default have bias
-	for ( int i = 0 ; i < neuronCnt ; ++i ) {
-		layer->neurons[i] = *create_Neuron(num_inputs_for_neurons);		
-	}		
-	return layer;
-}		
-
-Network* create_Network(int* layers, uint64_t input_size, int num_layer ) {
-	Network* network = (Network*)malloc(sizeof(Network));
-	network->layer_count = num_layer;
-	network->layers = (Layer*)malloc(num_layer * sizeof(Layer));
-
-	for ( int i = 0 ; i < num_layer ; ++i ) {
-		// layers[0] is the input of the neural network	
-		int num_inputs = (i == 0) ? input_size : layers[i-1];	
-		network->layers[i] = *create_Layer(layers[i], num_inputs);
-	}		
-
-	return network;
-}		
-
-int forward_propagation(Network* network, double* inputs, uint64_t input_size, int ansIdx, double* loss) {
-	
-	for ( int i = 0; i < network->layer_count ; ++i ) {
-		Layer* layer = &(network->layers[i]);
-		for ( int j = 0 ; j < layer->num_neurons ; ++j ) {
-			Neuron* neuron = &(layer->neurons[j]);
-			double sum = neuron->bias;
-            if (i == 0) {
-                for ( uint64_t input_i = 0 ; input_i < input_size ; ++input_i ) {
-                    sum += neuron->weights[input_i] * inputs[input_i];
-                }
-            }
-            else {
-                for ( int k = 0 ; k < neuron->num_weight ; ++k ) {
-                    sum += neuron->weights[k] * network->layers[i-1].outputs[k]; 
-                }		
-            }
-			// neuron->output = reLU(sum);
-			if ( i < network->layer_count - 1 ) {
-				neuron->output = reLU(sum);
-			}		
-			else {
-				neuron->output = sum;
-			}
-			layer->outputs[j] = neuron->output;
-		}		
-	}		
-	Layer* output_layer = &(network->layers[network->layer_count-1]);
-	softMax(output_layer->outputs, output_layer->num_neurons);
-	*loss += crossEntropyLoss(ansIdx, output_layer->outputs);
-
-	int answer = findMax(output_layer->num_neurons, output_layer->outputs);
-	return answer;
-}		
-
-void backward_propagation(Network *network, double *expected, double learning_rate,
-                          double* inputs, uint64_t input_size) {
-    Layer* output_layer = &network->layers[network->layer_count - 1];
-
-    /* output delta: softmax + cross entropy */
-    for (int j = 0; j < output_layer->num_neurons; ++j) {
-        Neuron* neuron = &output_layer->neurons[j];
-        double output = output_layer->outputs[j];
-        neuron->delta = (output - expected[j]);
-    }
-
-    /* hidden deltas */
-    for (int i = network->layer_count - 2; i >= 0; --i) {
-        Layer *layer = &network->layers[i];
-        Layer *next_layer = &network->layers[i + 1];
-
-        for (int j = 0; j < layer->num_neurons; ++j) {
-            double error = 0.0;
-            for (int k = 0; k < next_layer->num_neurons; ++k) {
-                error += next_layer->neurons[k].weights[j] * next_layer->neurons[k].delta;
-            }
-            layer->neurons[j].delta = error * reLU_diff(layer->neurons[j].output);
-        }
-    }
-
-    /* update */
-    for (int i = 0; i < network->layer_count; ++i) {
-        Layer *layer = &network->layers[i];
-
-        for (int j = 0; j < layer->num_neurons; ++j) {
-            Neuron *neuron = &layer->neurons[j];
-
-            if (i == 0) {
-                if ((uint64_t)neuron->num_weight != input_size) {
-                    printf("[ERROR] input_size mismatch in layer 0: %d vs %" PRIu64 "\n",
-                           neuron->num_weight, (unsigned long long)input_size);
-                    return;
-                }
-                for (int k = 0; k < neuron->num_weight; ++k) {
-                    neuron->weights[k] -= learning_rate * neuron->delta * inputs[k];
-                }
-            } else {
-                for (int k = 0; k < neuron->num_weight; ++k) {
-                    neuron->weights[k] -= learning_rate * neuron->delta * network->layers[i - 1].outputs[k];
-                }
-            }
-
-            if (layer->has_bias) {
-                neuron->bias -= learning_rate * neuron->delta;
-            }
-        }
-    }
+    arena_destroy(&t_a);
+	// freeNetwork(network);
 }
 
 void freeSamples(Sample* samples, int num_sample, size_t firstD) {

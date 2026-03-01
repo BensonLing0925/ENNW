@@ -5,6 +5,9 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include "../src/structDef.h"
+#include "../src/modules/conv/conv.h"
+#include "../src/modules/fc/fc.h"
 
 #define FIXED_HEADER_SIZE 68u
 
@@ -27,12 +30,6 @@
 #define WEIGHT_FAIL_READ 7
 #define WEIGHT_UNKNOWN_LAYER_TYPE 8
 
-
-
-struct Conv2D;
-struct Network;
-struct Model;
-
 struct Binary_Header {
     char magic[4]; 
     uint32_t ver;
@@ -49,6 +46,7 @@ struct Binary_Header {
 struct Binary_Net_Layer_Meta {
     uint32_t network_type;
     uint32_t fc_layer_count;
+    uint32_t input_size;
     uint32_t reserved[2];
 };
 
@@ -86,7 +84,13 @@ struct Binary_Layer_Meta {
     } u_layer;
 };
 
+typedef struct PayloadEntry {
+    uint32_t layer_type;     // LAYER_CONV2D / LAYER_FC (network block)
+    uint64_t payload_bytes;  // current block's payload length
+    uint64_t payload_offset; // payload offset（absolute file offset）
+} PayloadEntry;
+
 int save_weight(const char* path, struct Model* model);
-int load_weight(const char* weight_path, struct Model* m);
+struct Model* model_load(const char* path, struct arena* a);
 
 #endif

@@ -1,30 +1,28 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include "structDef.h"
-#include "matrixOps.h"
+#include "conv.h"
+#include "../../nn_utils/nn_utils.h"
 #include "../mem/arena.h"
 
 void initConv2D(Conv2D* conv, int num_filter, int fSize, int pSize,
 				PoolingType pType) {
     conv->in_channels = 1;
 	conv->num_filter = num_filter;
-	conv->filter_size = fSize;
-	conv->pooling_size = pSize;
+    conv->pooling_h = pSize;
+    conv->pooling_w = pSize;
 	conv->pType = pType;
     conv->stride_h = 1;
     conv->stride_w = 1;
     conv->padding_h = 0;
     conv->padding_w = 0;
     conv->has_bias = 0;
+    conv->kernel_h = fSize;
+    conv->kernel_w = fSize;
 }		
 
 void allocConv(Conv2D* conv, int input_rows, int input_cols) {
-	int fPicRowSize = input_rows - conv->filter_size + 1;   
-	int fPicColSize = input_cols - conv->filter_size + 1;   
-	int pooled_size = fPicRowSize / conv->pooling_size;
-	conv->filters = alloc3DArr(conv->num_filter, conv->filter_size, conv->filter_size);
-	conv->filtered_pics = alloc3DArr(conv->num_filter, fPicRowSize, fPicColSize);
-	conv->pooled_pics = alloc3DArr(conv->num_filter, pooled_size, pooled_size);
+	conv->filters = alloc3DArr(conv->num_filter, conv->kernel_h, conv->kernel_w);
 }		
 
 // called after initConv and allocConv
@@ -95,8 +93,8 @@ void manualKernal(Conv2D* conv) {
 	};
 
 	for ( int filterCnt = 0 ; filterCnt < num_filter ; ++filterCnt ) {
-		for ( int fRowSize = 0 ; fRowSize < conv->filter_size ; ++fRowSize ) {  // square filter assumed
-			for ( int fColSize = 0 ; fColSize < conv->filter_size ; ++fColSize ) {  // square filter assumed
+		for ( int fRowSize = 0 ; fRowSize < conv->kernel_h ; ++fRowSize ) {  // square filter assumed
+			for ( int fColSize = 0 ; fColSize < conv->kernel_w ; ++fColSize ) {  // square filter assumed
 				conv->filters[filterCnt][fRowSize][fColSize] = kernels[filterCnt][fRowSize][fColSize];
 			}		
 		}		
@@ -105,7 +103,7 @@ void manualKernal(Conv2D* conv) {
 }		
 
 void freeConv(Conv2D* conv) {
-	free3DArr(conv->filters, conv->num_filter, conv->filter_size);
+	free3DArr(conv->filters, conv->num_filter, conv->kernel_h);
     free(conv);
 }
 
