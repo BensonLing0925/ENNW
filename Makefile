@@ -22,6 +22,7 @@ MODULES_DIR := $(SRC_DIR)/modules
 FC_DIR      := $(MODULES_DIR)/fc
 CONV_DIR    := $(MODULES_DIR)/conv
 NNUTILS_DIR := $(SRC_DIR)/nn_utils
+ERROR_DIR	:= $(SRC_DIR)/error
 
 CFG_DIR     := config
 CJSON_DIR   := $(CFG_DIR)/cJSON
@@ -32,7 +33,7 @@ TARGET := nn$(EXEEXT)
 
 # ---- Include paths ----
 INCLUDES := -I$(SRC_DIR) -I$(MODULES_DIR) -I$(FC_DIR) -I$(CONV_DIR) -I$(NNUTILS_DIR) \
-            -I$(CFG_DIR) -I$(CJSON_DIR) -I$(MEM_DIR) -I$(WEIGHTIO_DIR)
+            -I$(CFG_DIR) -I$(CJSON_DIR) -I$(MEM_DIR) -I$(WEIGHTIO_DIR) -I$(ERROR_DIR)
 
 # ---- Common flags ----
 CFLAGS_COMMON := -Wall -Wextra $(INCLUDES)
@@ -61,7 +62,8 @@ SRC_C23 := $(wildcard $(SRC_DIR)/*.c) \
            $(wildcard $(NNUTILS_DIR)/*.c) \
            $(CFG_DIR)/config.c \
            $(MEM_DIR)/arena.c \
-           $(WEIGHTIO_DIR)/weightio.c
+           $(WEIGHTIO_DIR)/weightio.c \
+		   $(ERROR_DIR)/rt_error.c
 
 # 2) cJSON source (compile as C89)
 SRC_C89 := $(CJSON_DIR)/cJSON.c

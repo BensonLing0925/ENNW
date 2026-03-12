@@ -91,6 +91,6 @@ typedef struct PayloadEntry {
 } PayloadEntry;
 
 int save_weight(const char* path, struct Model* model);
-struct Model* model_load(const char* path, struct arena* a);
+int model_load(const char* path, struct arena* a, struct Model* model);
 
 #endif

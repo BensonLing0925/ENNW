@@ -1,5 +1,6 @@
 #include "weightio.h"
 #include "../mem/arena.h"
+#include "../src/error/rt_error.h"
 #include "../src/modules/fc/fc.h"
 #include "../src/modules/conv/conv.h"
 #include "../src/structDef.h"
@@ -72,8 +73,7 @@ uint64_t layer_param_calculate(struct LayerMeta* layer) {
             num_layer_param += conv2d_param_calculate(layer->u_layer.conv);
             break;
         default:
-            printf("Unknown Layer Type at \"layer_param_calculate\"");
-            break;
+            RT_FAIL(RT_EINVAL, "Unknown Layer Type: %u", layer->layer_type);
     }
     return num_layer_param;
 }
@@ -82,8 +82,9 @@ uint64_t layer_param_calculate(struct LayerMeta* layer) {
 // fc_meta is an array
 int net_layer_meta_create(struct Binary_Layer_Meta* blm, struct LayerMeta* net_lm) {
     if (blm->layer_type != net_lm->layer_type) {
-        printf("[ERROR] incompatible Meta conversion at \"net_layer_meta_create\"");
-        return -1;
+        RT_FAIL(RT_EINVAL, 
+                "Incompatible meta conversion between %u and %u", 
+                blm->layer_type, net_lm->layer_type);
     }
     struct Binary_Net_Layer_Meta* meta = &(blm->u_layer.net_layer_meta);
     struct Network* net = net_lm->u_layer.network;
@@ -104,9 +105,11 @@ int fc_layer_meta_create(struct Layer* net_layer, struct Binary_FC_Layer_Meta* f
 }
 
 int conv2d_layer_meta_create(struct Binary_Layer_Meta* blm, struct LayerMeta* lm) {
+
     if (blm->layer_type != lm->layer_type) {
-        printf("[ERROR] incompatible Meta conversion at \"conv2d_layer_meta_create\"");
-        return -1;
+        RT_FAIL(RT_EINVAL, 
+                "Incompatible meta conversion between %u and %u", 
+                blm->layer_type, lm->layer_type);
     }
     struct Binary_Conv2D_Layer_Meta* meta = &(blm->u_layer.conv2d_layer_meta);
     struct Conv2D* lm_conv = lm->u_layer.conv;
@@ -144,26 +147,24 @@ int layer_meta_create(struct Binary_Layer_Meta* blm, struct LayerMeta* lm) {
             blm->payload_bytes = blm->param_count * sizeof(double);
             break;
         default:
-            printf("Unknown Layer Type at \"layer_meta_create\"");
-            return -1;
+            RT_FAIL(RT_EINVAL, "Unknown layer meta data type: %u", lm->dtype);
     }
 
     switch (blm->layer_type) {
         case LAYER_FC:
-            if (net_layer_meta_create(blm, lm) != 0) {
+            if (net_layer_meta_create(blm, lm) < 0) {
                 return -1;
             } 
             break;
         case LAYER_CONV2D:
-            if (conv2d_layer_meta_create(blm, lm) != 0) {
+            if (conv2d_layer_meta_create(blm, lm) < 0) {
                 return -1;
             }
             break;
         case LAYER_POOL:
             break;
         default:
-            perror("[ERROR] Unknown Binary Layer Type at \"layer_meta_create\"");
-            return -1;
+            RT_FAIL(RT_EINVAL, "Unknown binary layer type: %u", blm->layer_type);
     }
 
     return 0;
@@ -221,9 +222,8 @@ int header_write(FILE* fptr, const struct Binary_Header* bh) {
     return 0;
 
 write_fail:
-    perror("[ERROR] write at \"header_write\"");
     fclose(fptr);
-    return -1;
+    RT_FAIL(RT_EIO, "Write fail");
 }
 
 int fc_meta_write(FILE* fptr, const struct Binary_FC_Layer_Meta* fc_blm) {
@@ -237,9 +237,8 @@ int fc_meta_write(FILE* fptr, const struct Binary_FC_Layer_Meta* fc_blm) {
     return 0;
 
 write_fail:
-    perror("[ERROR] write fail at \"fc_meta_write\"");
     fclose(fptr);
-    return -1;
+    RT_FAIL(RT_EIO, "Write fail");
 }
 
 int net_meta_write(FILE* fptr,
@@ -248,30 +247,33 @@ int net_meta_write(FILE* fptr,
 {
     if (!fptr || !net_blm || !net) return -1;
     if (net_blm->fc_layer_count != net->layer_count) {
-        fprintf(stderr, "[ERROR] fc_layer_count mismatch in net_meta_write\n");
-        return -1;
+        RT_FAIL(RT_EINVAL, 
+                "Layer count mismatch between %u and %u", 
+                net_blm->fc_layer_count, net->layer_count);
     }
 
-    if (write_u32(fptr, net_blm->network_type)   < 0) return -1;
-    if (write_u32(fptr, net_blm->fc_layer_count) < 0) return -1;
-    if (write_u32(fptr, net_blm->input_size) < 0) return -1;
-    if (write_bytes(fptr, net_blm->reserved, sizeof(net_blm->reserved)) < 0) return -1;
+    if (write_u32(fptr, net_blm->network_type)   < 0) goto write_fail;
+    if (write_u32(fptr, net_blm->fc_layer_count) < 0) goto write_fail;
+    if (write_u32(fptr, net_blm->input_size) < 0) goto write_fail;
+    if (write_bytes(fptr, net_blm->reserved, sizeof(net_blm->reserved)) < 0) goto write_fail;
 
     for (uint32_t i = 0; i < net_blm->fc_layer_count; ++i) {
         struct Binary_FC_Layer_Meta fc_meta;
 
-        if (fc_layer_meta_create(&net->layers[i], &fc_meta) < 0) {
-            fprintf(stderr, "[ERROR] fc_layer_meta_create failed at i=%u\n", i);
-            return -1;
-        }
+        if (fc_layer_meta_create(&net->layers[i], &fc_meta) < 0) return -1;
         if (fc_meta_write(fptr, &fc_meta) < 0) return -1;
     }
 
     return 0;
+
+write_fail:
+    fclose(fptr);
+    RT_FAIL(RT_EIO, "Write fail");
 }
 
 int conv2d_meta_write(FILE *fptr, const struct Binary_Conv2D_Layer_Meta *m) {
-    if (!fptr || !m) return -1;
+    if (!fptr || !m)
+        RT_FAIL(RT_EINVAL, "Assignment pointer is NULL");
 
     if (write_u32(fptr, m->num_filter)    < 0) goto write_fail;
     if (write_u32(fptr, m->in_channels)   < 0) goto write_fail;
@@ -293,8 +295,8 @@ int conv2d_meta_write(FILE *fptr, const struct Binary_Conv2D_Layer_Meta *m) {
     return 0;
 
 write_fail:
-    perror("[ERROR] write fail at \"conv_meta_write\"");
-    return -1;
+    fclose(fptr);
+    RT_FAIL(RT_EIO, "Write fail");
 }
 
 int layer_meta_write(FILE* fptr, 
@@ -318,18 +320,14 @@ int layer_meta_write(FILE* fptr,
             break;
 
         default:
-            fprintf(stderr,
-                    "[ERROR] unknown layer type (%u) at \"layer_meta_write\"",
-                    (unsigned)blm->layer_type);
-            goto write_fail;
+            RT_FAIL(RT_EINVAL, "Unknown binary layer type: %u", blm->layer_type);
     }
 
     return 0;
 
 write_fail:
-    perror("[ERROR] write fail at \"layer_meta_write\"");
     fclose(fptr);
-    return -1;
+    RT_FAIL(RT_EIO, "Write fail");
 }
 
 int fc_payload_write(FILE* fptr, const struct Layer* layer) {
@@ -345,7 +343,7 @@ int fc_payload_write(FILE* fptr, const struct Layer* layer) {
 
 write_fail:
     fclose(fptr);
-    return -1;
+    RT_FAIL(RT_EIO, "Write fail");
 }
 
 int conv2d_payload_write(FILE* fptr, const struct Conv2D* conv) {
@@ -366,7 +364,7 @@ int conv2d_payload_write(FILE* fptr, const struct Conv2D* conv) {
     return 0;
 write_fail:
     fclose(fptr);
-    return -1;
+    RT_FAIL(RT_EIO, "Write fail");
 }
 
 int payload_write(FILE* fptr, struct LayerMeta* lm) {
@@ -374,30 +372,25 @@ int payload_write(FILE* fptr, struct LayerMeta* lm) {
     switch (lm->layer_type) {
         case LAYER_FC:
             for ( int i = 0 ; i < lm->u_layer.network->layer_count ; ++i ) {
-                if (fc_payload_write(fptr, &lm->u_layer.network->layers[i]) != 0) goto write_fail;
+                if (fc_payload_write(fptr, &lm->u_layer.network->layers[i]) < 0) return -1;
             }
             break;
         case LAYER_CONV2D:
-            if (conv2d_payload_write(fptr, lm->u_layer.conv) != 0) goto write_fail;
+            if (conv2d_payload_write(fptr, lm->u_layer.conv) != 0) return -1;
         default:
-            break;
+            RT_FAIL(RT_EINVAL, "Unknown layer type: %u", lm->layer_type);
     }
     long end = ftell(fptr);
     fprintf(stderr,
         "[DEBUG] payload size: wrote=%ld\n",
         end - start);
     return 0;
-
-write_fail:
-    fclose(fptr);
-    return -1;
 }
 
 int save_weight(const char* path, struct Model* model) {
     FILE* fptr = fopen(path, "wb");
     if (!fptr) {
-        perror("[ERROR] fopen at \"save_weight\"");
-        return -1;
+        RT_FAIL(RT_EIO, "fopen error");
     }
 
     struct Binary_Header bh;
@@ -411,12 +404,11 @@ int save_weight(const char* path, struct Model* model) {
     }
     for ( int j = 0 ; j < model->num_total_layers ; ++j )
         if (payload_write(fptr, &model->layers_meta[j]) < 0) goto save_fail;
+
     fclose(fptr);
     return 0;
 
 save_fail:
-    fclose(fptr);
-    perror("[ERROR] save fail at \"save_weight\"");
     return -1;
 }
 
@@ -425,14 +417,14 @@ int header_check(FILE* fptr, struct Model* model) {
     char magic[4];
     if (read_bytes(fptr, magic, 4)   < 0) goto read_fail;
     if (memcmp(magic, "BNNW", 4) != 0) {
-        return -WEIGHT_ERR_MAGIC;
+        RT_FAIL(RT_EINVAL, "Magic error");
     }
 
     // version (1 is the version number)
     uint32_t version;
     if (read_u32(fptr, &version)  < 0) goto read_fail;
     if (version != 1) {
-        return -WEIGHT_ERR_VERSION;
+        RT_FAIL(RT_EINVAL, "Version error");
     }
 
     uint32_t endian;
@@ -440,19 +432,19 @@ int header_check(FILE* fptr, struct Model* model) {
     if (endian != 1) {
         // do endian conversion
         // return error for now
-        return -WEIGHT_ERR_FORMAT;
+        RT_FAIL(RT_EINVAL, "Endian error");
     }
 
     uint32_t dtype;
     if (read_u32(fptr, &dtype)  < 0) goto read_fail;
     if (dtype != 2) {
-        return -WEIGHT_ERR_DTYPE;
+        RT_FAIL(RT_EINVAL, "Header data type error");
     }
 
     uint32_t model_type;
     if (read_u32(fptr, &model_type)  < 0) goto read_fail;
     if (model_type >= 3) {
-        return -WEIGHT_ERR_FORMAT;
+        RT_FAIL(RT_EINVAL, "Unknown model type");
     }
 
     uint32_t layer_count;
@@ -473,81 +465,77 @@ int header_check(FILE* fptr, struct Model* model) {
 
 read_fail:
     fclose(fptr);
-    perror("[ERROR] read fail at \"header_peek\"");
-    return -WEIGHT_FAIL_READ;
+    RT_FAIL(RT_EIO, "Read fail");
 }
 
 int layer_common_header_check(FILE* fptr, uint32_t* layer_type, struct PayloadEntry* payload_entry) {
     if (read_u32(fptr, layer_type) < 0)    goto read_fail;
     if (*layer_type >= 3) {
-        perror("[ERROR] Unknown layer_type at \"layer_common_header_check\"");
-        return -WEIGHT_UNKNOWN_LAYER_TYPE;
+        RT_FAIL(RT_EINVAL, "Unknown layer type");
     }
 
     static uint32_t prev_layer_index = 0;
     uint32_t layer_index;
     if (read_u32(fptr, &layer_index) < 0)    goto read_fail;
     if (layer_index != 0 && (layer_index != prev_layer_index + 1)) {
-        perror("[ERROR] Incontiguous layer index at \"layer_common_header_check\"");
-        return -WEIGHT_ERR_FORMAT;
+        fprintf(stdout, "[WARNING] Incontiguous layer index at \"__func__\"");
     }
 
     uint64_t param_count;
     if (read_u64(fptr, &param_count) < 0)   goto read_fail;
     // check param_count is equal to layer's supposed param_count
-    printf("layer_common_header_check param_count: %I64u\n", param_count);
+    // printf("layer_common_header_check param_count: %I64u\n", param_count);
 
     uint64_t payload_bytes;
     if (read_u64(fptr, &payload_bytes) < 0) goto read_fail;
     payload_entry->payload_bytes = payload_bytes;
-    printf("layer_common_header_check payload_bytes: %I64u\n", param_count * sizeof(double));
+    // printf("layer_common_header_check payload_bytes: %I64u\n", param_count * sizeof(double));
 
     return 0;
 
 read_fail:
     fclose(fptr);
-    perror("[ERROR] read fail at \"model_alloc_from_weight_file\"");
-    return -1;
+    RT_FAIL(RT_EIO, "Read fail");
 }
 
 int conv_meta_load(FILE* fptr, struct LayerMeta* layer, struct arena* a) {
     layer->layer_type = LAYER_CONV2D;
 
     uint32_t num_filter;
-    if (read_u32(fptr, &num_filter) < 0)    return -1;
+    if (read_u32(fptr, &num_filter) < 0)    goto read_fail;
 
     uint32_t in_channels;
-    if (read_u32(fptr, &in_channels) < 0)    return -1;
+    if (read_u32(fptr, &in_channels) < 0)    goto read_fail;
 
     uint32_t kernel_h;
-    if (read_u32(fptr, &kernel_h) < 0)    return -1;
+    if (read_u32(fptr, &kernel_h) < 0)    goto read_fail;
 
     uint32_t kernel_w;
-    if (read_u32(fptr, &kernel_w) < 0)    return -1;
+    if (read_u32(fptr, &kernel_w) < 0)    goto read_fail;
 
     uint32_t stride_h;
-    if (read_u32(fptr, &stride_h) < 0)    return -1;
+    if (read_u32(fptr, &stride_h) < 0)    goto read_fail;
 
     uint32_t stride_w;
-    if (read_u32(fptr, &stride_w) < 0)    return -1;
+    if (read_u32(fptr, &stride_w) < 0)    goto read_fail;
 
     uint32_t padding_h;
-    if (read_u32(fptr, &padding_h) < 0)    return -1;
+    if (read_u32(fptr, &padding_h) < 0)   goto read_fail;
 
     uint32_t padding_w;
-    if (read_u32(fptr, &padding_w) < 0)    return -1;
+    if (read_u32(fptr, &padding_w) < 0)    goto read_fail;
 
     uint32_t has_bias;
-    if (read_u32(fptr, &has_bias) < 0)    return -1;
+    if (read_u32(fptr, &has_bias) < 0)    goto read_fail;
 
     uint32_t pooling_type;
-    if (read_u32(fptr, &pooling_type) < 0)    return -1;
+    if (read_u32(fptr, &pooling_type) < 0)    goto read_fail;
 
     uint32_t pooling_h;
-    if (read_u32(fptr, &pooling_h) < 0)    return -1;
+    if (read_u32(fptr, &pooling_h) < 0)    goto read_fail;
 
     uint32_t pooling_w;
-    if (read_u32(fptr, &pooling_w) < 0)    return -1;
+    if (read_u32(fptr, &pooling_w) < 0)    goto read_fail;
 
     layer->u_layer.conv = (struct Conv2D*)arena_alloc(a, sizeof(struct Conv2D));
     struct Conv2D* conv = layer->u_layer.conv;
@@ -571,6 +559,10 @@ int conv_meta_load(FILE* fptr, struct LayerMeta* layer, struct arena* a) {
 
     fseek(fptr, 4 * sizeof(uint32_t), SEEK_CUR);
     return 0;
+
+read_fail:
+    fclose(fptr);
+    RT_FAIL(RT_EIO, "Read fail");
 }
 
 int net_meta_peek(FILE* fptr, int* layers, uint32_t fc_layer_count) {
@@ -579,7 +571,10 @@ int net_meta_peek(FILE* fptr, int* layers, uint32_t fc_layer_count) {
 
     for ( uint32_t i = 0 ; i < fc_layer_count ; ++i ) {
         uint32_t num_neurons;
-        if (read_u32(fptr, &num_neurons) < 0)    return -1;
+        if (read_u32(fptr, &num_neurons) < 0) {
+            fclose(fptr);
+            RT_FAIL(RT_EIO, "Read fail");
+        }
         fseek(fptr, 3 * sizeof(uint32_t), SEEK_CUR);
         layers[i] = num_neurons;
     }
@@ -591,13 +586,13 @@ int net_meta_peek(FILE* fptr, int* layers, uint32_t fc_layer_count) {
 int fc_meta_load(FILE* fptr, struct Layer* layer) {
 
     uint32_t num_neurons;
-    if (read_u32(fptr, &num_neurons) < 0)    return -1;
+    if (read_u32(fptr, &num_neurons) < 0)   goto read_fail;
 
     uint32_t input_dim;
-    if (read_u32(fptr, &input_dim) < 0)    return -1;
+    if (read_u32(fptr, &input_dim) < 0)    goto read_fail;
 
     uint32_t has_bias;
-    if (read_u32(fptr, &has_bias) < 0)    return -1;
+    if (read_u32(fptr, &has_bias) < 0)    goto read_fail;
 
     // reserved
     fseek(fptr, sizeof(uint32_t), SEEK_CUR);
@@ -607,6 +602,10 @@ int fc_meta_load(FILE* fptr, struct Layer* layer) {
     layer->has_bias = has_bias;
 
     return 0;
+
+read_fail:
+    fclose(fptr);
+    RT_FAIL(RT_EIO, "Read fail");
 }
 
 int net_meta_load(FILE* fptr, struct LayerMeta* lm, struct arena* a) {
@@ -641,7 +640,7 @@ int net_meta_load(FILE* fptr, struct LayerMeta* lm, struct arena* a) {
 read_fail:
     fclose(fptr);
     free(layers);
-    return -1;
+    RT_FAIL(RT_EIO, "Read fail");
 }
 
 int load_conv_weight(FILE* fptr, struct Conv2D* conv) {
@@ -650,7 +649,10 @@ int load_conv_weight(FILE* fptr, struct Conv2D* conv) {
         for ( int j = 0 ; j < conv->kernel_h ; ++j ) {
             for ( int k = 0 ; k < conv->kernel_w ; ++k ) {
                 double weight;
-                if (read_f64(fptr, &weight) < 0) return -1;
+                if (read_f64(fptr, &weight) < 0) {
+                    fclose(fptr);
+                    RT_FAIL(RT_EIO, "Read fail");
+                }
                 conv->filters[i][j][k] = weight;
             }
         }
@@ -667,24 +669,27 @@ int load_net_weight(FILE* fptr, struct Network* network) {
             struct Neuron* neuron = &layer->neurons[j];
             for ( int k = 0 ; k < neuron->num_weight ; ++k ) {
                 double weight;
-                if (read_f64(fptr, &weight) < 0) return -1;
+                if (read_f64(fptr, &weight) < 0) goto read_fail;
                 neuron->weights[k] = weight;
             }
             if (has_bias) {
                 double bias;
-                if (read_f64(fptr, &bias) < 0) return -1;
+                if (read_f64(fptr, &bias) < 0) goto read_fail;
                 neuron->bias = bias;
             }
         }
     }
     return 0;
+
+read_fail:
+    fclose(fptr);
+    RT_FAIL(RT_EIO, "Read fail");
 }
 
 int load_weight(FILE* fptr, struct Model* model, struct PayloadEntry* payload_entry) {
 
     if (!model) {
-        perror("[ERROR] model is NULL at \"load_weight\"");
-        return -1;
+        RT_FAIL(RT_EINVAL, "Model is NULL");
     }
 
     for ( int i = 0 ; i < model->num_total_layers ; ++i ) {
@@ -700,15 +705,14 @@ int load_weight(FILE* fptr, struct Model* model, struct PayloadEntry* payload_en
     return 0;
 }
 
-struct Model* model_load(const char* path, struct arena* a) {
+int model_load(const char* path, struct arena* a, struct Model* model) {
 
     FILE* fptr = fopen(path, "rb");
     if (!fptr) {
-        perror("[ERROR] fopen at \"model_load\"");
-        goto read_fail;
+        RT_FAIL(RT_EINVAL, "fopen error");
     }
     
-    struct Model* model = arena_alloc(a, sizeof(struct Model)); 
+    model = arena_alloc(a, sizeof(struct Model)); 
 
     if (header_check(fptr, model)   < 0) goto read_fail;
     model->layers_meta = arena_alloc(a, sizeof(struct LayerMeta) * model->num_total_layers);
@@ -746,14 +750,10 @@ struct Model* model_load(const char* path, struct arena* a) {
 
     if (load_weight(fptr, model, payload_entry) < 0) goto read_fail;
 
-    return model;
+    return 0;
 
 read_fail:
     fclose(fptr);
-    perror("[ERROR] read fail at \"model_load\"");
-    return NULL;
+    return -1;
 }
 
-
-
-    
