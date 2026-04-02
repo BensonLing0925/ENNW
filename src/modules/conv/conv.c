@@ -2,31 +2,64 @@
 #include <stdlib.h>
 #include "structDef.h"
 #include "conv.h"
-#include "../../nn_utils/nn_utils.h"
 #include "../mem/arena.h"
+#include "../../nn_utils/nn_utils.h"
+#include "../../ops/tensor.h"
+#include "../../ops/tensor_ops.h"
+#include "../../runtime/rt_context.h"
 
-void initConv2D(Conv2D* conv, int num_filter, int fSize, int pSize,
-				PoolingType pType) {
-    conv->in_channels = 1;
-	conv->num_filter = num_filter;
-    conv->pooling_h = pSize;
-    conv->pooling_w = pSize;
-	conv->pType = pType;
-    conv->stride_h = 1;
-    conv->stride_w = 1;
-    conv->padding_h = 0;
-    conv->padding_w = 0;
-    conv->has_bias = 0;
-    conv->kernel_h = fSize;
-    conv->kernel_w = fSize;
+struct tk_conv2d* tk_conv2D_create(struct tk_rt_ctx* ctx) {
+    struct tk_conv2d* conv = arena_alloc(ctx->meta_arena, sizeof(struct tk_conv2d));
+    return conv;
+}
+
+void tk_conv2d_init(struct tk_conv2d* conv, struct tk_conv2d_config config) {
+    conv->num_filter = config.num_filter;
+    conv->kernel_h   = config.kernel_h;
+    conv->kernel_w   = config.kernel_w;
+    conv->stride_h  = config.stride_h;
+    conv->stride_w  = config.stride_w;
+    conv->padding_h = config.padding_h;
+    conv->padding_w = config.padding_w;
+    
+    // set some reasonable value if not setted in config
+    conv->input_c = 1;
+    conv->has_bias  = 0;
+}
+
+// conv->input_h/w and kernel_w/h should be setted before calling this
+// function
+void tk_conv2d_setup(struct tk_conv2d* conv, struct tk_tensor* input) {
+
+    // input information (should be 3D. If gray scale, the first dimension saet to 1)
+    conv->input_c = input->shape[0];
+    conv->input_h = input->shape[1];
+    conv->input_w = input->shape[2];
+    conv->dtype = input->dtype;
+
+    // inferred information
+    conv->filtered_h = (conv->input_h + 2 * conv->padding_h - conv->kernel_h) / conv->stride_h + 1;
+    conv->filtered_w = (conv->input_w + 2 * conv->padding_w - conv->kernel_w) / conv->stride_w + 1;
+    conv->padded_h = conv->input_h + 2 * conv->padding_h;
+    conv->padded_w = conv->input_w + 2 * conv->padding_w;
+
+}
+
+int tk_conv2d_load_weights(struct tk_conv2d* conv, FILE* fp) {
+    if (!fp)
+        RT_FAIL(RT_EINVAL, "File pointer is NULL");
+    uint64_t size = conv->input_c * conv->kernel_h * conv->kernel_w * tk_get_dtype_size(conv->dtype);
+    int err = tk_tensor_load_data(conv->filters, fp, size);
+    return err;
+}
+
+void tk_conv2d_alloc(struct tk_rt_ctx* ctx, tk_conv2d* conv) {
+    conv->filters = tk_ws_tensor_alloc(ctx->ws, ctx->meta_arena, conv->dtype, (int[]){conv->num_filter, conv->input_c, conv->kernel_h, conv->kernel_w}, 4);
 }		
 
-void allocConv(Conv2D* conv, int input_rows, int input_cols) {
-	conv->filters = alloc3DArr(conv->num_filter, conv->kernel_h, conv->kernel_w);
-}		
-
+/*
 // called after initConv and allocConv
-void manualKernal(Conv2D* conv) {
+void manualKernal(tk_conv2d* conv) {
 
 	int num_filter = conv->num_filter;
 	double kernels[10][3][3] = {
@@ -99,55 +132,25 @@ void manualKernal(Conv2D* conv) {
 			}		
 		}		
 	}		
-
 }		
+*/
 
-void freeConv(Conv2D* conv) {
-	free3DArr(conv->filters, conv->num_filter, conv->kernel_h);
-    free(conv);
+// called after conv_bind_input
+struct tk_tensor* tk_conv_forward(struct tk_rt_ctx* ctx, struct tk_conv2d* conv, struct Dataset* dataset) {
+
+    enum tk_dtype dtype = TK_F64;
+    struct tk_tensor* padded_pics = tk_ws_tensor_alloc(ctx->ws, ctx->meta_arena, dtype, (int[]){conv->num_filter, conv->padded_h, conv->padded_w}, 3);
+    /* runtime tensor */
+    struct tk_tensor* filtered_pics = tk_ws_tensor_alloc(ctx->ws, ctx->meta_arena, dtype, (int[]){conv->num_filter, conv->filtered_h, conv->filtered_w}, 3); 
+
+    if (ctx->rt_type != RT_DRYRUN) {
+        for ( int i = 0 ; i < conv->num_filter ; ++i ) {
+            tk_tensor_padding(dataset->samples, padded_pics,
+                              conv->padding_h, conv->padding_w);
+            tk_ops_convolute(padded_pics, conv->filters, filtered_pics);
+            // tk_tensor_relu(filtered_pics);
+        }
+    }
+    return filtered_pics;
 }
 
-// assume picture and filter are square
-// stride = 1
-double** convolute( double** picture, int rows, int cols,
- 					double** filter, int f_rows, int f_cols ) {
-	int fmapColSize = cols - f_cols + 1;	// assume kernel = 3x3, fmapColSize = 26
-	int fmapRowSize = rows - f_rows + 1;
-	double** re = alloc2DArr(fmapRowSize, fmapColSize);
-	for ( int y = 0 ; y < fmapRowSize ; ++y ) {
-		for ( int x = 0 ; x < fmapColSize ; ++x ) {
-			for ( int y_filter = 0 ; y_filter < f_rows ; ++y_filter) {
-				for ( int x_filter = 0 ; x_filter < f_cols ; ++x_filter) {
-					re[y][x] += picture[y + y_filter][x + x_filter] * filter[y_filter][x_filter];	
-				}		
-			}		
-		}		
-	}
-	return re;
-}		
-
-// assume pooling filter is a square, feature map = 26x26, pSize = 2x2
-// max pooling
-double** pooling( double** fmap, int fmapSize, int pSize ) {
-	int pMapSize = (fmapSize / pSize);
-	double** pooledMap = alloc2DArr(pMapSize, pMapSize);	
-	for ( int y = 0 ; y < fmapSize ; y += 2 ) {
-		for ( int x = 0 ; x < fmapSize ; x += 2 ) {
-			double biggest = -99999;		
-			for ( int y_pool = 0 ; y_pool < pSize ; ++y_pool ) {
-				for ( int x_pool = 0 ; x_pool < pSize ; ++x_pool ) {
-					if (fmap[y + y_pool][x + x_pool] > biggest) {
-						biggest = fmap[y + y_pool][x + x_pool];
-					}		
-				}		
-			}
-			pooledMap[y/pSize][x/pSize] = biggest;
-		}		
-	}		
-	return pooledMap;
-}
-
-double** padding() {
-
-
-}

@@ -7,6 +7,7 @@
 #include "structDef.h"
 #include "Trie.h"
 
+/*
 #define BUFSIZE 2048
 #define FILELEN 256
 #define H_OFFSET 5
@@ -25,11 +26,13 @@ const uint8_t DQT_MARKER[2] = { 0xFF, 0xDB };
 const uint8_t DHT_MARKER[2] = { 0xFF, 0xC4 };
 const uint8_t SOI_MARKER[2] = { 0xFF, 0xD8 };
 const uint8_t EOI_MARKER[2] = { 0xFF, 0xD9 };
+*/
 
 uint32_t littleToBigEndian32(uint32_t little);
 uint16_t littleToBigEndian16(uint16_t little);
 uint16_t byteConcat(uint8_t byte1, uint8_t byte2);
 char* intToBit(int val, int bitLen);
+/*
 void symTobits(Img* image);
 void readTableInfo(FILE* fptr, Img* image);
 void readMarkers(FILE* fptr, Img* image);
@@ -40,9 +43,11 @@ void readTables(FILE* fptr, Img* image);
 void printDebug(Img* image);
 void initImg(Img* image);
 void imageProcess(const char filePath[]);
+*/
 /* ===============================bmp read=============================== */
-void loadImgLabel(const char filePath[], DataSet* dataset);
-void loadImgFile(const char filePath[], DataSet* dataset, int sampleCnt);
-void loadKernal(const char filePath[], Conv2D* conv);
-
+struct Dataset* tk_dataset_create(struct tk_rt_ctx* ctx);
+void loadImgLabel(struct tk_rt_ctx* ctx,
+                  struct Dataset* dataset,
+                  const char filePath[]);
+void loadImgFile(struct tk_rt_ctx* ctx, Dataset* dataset, const char filePath[], int sampleCnt);
 #endif

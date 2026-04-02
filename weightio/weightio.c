@@ -1,13 +1,10 @@
 #include "weightio.h"
 #include "../mem/arena.h"
-#include "../src/error/rt_error.h"
-#include "../src/modules/fc/fc.h"
-#include "../src/modules/conv/conv.h"
 #include "../src/structDef.h"
 
 int header_create(struct Binary_Header* bh, struct Model* model) {
 
-    memcpy(bh->magic, "BNNW", 4);
+    memcpy(bh->magic, "ENNW", 4);
     bh->ver = 1;
     bh->endian = 1;    // little endian
     bh->dtype = 2;                        // 1 => float32, 2 => float64(double)
@@ -72,6 +69,8 @@ uint64_t layer_param_calculate(struct LayerMeta* layer) {
         case LAYER_CONV2D:
             num_layer_param += conv2d_param_calculate(layer->u_layer.conv);
             break;
+        case LAYER_POOL:
+            break;
         default:
             RT_FAIL(RT_EINVAL, "Unknown Layer Type: %u", layer->layer_type);
     }
@@ -135,6 +134,64 @@ int conv2d_layer_meta_create(struct Binary_Layer_Meta* blm, struct LayerMeta* lm
     return 0;
 }
 
+int pool_layer_meta_create(struct Binary_Layer_Meta* blm, struct LayerMeta* lm) {
+    if (blm->layer_type != lm->layer_type) {
+        RT_FAIL(RT_EINVAL, 
+                "Incompatible meta conversion between %u and %u", 
+                blm->layer_type, lm->layer_type);
+    }
+    struct Binary_Pool_Layer_Meta* meta = &(blm->u_layer.pool_layer_meta);
+    struct tk_pooling* lm_pl = lm->u_layer.pooling;
+    meta->kernel_h = lm_pl->kernel_h; //assume square for now
+    meta->kernel_w = lm_pl->kernel_w;
+    meta->stride_h = lm_pl->stride_h;
+    meta->stride_w = lm_pl->stride_w;
+    meta->padding_h = lm_pl->padding_h;
+    meta->padding_w = lm_pl->padding_w;
+    if (lm_pl->pType == MAX_POOL)
+        meta->pooling_type = 1;
+    else if (lm_pl->pType == AVG_POOL)
+        meta->pooling_type = 2;
+    else
+        meta->pooling_type = 0;
+    memset(meta->reserved, 0, sizeof(meta->reserved));
+    return 0;
+}
+
+int pool_meta_write(FILE* fptr,
+                    const struct Binary_Pool_Layer_Meta* pm) {
+    if (!fptr || !pm) return -1;
+    if (write_u32(fptr, pm->stride_h)     < 0) goto write_fail;
+    if (write_u32(fptr, pm->stride_w)     < 0) goto write_fail;
+    if (write_u32(fptr, pm->kernel_h)       < 0) goto write_fail;
+    if (write_u32(fptr, pm->kernel_w)       < 0) goto write_fail;
+    if (write_u32(fptr, pm->padding_h)    < 0) goto write_fail;
+    if (write_u32(fptr, pm->padding_w)    < 0) goto write_fail;
+    if (write_u32(fptr, pm->pooling_type) < 0) goto write_fail;
+    for (int i = 0; i < 4; i++)
+        if (write_u32(fptr, pm->reserved[i]) < 0) goto write_fail;
+    return 0;
+write_fail:
+    fclose(fptr);
+    RT_FAIL(RT_EIO, "Write fail");
+}
+
+int pool_meta_load(FILE* fptr, struct Binary_Pool_Layer_Meta* pm) {
+    if (!fptr || !pm) return -1;
+    if (read_u32(fptr, &pm->stride_h)     < 0) goto read_fail;
+    if (read_u32(fptr, &pm->stride_w)     < 0) goto read_fail;
+    if (read_u32(fptr, &pm->kernel_h)       < 0) goto read_fail;
+    if (read_u32(fptr, &pm->kernel_w)       < 0) goto read_fail;
+    if (read_u32(fptr, &pm->padding_h)    < 0) goto read_fail;
+    if (read_u32(fptr, &pm->padding_w)    < 0) goto read_fail;
+    if (read_u32(fptr, &pm->pooling_type) < 0) goto read_fail;
+    fseek(fptr, 4 * sizeof(uint32_t), SEEK_CUR);  // reserved
+    return 0;
+read_fail:
+    fclose(fptr);
+    RT_FAIL(RT_EIO, "Read fail");
+}
+
 int layer_meta_create(struct Binary_Layer_Meta* blm, struct LayerMeta* lm) {
     blm->layer_type = lm->layer_type;
     blm->layer_index = lm->layer_index;
@@ -162,6 +219,9 @@ int layer_meta_create(struct Binary_Layer_Meta* blm, struct LayerMeta* lm) {
             }
             break;
         case LAYER_POOL:
+            if (pool_layer_meta_create(blm, lm) < 0) {
+                return -1;
+            }
             break;
         default:
             RT_FAIL(RT_EINVAL, "Unknown binary layer type: %u", blm->layer_type);
@@ -643,7 +703,7 @@ read_fail:
     RT_FAIL(RT_EIO, "Read fail");
 }
 
-int load_conv_weight(FILE* fptr, struct Conv2D* conv) {
+int load_conv_weight(FILE* fptr, struct tk_conv2d* conv) {
     conv->filters = alloc3DArr(conv->num_filter, conv->kernel_h, conv->kernel_w);
     for ( int i = 0 ; i < conv->num_filter ; ++i ) {
         for ( int j = 0 ; j < conv->kernel_h ; ++j ) {
@@ -705,14 +765,15 @@ int load_weight(FILE* fptr, struct Model* model, struct PayloadEntry* payload_en
     return 0;
 }
 
-int model_load(const char* path, struct arena* a, struct Model* model) {
+int model_load(const char* path, struct arena* a, struct Model** model) {
 
     FILE* fptr = fopen(path, "rb");
     if (!fptr) {
         RT_FAIL(RT_EINVAL, "fopen error");
     }
     
-    model = arena_alloc(a, sizeof(struct Model)); 
+    struct Model* model_rt = arena_alloc(a, sizeof(struct Model)); 
+    *model = model_rt; 
 
     if (header_check(fptr, model)   < 0) goto read_fail;
     model->layers_meta = arena_alloc(a, sizeof(struct LayerMeta) * model->num_total_layers);
@@ -739,6 +800,13 @@ int model_load(const char* path, struct arena* a, struct Model* model) {
             payload_entry[i].layer_type = LAYER_FC;
             if (net_meta_load(fptr, &model->layers_meta[i], a) < 0) goto read_fail;
         }
+        if (layer_type == LAYER_POOL) {
+            model->layers_meta[i].layer_type = LAYER_POOL;
+            payload_entry[i].layer_type      = LAYER_POOL;
+            payload_entry[i].payload_bytes   = 0;
+            if (pool_meta_load(fptr, &model->layers_meta[i].u_layer.pool_layer_meta) < 0)
+                goto read_fail;
+}
     }
 
     long int pos = ftell(fptr);

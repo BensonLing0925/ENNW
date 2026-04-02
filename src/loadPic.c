@@ -4,6 +4,10 @@
 #include "structDef.h"
 #include "loadPic.h"
 #include "Trie.h"
+#include "ops/tensor.h"
+#include "ops/tensor_ops.h"
+#include "runtime/rt_context.h"
+#include "runtime/workspaces/rt_workspaces.h"
 
 uint32_t littleToBigEndian32(uint32_t little) {
 	return ((little >> 24) & 0x000000FF) |
@@ -31,6 +35,7 @@ char* intToBit(int val, int bitLen) {
     return result;
 }    
 
+/*
 void symTobits(Img* image) {
     int i_huf = 0;
     int baseVal = 0;
@@ -277,9 +282,18 @@ void imageProcess(const char filePath[]) {
 	freeTable(&image);
 	fclose(fptr);
 }	
+*/
 
 /* ===============================bmp read=============================== */
-void loadImgLabel(const char filePath[], DataSet* dataset) {
+
+struct Dataset* tk_dataset_create(struct tk_rt_ctx* ctx) {
+    struct Dataset* dataset = arena_alloc(ctx->meta_arena, sizeof(struct Dataset));
+    return dataset;
+}
+
+void loadImgLabel(struct tk_rt_ctx* ctx,
+                  struct Dataset* dataset,
+                  const char filePath[]) {
 	FILE* fptr = fopen(filePath, "rb");
 	if (!fptr) {
 		printf("File does not exist\n");
@@ -294,66 +308,49 @@ void loadImgLabel(const char filePath[], DataSet* dataset) {
 	magic = littleToBigEndian32(magic);
 	num_sample = littleToBigEndian32(num_sample);
 
-	unsigned char temp;
-	for ( int i = 0 ; i < dataset->num_sample ; ++i ) {
-		fread(&temp, 1, 1, fptr);	
-		dataset->samples[i].answer = temp;
-	}
+    dataset->labels = tk_ws_tensor_alloc(ctx->ws, ctx->meta_arena, TK_U8, (int[]){num_sample}, 1);
+    dataset->num_samples = num_sample;
+
+    if (ctx->rt_type != RT_DRYRUN) {
+        struct tk_tensor* labels = dataset->labels;
+        fread(labels->data, tk_get_dtype_size(labels->dtype), num_sample, fptr);
+    }
 	fclose(fptr);
 }		
 
 // if sampleCnt = -1, load all samples
-void loadImgFile(const char filePath[], DataSet* dataset, int sampleCnt){
+void loadImgFile(struct tk_rt_ctx* ctx, Dataset* dataset, const char filePath[], int sampleCnt){
 	FILE* fptr = fopen(filePath, "rb");
 	if (!fptr) {
 		printf("File does not exist\n");
 		return;
 	}		
-	int magic, num_sample;
+	int magic, total_num;
 	int rows, cols;
+    int num_sample;
 
 	/*             image info            */
 	fread(&magic, 4, 1, fptr);
-	fread(&num_sample, 4, 1, fptr);
+	fread(&total_num, 4, 1, fptr);
 	fread(&rows, 4, 1, fptr);
 	fread(&cols, 4, 1, fptr);
 
 	magic = littleToBigEndian32(magic);
-	num_sample = littleToBigEndian32(num_sample);
+	total_num = littleToBigEndian32(total_num);
 	rows = littleToBigEndian32(rows);
 	cols = littleToBigEndian32(cols);
 
-	if ( sampleCnt == -1 ) {
-		dataset->num_sample = num_sample;
-	}	
-	else {
-		dataset->num_sample = sampleCnt;
-	}		
+    num_sample = (sampleCnt == -1) ? total_num : sampleCnt;
 
-	dataset->rows = rows;
-	dataset->cols = cols;
+    dataset->samples = tk_ws_tensor_alloc(ctx->ws, ctx->meta_arena, TK_U8, (int[]){num_sample, rows, cols}, 3);
+    dataset->rows = rows;
+    dataset->cols = cols;
 
-	Sample* samples = (Sample*)malloc(dataset->num_sample * sizeof(Sample));	
-	dataset->samples = samples;
-	/*             read image            */
-	unsigned char* buffer = (unsigned char*)malloc( rows * cols );
-	// i < dataset->num_sample
-	// just pick one sample to see
-	for ( int i = 0 ; i < dataset->num_sample ; ++i ) {
-		dataset->samples[i].picture = alloc2DArr(dataset->rows, dataset->cols);
-		fread(buffer, rows * cols, 1, fptr);
-        for (int r = 0; r < rows; ++r) {
-            for (int c = 0; c < cols; ++c) {
-                dataset->samples[i].picture[r][c] = (double)((int)buffer[r * cols + c]/(double)255);
-            }
-        }
-	}
+    if (ctx->rt_type != RT_DRYRUN) {
+        uint64_t total_size = num_sample * rows * cols;
+        struct tk_tensor* samples = dataset->samples;
+        fread(samples->data, tk_get_dtype_size(samples->dtype), total_size, fptr);
+    }
 
-	free(buffer);
 	fclose(fptr);
-}		
-
-void loadKernal(const char filePath[], Conv2D* conv) {
-	
-
 }		
