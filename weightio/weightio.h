@@ -73,6 +73,17 @@ struct Binary_Conv2D_Layer_Meta {
     uint32_t reserved[4];
 };
 
+struct Binary_Pool_Layer_Meta {
+    uint32_t stride_h;
+    uint32_t stride_w;
+    uint32_t size_h;
+    uint32_t size_w;
+    uint32_t padding_h;
+    uint32_t padding_w;
+    uint32_t pooling_type;
+    uint32_t reserved[4];
+};
+
 struct Binary_Layer_Meta {
     uint32_t layer_type;
     uint32_t layer_index;
@@ -81,6 +92,7 @@ struct Binary_Layer_Meta {
     union {
         struct Binary_Net_Layer_Meta net_layer_meta;
         struct Binary_Conv2D_Layer_Meta conv2d_layer_meta;
+        struct Binary_Pool_Layer_Meta   pool_layer_meta;
     } u_layer;
 };
 

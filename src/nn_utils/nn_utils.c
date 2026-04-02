@@ -5,54 +5,9 @@
 #include <math.h>
 #include <float.h>
 #include <stdio.h>
-#include "nn_utils.h"
 #include "../mem/arena.h"
-
-double** alloc2DArr(size_t firstD, size_t secondD) {
-	double** re = (double**)calloc(firstD, sizeof(double*));
-	for ( size_t i = 0 ; i < firstD ; ++i )
-		re[i] = (double*)calloc(secondD, sizeof(double));
-	return re;	
-}
-
-void free2DArr(double** freeArr, size_t firstD) {
-	for ( size_t i = 0 ; i < firstD; ++i )
-		free(freeArr[i]);
-	free(freeArr);	
-}
-
-double*** alloc3DArr(size_t firstD, size_t secondD, size_t thirdD) {
-
-	double*** re = (double***)calloc(firstD, sizeof(double**));
-	for ( size_t i = 0 ; i < firstD ; ++i ) {
-		re[i] = alloc2DArr(secondD, thirdD);
-	}		
-	return re;
-}		
-
-void free3DArr(double*** freeArr, size_t firstD, size_t secondD) {
-	for ( size_t i = 0 ; i < firstD ; ++i ) {
-		free2DArr(freeArr[i], secondD);
-	}		
-	free(freeArr);
-}		
-
-double reLU(double x) {
-	return ( x > 0.0 ) ? x : 0.0;
-}		
-
-double reLU_diff(double x) {
-	return ( x > 0.0 ) ? 1 : 0.0;
-}		
-
-void reLU_pic( double** pic, int picRow, int picCol ) {
-	for ( int i = 0 ; i < picRow; ++i ) {
-		for ( int j = 0 ; j < picCol; ++j ) {
-			if ( pic[i][j] < 0.000 )
-				pic[i][j] = 0.000;
-		}		
-	}		
-}		
+#include "../ops/tensor.h"
+#include "nn_utils.h"
 
 int findMax(size_t outSize, double* prob) {
 	double max = -99999;
@@ -93,7 +48,11 @@ double sigmoid(double x) {
 	return (1.0/(1+exp(-x)));	
 }
 
-void softMax(double* hid_layer_output, int n) {
+void softMax(struct tk_tensor* tk_output) {
+    // before softMax must be double
+    double* hid_layer_output = tk_output->data;
+    // usually the last dimension of outputs;
+    int n = tk_output->shape[tk_output->ndims-1];
     double max = hid_layer_output[0];
     double sum = 0;
 
@@ -121,8 +80,10 @@ void softMax(double* hid_layer_output, int n) {
 // ans should be either 0 or 1(0 means not the answer, 1 means is the answer)
 // eg. ans = [0, 1, 0, 0, 0, 0, 0, 0, 0, 0]
 // predict is the probability that the machine calculate if the choice is the answer.
-double crossEntropyLoss( int ansIndex, double* softmaxOut ) {
-	double prob = fmax(softmaxOut[ansIndex], DBL_MIN);
+double crossEntropyLoss( int ansIndex, struct tk_tensor* softmaxOut ) {
+    // softmaxOut = [num_samples, num_class] or [1, num_class]?
+    double* sfm_out = (double*)softmaxOut->data;
+	double prob = fmax(sfm_out[ansIndex], DBL_MIN);
 	double singleSampleLoss = -1 * log(prob);
 	return singleSampleLoss;
 }

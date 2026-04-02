@@ -6,20 +6,15 @@
 #include <float.h>
 #include <stdio.h>
 #include "../mem/arena.h"
+#include "../ops/tensor.h"
+#include "../ops/tensor_ops.h"
 
-double** alloc2DArr(size_t firstD, size_t secondD);
-void free2DArr(double** freeArr, size_t firstD);
-double*** alloc3DArr(size_t firstD, size_t secondD, size_t thirdD);
-void free3DArr(double*** freeArr, size_t firstD, size_t secondD);
-double reLU(double x);
-double reLU_diff(double x);
-void reLU_pic( double** pic, int picRow, int picCol );
 int findMax(size_t outSize, double* prob);
 double* flatten(double** input, int colSize, int rowSize);
 double dotProd(size_t n, double* w, double* input, double b);
 double sigmoid(double x);
-void softMax(double* hid_layer_output, int n);
-double crossEntropyLoss( int ansIndex, double* softmaxOut );
+void softMax(struct tk_tensor* tk_output);
+double crossEntropyLoss( int ansIndex, struct tk_tensor* softmaxOut );
 double totalLoss(int sampleCount, double* lossArr);
 double MSE( double ans, double trainedAns );
 double sigmoid_diff(double z);

@@ -4,44 +4,19 @@
 typedef double** Double2D;
 
 #include <stdint.h>
+#include "modules/transformer/tf_block.h"
+#include "ops/tensor.h"
 
 #define MAX_CHILD 2  // bitwise Trie, only 0 and 1
 #define MAX_HEIGHT 16  // JPEG at most height of 16, each height represent one bit
-                       
-typedef struct Neuron {
-	int num_weight;
-	double* weights;
-	double bias;
-	double output;
-	double delta;
-} Neuron;	
 
-typedef struct Layer {
-	int num_neurons;
-    int input_dim;
-    int has_bias;
-	Neuron* neurons;
-	double* outputs;
-} Layer;		
-
-typedef struct Network {
-	int layer_count;
-	Layer* layers; // to point to individual Layer
-    uint32_t network_type;
-    uint32_t input_size;
-} Network;		
-
-typedef struct {
-	int answer;
-	double** picture;	
-} Sample; 
-
-typedef struct {
-	Sample* samples;
-	int num_sample;
-	int rows;
-	int cols;
-} DataSet;	
+typedef struct Dataset {
+    struct tk_tensor* samples;
+    struct tk_tensor* labels;
+    int num_samples;
+    int rows;
+    int cols;
+} Dataset;	
 
 typedef enum {
 	INT_TYPE,
@@ -59,35 +34,14 @@ typedef struct {
 	size_t dataSize;
 } DataPointer; 	
 
-typedef enum {
-	MAX_POOL,
-	AVG_POOL
-} PoolingType;	
-
-typedef struct Conv2D {
-    int in_channels;
-	int num_filter;
-    int kernel_h;
-    int kernel_w;
-    int stride_h;
-    int stride_w;
-    int padding_h;
-    int padding_w;
-    int pooling_h;
-    int pooling_w;
-    int has_bias;
-    double* biases;
-	Double2D* filters;
-	PoolingType pType;
-} Conv2D;		
-
 typedef struct LayerMeta {
     uint32_t layer_type;
     uint32_t layer_index;
     union {
-        struct Conv2D* conv;
-        // struct Layer* layer;
+        struct tk_conv2d* conv;
         struct Network* network;
+        struct tk_pooling* pooling;
+        struct TransformerBlock* tf_block;
     } u_layer;
     uint32_t dtype;
 } LayerMeta;
@@ -110,6 +64,7 @@ typedef struct {
 	DataPointer ydata;
 } PlotInfo;	
 
+/*
 typedef enum {
 	LUMINANCE = 0,	
 	CHROMINANCE = 1
@@ -178,4 +133,5 @@ typedef struct {
 	DQT_struct* DQTs;
 	DHT_struct* DHTs;
 } Img;	
+*/
 #endif

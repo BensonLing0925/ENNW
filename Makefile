@@ -19,21 +19,27 @@ endif
 # ---- Project layout ----
 SRC_DIR     := src
 MODULES_DIR := $(SRC_DIR)/modules
+RT_DIR		:= $(SRC_DIR)/runtime
+RT_WS_DIR	:= $(RT_DIR)/workspaces
 FC_DIR      := $(MODULES_DIR)/fc
 CONV_DIR    := $(MODULES_DIR)/conv
+PL_DIR		:= $(MODULES_DIR)/pooling
+# TRANSFORMER_DIR    := $(MODULES_DIR)/transformer
+OPS_DIR		:= $(SRC_DIR)/ops
 NNUTILS_DIR := $(SRC_DIR)/nn_utils
 ERROR_DIR	:= $(SRC_DIR)/error
 
 CFG_DIR     := config
 CJSON_DIR   := $(CFG_DIR)/cJSON
 MEM_DIR     := mem
-WEIGHTIO_DIR:= weightio
+# WEIGHTIO_DIR:= weightio
 
 TARGET := nn$(EXEEXT)
 
 # ---- Include paths ----
 INCLUDES := -I$(SRC_DIR) -I$(MODULES_DIR) -I$(FC_DIR) -I$(CONV_DIR) -I$(NNUTILS_DIR) \
-            -I$(CFG_DIR) -I$(CJSON_DIR) -I$(MEM_DIR) -I$(WEIGHTIO_DIR) -I$(ERROR_DIR)
+            -I$(CFG_DIR) -I$(CJSON_DIR)	-I$(MEM_DIR) -I$(ERROR_DIR) \
+			-I$(OPS_DIR) -I$(RT_DIR) -I$(RT_WS_DIR) -I$(PL_DIR)
 
 # ---- Common flags ----
 CFLAGS_COMMON := -Wall -Wextra $(INCLUDES)
@@ -59,10 +65,13 @@ LDLIBS ?= -lm
 SRC_C23 := $(wildcard $(SRC_DIR)/*.c) \
            $(wildcard $(FC_DIR)/*.c) \
            $(wildcard $(CONV_DIR)/*.c) \
+           $(wildcard $(PL_DIR)/*.c) \
            $(wildcard $(NNUTILS_DIR)/*.c) \
+           $(wildcard $(OPS_DIR)/*.c) \
+           $(wildcard $(RT_DIR)/*.c) \
+           $(wildcard $(RT_WS_DIR)/*.c) \
            $(CFG_DIR)/config.c \
            $(MEM_DIR)/arena.c \
-           $(WEIGHTIO_DIR)/weightio.c \
 		   $(ERROR_DIR)/rt_error.c
 
 # 2) cJSON source (compile as C89)

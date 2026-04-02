@@ -12,7 +12,7 @@
 static RT_THREAD_LOCAL struct rt_err_status g_rt_err_status;
 
 void err_status_clear(void) {
-    memset(&g_rt_err_status, 0, sizeof(g_rt_err_status));
+    memset(&g_rt_err_status, 0, sizeof(struct rt_err_status));
 }
 
 const struct rt_err_status* rt_err_last(void) {
@@ -36,19 +36,20 @@ int rt_err_set(rt_errc code, int sys_errno,
                const char* file, int line, const char* func,
                const char* fmt, ...) {
     
-    g_rt_err_status.code = code;
-    g_rt_err_status.sys_errno = sys_errno;
-    g_rt_err_status.file = file;
-    g_rt_err_status.line = line;
-    g_rt_err_status.func = func;
+    struct rt_err_status* err = &g_rt_err_status;
+    err->code = code;
+    err->sys_errno = sys_errno;
+    err->file = file;
+    err->line = line;
+    err->func = func;
     
-    g_rt_err_status.msg[0] = '\0';
+    err->msg[0] = '\0';
     if (fmt) {
         va_list ap;
         va_start(ap, fmt);
         // add "[ERROR] at the beginning
-        memcpy(g_rt_err_status.msg, "[ERROR] ", 8);
-        vsnprintf(g_rt_err_status.msg, sizeof(g_rt_err_status.msg), fmt, ap);
+        memcpy(err->msg, "[ERROR] ", 8);
+        vsnprintf(err->msg, sizeof(err->msg), fmt, ap);
         va_end(ap);
     }
 
@@ -58,7 +59,7 @@ int rt_err_set(rt_errc code, int sys_errno,
 
 void rt_err_print(FILE* out) {
     if (!out) out = stderr;
-    const struct rt_err_status* e = rt_err_last();
+    const struct rt_err_status* e = &g_rt_err_status;
     if (!e || e->code == RT_OK) {
         fprintf(out, "[RT] OK\n");
         return;
