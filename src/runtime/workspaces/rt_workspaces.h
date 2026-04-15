@@ -4,8 +4,8 @@
 #include <stdint.h>
 #include "../../ops/tensor.h"
 
-#define TK_WS_BEGIN(ctx) uint64_t _ws_save = (ctx)->ws.cur_offset
-#define TK_WS_END(ctx) (ctx)->ws.cur_offset = _ws_save
+#define TK_WS_BEGIN(ctx) size_t _ws_save = (ctx)->ws->cur_offset
+#define TK_WS_END(ctx) (ctx)->ws->cur_offset = _ws_save
 
 struct tk_workspace {
     void* arena_base;

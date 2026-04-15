@@ -1,0 +1,13 @@
+{
+    "mode": "TEST",
+    "seed": 42,
+    "imgPath": "src\\MNIST\\t10k-images-idx3-ubyte",
+    "imgLabelPath": "src\\MNIST\\t10k-labels-idx1-ubyte",
+    "weights_path": "weight_files\\model.bin",
+
+    "num_filter": 10,
+    "kernel_size": 3,
+    "pool_size": 2,
+    "tf_n_heads": 13,
+    "fc_layers": [100, 50, 10]
+}

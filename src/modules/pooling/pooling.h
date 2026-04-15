@@ -10,13 +10,13 @@ typedef enum {
 } PoolingType;		
 
 #define TK_PL_RECT(t, sth, stw, szh, szw, ph, pw) (struct tk_pooling_config){ \
-    .pType = t,      \
-    .stride_h = sth, \
-    .stride_w = stw, \
-    .size_h = szh,   \
-    .size_w = szw,   \
-    .padding_h = ph, \
-    .padding_w = pw  \
+    .pType = t,        \
+    .stride_h = sth,   \
+    .stride_w = stw,   \
+    .kernel_h = szh,   \
+    .kernel_w = szw,   \
+    .padding_h = ph,   \
+    .padding_w = pw    \
 }
 
 #define TK_PL_SQR(t, st, sz, p) TK_PL_RECT(t, st, st, sz, sz, p, p)

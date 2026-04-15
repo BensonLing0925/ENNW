@@ -1,0 +1,25 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(where gcc:*)",
+      "Bash(gcc --version)",
+      "Bash(mingw32-make)",
+      "Bash(mingw32-make clean:*)",
+      "Bash(mingw32-make -C \"C:\\\\Users\\\\Benson Ling\\\\Desktop\\\\CNN\")",
+      "Bash(make -C \"C:/Users/Benson Ling/Desktop/CNN\")",
+      "Bash(python tools/export_weights.py --config tools/config_infer.json --out /tmp/test_weights.bin)",
+      "Bash(python tools/export_weights.py --config tools/config_infer_test.json --out \"weights/test_random.bin\")",
+      "Bash(python tools/export_weights.py --config tools/config_infer_test.json --out \"C:/Users/Benson Ling/Desktop/CNN/weights/test_random.bin\")",
+      "Bash(python tools/export_weights.py --config tools/config_infer_test.json --out \"weight_files/test_random.bin\")",
+      "Bash(./nn.exe tools/config_infer_test.json)",
+      "Bash(python3:*)",
+      "Bash(./nn.exe \"tools/config_infer_test.json\")",
+      "Bash(python tools/verify_engine.py --n 50)",
+      "Bash(python tools/verify_engine.py --n 200)",
+      "Bash(/c/Users/\"Benson Ling\"/AppData/Local/Programs/Python/Python312/python.exe tools/verify_engine.py --n 200)",
+      "Bash(tee /tmp/verify_out.txt)",
+      "Read(//tmp/**)",
+      "Bash(tee /tmp/v2.txt)"
+    ]
+  }
+}

@@ -1,0 +1,12 @@
+# compile output
+*.exe
+*.o
+nn
+
+# unnecessary weights
+*.bin
+*.weights
+
+# python cache
+__pycache__/
+.ipynb_checkpoints/

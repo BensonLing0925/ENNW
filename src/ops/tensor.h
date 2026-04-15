@@ -4,6 +4,8 @@
 #include <stdint.h>
 #include "arena.h"
 
+#define TK_DEBUG_SIZE 15
+
 #define TK_DISPATCH_TYPES(dtype, name, ...) \
     do { \
         switch(dtype) { \
@@ -51,5 +53,7 @@ void tk_tensor_padding(struct tk_tensor* src, struct tk_tensor* dest, int pad_h,
 int tk_tensor_transpose(struct arena* a, struct tk_tensor* tk_tensor, int dim1, int dim2);
 void tk_tensor_relu(struct tk_tensor* src);
 int tk_tensor_load_data(struct tk_tensor* dest, FILE* fp, size_t size);
+void tk_tensor_data_print(struct tk_tensor* src);
+void tk_tensor_print(struct tk_tensor* src);
 
 #endif

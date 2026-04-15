@@ -139,26 +139,27 @@ int tk_ops_gemm(struct tk_tensor* src1, struct tk_tensor* src2, struct tk_tensor
 
 int tk_ops_layernorm(struct tk_tensor* src, struct tk_tensor* gamma, struct tk_tensor* beta, struct tk_tensor* dest) {
 
-    uint32_t check_size = 4;
-    struct tk_tensor* tensor_arr = malloc(check_size * sizeof(struct tk_tensor));
-
-    tensor_arr[0] = *src;
-    tensor_arr[1] = *gamma;
-    tensor_arr[2] = *beta;
-    tensor_arr[3] = *dest;
-
-    int err = 0;
-    err = mult_shape_equal_check(tensor_arr, check_size);
+    // src and dest must have identical shape
+    int err = shape_equal_check(src, dest);
     if (err != 0)
         return err;
 
-    if (!tk_tensor_is_contiguous(src) || !tk_tensor_is_contiguous(gamma) || 
+    // gamma and beta must match the last dimension of src
+    int last_dim = src->shape[src->ndims - 1];
+    if (gamma->shape[gamma->ndims - 1] != last_dim)
+        RT_FAIL(RT_EINVAL, "Layernorm: gamma last dim %d != src last dim %d\n",
+                gamma->shape[gamma->ndims - 1], last_dim);
+    if (beta->shape[beta->ndims - 1] != last_dim)
+        RT_FAIL(RT_EINVAL, "Layernorm: beta last dim %d != src last dim %d\n",
+                beta->shape[beta->ndims - 1], last_dim);
+
+    if (!tk_tensor_is_contiguous(src) || !tk_tensor_is_contiguous(gamma) ||
         !tk_tensor_is_contiguous(beta) || !tk_tensor_is_contiguous(dest))
         RT_FAIL(RT_EINVAL, "Incontiguous tensor detected\n");
     
-    uint64_t num_rows = shape_size_calc(src->shape, src->ndims - 1); // how many column to compute for layernorm
-    int dim = src->shape[src->ndims - 1]; // last row's element count
-    float eps = 1e-5f;
+    uint64_t num_rows = shape_size_calc(src->shape, src->ndims - 1);
+    int dim = src->shape[src->ndims - 1];
+    double eps = 1e-5;
 
     TK_DISPATCH_TYPES(src->dtype, __func__, {
         scalar_t* s_ptr = (scalar_t*)src->data;
@@ -166,33 +167,30 @@ int tk_ops_layernorm(struct tk_tensor* src, struct tk_tensor* gamma, struct tk_t
         scalar_t* g_ptr = (scalar_t*)gamma->data;
         scalar_t* b_ptr = (scalar_t*)beta->data;
 
-        // #pragma omp parallel for
         for (uint64_t i = 0; i < num_rows; i++) {
             scalar_t* row_s = s_ptr + i * dim;
             scalar_t* row_d = d_ptr + i * dim;
 
-            // step 1. calculate arithmetic mean
-            scalar_t sum = 0;
-            // #pragma omp simd reduction(+:sum) // use simd to potentially speed up mean calculation
-            for (int j = 0; j < dim; j++) sum += row_s[j];
-            scalar_t mean = sum / dim;
+            /* mean */
+            double sum = 0.0;
+            for (int j = 0; j < dim; j++) sum += (double)row_s[j];
+            double mean = sum / dim;
 
-            // step 2. calculate variance
-            scalar_t var_sum = 0;
-            // #pragma omp simd reduction(+:var_sum)
+            /* variance */
+            double var_sum = 0.0;
             for (int j = 0; j < dim; j++) {
-                scalar_t diff = row_s[j] - mean;
+                double diff = (double)row_s[j] - mean;
                 var_sum += diff * diff;
             }
-            scalar_t inv_std = 1.0f / sqrtf(var_sum / dim + eps);
+            double inv_std = 1.0 / sqrt(var_sum / dim + eps);
 
-            // step 3. normalization
+            /* normalize */
             for (int j = 0; j < dim; j++) {
-                row_d[j] = (row_s[j] - mean) * inv_std * g_ptr[j] + b_ptr[j];
+                row_d[j] = (scalar_t)(((double)row_s[j] - mean) * inv_std
+                                      * (double)g_ptr[j] + (double)b_ptr[j]);
             }
         }
     });
-    free(tensor_arr);
     return 0;
 }
 
@@ -203,16 +201,15 @@ void tk_ops_gelu(struct tk_tensor* src, struct tk_tensor* dest) {
         scalar_t* s_ptr = (scalar_t*)src->data;
         scalar_t* d_ptr = (scalar_t*)dest->data;
 
-        // GeLU(x) formula: 0.5x * (1 + tanh(sqrt(2 / pi)(0.044715 * x_cube)))
-        const float sqrt_2_over_pi = 0.79788456f; // sqrt(2/pi)
-        const float coeff = 0.044715f;
+        // GeLU(x) formula: 0.5x * (1 + tanh(sqrt(2/pi) * (x + 0.044715 * x^3)))
+        const double sqrt_2_over_pi = 0.7978845608028654;
+        const double coeff = 0.044715;
 
-        // #pragma omp parallel for
         for (uint64_t n = 0; n < total_size; ++n) {
-            float x = (float)s_ptr[n];
-            float x_cube = x * x * x;
-            float inner = sqrt_2_over_pi * (x + coeff * x_cube);
-            d_ptr[n] = 0.5f * x * (1.0f + tanhf(inner));
+            double x = (double)s_ptr[n];
+            double x_cube = x * x * x;
+            double inner = sqrt_2_over_pi * (x + coeff * x_cube);
+            d_ptr[n] = (scalar_t)(0.5 * x * (1.0 + tanh(inner)));
         }
     });
 }
@@ -361,8 +358,8 @@ int tk_ops_pooling(struct tk_pooling_params* pooling, struct tk_tensor* src, str
     int input_h = pooling->input_h;
     int input_w = pooling->input_w;
 
-    int size_h = pooling->size_h;
-    int size_w = pooling->size_w;
+    int size_h = pooling->kernel_h;
+    int size_w = pooling->kernel_w;
 
     int stride_h = pooling->stride_h;
     int stride_w = pooling->stride_w;
