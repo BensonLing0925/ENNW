@@ -4,12 +4,21 @@
 
 void config_init(struct Config* c) {
     c->mode = MODE_NONE;
-    c->seed = -1;   // seed = -1 will be time(NULL)
+    c->seed = -1;   /* seed = -1 will be time(NULL) */
     c->lr = 0.01;
     c->imgPath = NULL;
     c->imgLabelPath = NULL;
     c->max_iter = 100;
     c->save_path = NULL;
+    /* architecture defaults */
+    c->num_filter    = 10;
+    c->kernel_size   = 3;
+    c->pool_size     = 2;
+    c->tf_n_heads    = 13;
+    c->fc_layers     = NULL;
+    c->fc_num_layers = 0;
+    /* inference */
+    c->weights_path  = NULL;
 }
 
 static char* read_entire_file_arena(const char* path, struct arena* a) {
@@ -61,6 +70,7 @@ int load_json(const char* path, struct arena* a,struct Config* c) {
     const cJSON* imgLabelPath = NULL;
     const cJSON* max_iter = NULL;
     const cJSON* save_path = NULL;
+    const cJSON* weights_path = NULL;
     int ret = -1;
 
     mode = cJSON_GetObjectItemCaseSensitive(json, "mode");
@@ -84,10 +94,8 @@ int load_json(const char* path, struct arena* a,struct Config* c) {
     lr = cJSON_GetObjectItemCaseSensitive(json, "lr");
     if (cJSON_IsNumber(lr))
         c->lr = lr->valuedouble;
-    else {
-        perror("Error while reading JSON element \"lr\": invalid option");
-        goto cleanup;
-    }
+    else
+        printf("[INFO] No lr specified, using default %.4f\n", c->lr);
 
     imgPath = cJSON_GetObjectItemCaseSensitive(json, "imgPath");
     if (cJSON_IsString(imgPath) && (imgPath->valuestring != NULL))
@@ -110,21 +118,44 @@ int load_json(const char* path, struct arena* a,struct Config* c) {
     max_iter = cJSON_GetObjectItemCaseSensitive(json, "max_iter");
     if (cJSON_IsNumber(max_iter)) {
         if (max_iter->valuedouble < 0)
-            perror("JSON element \"max_iter\" must be >= 0");
-        c->max_iter = (unsigned int) max_iter->valuedouble;
+            printf("[WARNING] max_iter must be >= 0, using default\n");
+        else
+            c->max_iter = (unsigned int) max_iter->valuedouble;
     }
-    else {
-        printf("Invalid option for \"max_iter\", using default value: %d", c->max_iter);
-        goto cleanup;
-    }
+    else
+        printf("[INFO] No max_iter specified, using default %u\n", c->max_iter);
 
     save_path = cJSON_GetObjectItemCaseSensitive(json, "save_path");
-    if (cJSON_IsString(save_path) && (save_path->valuestring != NULL)) {
+    if (cJSON_IsString(save_path) && (save_path->valuestring != NULL))
         c->save_path = arena_strdup(a, save_path->valuestring);
-        printf("raw save_path:    [%s]\n", save_path->valuestring);
-    }
-    else {
-        printf("[REMINDER] Not saving model weights\n");
+    else
+        printf("[INFO] No save_path specified, weights will not be saved\n");
+
+    weights_path = cJSON_GetObjectItemCaseSensitive(json, "weights_path");
+    if (cJSON_IsString(weights_path) && (weights_path->valuestring != NULL))
+        c->weights_path = arena_strdup(a, weights_path->valuestring);
+
+    /* ---- Architecture (all optional) ---- */
+    const cJSON* num_filter_j = cJSON_GetObjectItemCaseSensitive(json, "num_filter");
+    if (cJSON_IsNumber(num_filter_j)) c->num_filter = (int)num_filter_j->valuedouble;
+
+    const cJSON* kernel_size_j = cJSON_GetObjectItemCaseSensitive(json, "kernel_size");
+    if (cJSON_IsNumber(kernel_size_j)) c->kernel_size = (int)kernel_size_j->valuedouble;
+
+    const cJSON* pool_size_j = cJSON_GetObjectItemCaseSensitive(json, "pool_size");
+    if (cJSON_IsNumber(pool_size_j)) c->pool_size = (int)pool_size_j->valuedouble;
+
+    const cJSON* tf_n_heads_j = cJSON_GetObjectItemCaseSensitive(json, "tf_n_heads");
+    if (cJSON_IsNumber(tf_n_heads_j)) c->tf_n_heads = (int)tf_n_heads_j->valuedouble;
+
+    const cJSON* fc_layers_j = cJSON_GetObjectItemCaseSensitive(json, "fc_layers");
+    if (cJSON_IsArray(fc_layers_j)) {
+        c->fc_num_layers = cJSON_GetArraySize(fc_layers_j);
+        c->fc_layers = arena_alloc(a, sizeof(int) * c->fc_num_layers);
+        for (int k = 0; k < c->fc_num_layers; ++k) {
+            const cJSON* item = cJSON_GetArrayItem(fc_layers_j, k);
+            c->fc_layers[k] = cJSON_IsNumber(item) ? (int)item->valuedouble : 10;
+        }
     }
 
     ret = 0;

@@ -33,5 +33,5 @@ unsigned char* arena_strdup(struct arena *a, const char *s);
 void arena_reset(struct arena* a);
 struct block* allocBlock(size_t block_size);
 void freeBlock(struct block* b);
-
+size_t arena_get_total_used(struct arena* a);
 #endif

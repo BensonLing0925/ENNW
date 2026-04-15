@@ -8,8 +8,7 @@ CC := gcc
 # ---- Platform detect ----
 ifeq ($(OS),Windows_NT)
     EXEEXT := .exe
-    RM := del /Q
-    NULLDEV := nul
+    RM := del /F /Q
 else
     EXEEXT :=
     RM := rm -f
@@ -24,22 +23,23 @@ RT_WS_DIR	:= $(RT_DIR)/workspaces
 FC_DIR      := $(MODULES_DIR)/fc
 CONV_DIR    := $(MODULES_DIR)/conv
 PL_DIR		:= $(MODULES_DIR)/pooling
-# TRANSFORMER_DIR    := $(MODULES_DIR)/transformer
+TRANSFORMER_DIR    := $(MODULES_DIR)/transformer
 OPS_DIR		:= $(SRC_DIR)/ops
 NNUTILS_DIR := $(SRC_DIR)/nn_utils
 ERROR_DIR	:= $(SRC_DIR)/error
 
-CFG_DIR     := config
-CJSON_DIR   := $(CFG_DIR)/cJSON
-MEM_DIR     := mem
-# WEIGHTIO_DIR:= weightio
+CFG_DIR      := config
+CJSON_DIR    := $(CFG_DIR)/cJSON
+MEM_DIR      := mem
+WEIGHTIO_DIR := weightio
 
 TARGET := nn$(EXEEXT)
 
 # ---- Include paths ----
 INCLUDES := -I$(SRC_DIR) -I$(MODULES_DIR) -I$(FC_DIR) -I$(CONV_DIR) -I$(NNUTILS_DIR) \
             -I$(CFG_DIR) -I$(CJSON_DIR)	-I$(MEM_DIR) -I$(ERROR_DIR) \
-			-I$(OPS_DIR) -I$(RT_DIR) -I$(RT_WS_DIR) -I$(PL_DIR)
+			-I$(OPS_DIR) -I$(RT_DIR) -I$(RT_WS_DIR) -I$(PL_DIR) -I$(TRANSFORMER_DIR) \
+			-I$(WEIGHTIO_DIR)
 
 # ---- Common flags ----
 CFLAGS_COMMON := -Wall -Wextra $(INCLUDES)
@@ -62,7 +62,7 @@ LDLIBS ?= -lm
 
 # ---- Source groups ----
 # 1) Your CNN / main and other app sources (C23)
-SRC_C23 := $(wildcard $(SRC_DIR)/*.c) \
+SRC_C23 := $(filter-out $(SRC_DIR)/Trie.c, $(wildcard $(SRC_DIR)/*.c)) \
            $(wildcard $(FC_DIR)/*.c) \
            $(wildcard $(CONV_DIR)/*.c) \
            $(wildcard $(PL_DIR)/*.c) \
@@ -70,9 +70,11 @@ SRC_C23 := $(wildcard $(SRC_DIR)/*.c) \
            $(wildcard $(OPS_DIR)/*.c) \
            $(wildcard $(RT_DIR)/*.c) \
            $(wildcard $(RT_WS_DIR)/*.c) \
+           $(wildcard $(TRANSFORMER_DIR)/*.c) \
            $(CFG_DIR)/config.c \
            $(MEM_DIR)/arena.c \
-		   $(ERROR_DIR)/rt_error.c
+		   $(ERROR_DIR)/rt_error.c \
+		   $(filter-out $(WEIGHTIO_DIR)/test_weightio.c, $(wildcard $(WEIGHTIO_DIR)/*.c))
 
 # 2) cJSON source (compile as C89)
 SRC_C89 := $(CJSON_DIR)/cJSON.c
@@ -105,7 +107,7 @@ run: $(TARGET)
 	./$(TARGET)
 
 clean:
-	-$(RM) $(OBJS) $(TARGET) 2>$(NULLDEV)
+	-$(RM) $(OBJS) $(TARGET)
 
 print:
 	@echo TARGET=$(TARGET)

@@ -21,10 +21,10 @@ void tk_conv2d_init(struct tk_conv2d* conv, struct tk_conv2d_config config) {
     conv->stride_w  = config.stride_w;
     conv->padding_h = config.padding_h;
     conv->padding_w = config.padding_w;
-    
-    // set some reasonable value if not setted in config
-    conv->input_c = 1;
-    conv->has_bias  = 0;
+
+    conv->input_c  = 1;
+    conv->has_bias = 0;
+    conv->dtype    = TK_F64;   /* filters are always double */
 }
 
 // conv->input_h/w and kernel_w/h should be setted before calling this
@@ -54,8 +54,16 @@ int tk_conv2d_load_weights(struct tk_conv2d* conv, FILE* fp) {
 }
 
 void tk_conv2d_alloc(struct tk_rt_ctx* ctx, tk_conv2d* conv) {
-    conv->filters = tk_ws_tensor_alloc(ctx->ws, ctx->meta_arena, conv->dtype, (int[]){conv->num_filter, conv->input_c, conv->kernel_h, conv->kernel_w}, 4);
-}		
+    int filter_shape[4] = {conv->num_filter, conv->input_c, conv->kernel_h, conv->kernel_w};
+    /* Weights are persistent — allocate from data_arena, not the workspace */
+    conv->filters = tk_tensor_alloc(ctx->data_arena, conv->dtype, filter_shape, 4);
+
+    /* Xavier-style random init */
+    uint64_t total = shape_size_calc(filter_shape, 4);
+    double* data = (double*)conv->filters->data;
+    for (uint64_t i = 0; i < total; ++i)
+        data[i] = ((double)rand() / RAND_MAX * 2.0 - 1.0) * 0.01;
+}
 
 /*
 // called after initConv and allocConv
@@ -135,20 +143,70 @@ void manualKernal(tk_conv2d* conv) {
 }		
 */
 
-// called after conv_bind_input
-struct tk_tensor* tk_conv_forward(struct tk_rt_ctx* ctx, struct tk_conv2d* conv, struct Dataset* dataset) {
-
+/* called after tk_conv2d_setup + tk_conv2d_alloc
+ *
+ * Correct 2-D convolution:
+ *   input:   [in_c, in_h, in_w]   (single sample)
+ *   filters: [num_filter, in_c, kH, kW]
+ *   output:  [num_filter, filtered_h, filtered_w]
+ *
+ * output[f, oh, ow] = sum_{c,kh,kw} input[c, oh*sh+kh, ow*sw+kw] * filter[f,c,kh,kw]
+ */
+struct tk_tensor* tk_conv_forward(struct tk_rt_ctx* ctx,
+                                  struct tk_conv2d* conv,
+                                  struct Dataset* dataset) {
     enum tk_dtype dtype = TK_F64;
-    struct tk_tensor* padded_pics = tk_ws_tensor_alloc(ctx->ws, ctx->meta_arena, dtype, (int[]){conv->num_filter, conv->padded_h, conv->padded_w}, 3);
-    /* runtime tensor */
-    struct tk_tensor* filtered_pics = tk_ws_tensor_alloc(ctx->ws, ctx->meta_arena, dtype, (int[]){conv->num_filter, conv->filtered_h, conv->filtered_w}, 3); 
 
-    if (ctx->rt_type != RT_DRYRUN) {
-        for ( int i = 0 ; i < conv->num_filter ; ++i ) {
-            tk_tensor_padding(dataset->samples, padded_pics,
-                              conv->padding_h, conv->padding_w);
-            tk_ops_convolute(padded_pics, conv->filters, filtered_pics);
-            // tk_tensor_relu(filtered_pics);
+    /* Allocate workspace only for the dry-run sizing pass */
+    if (conv->padding_h > 0 || conv->padding_w > 0)
+        tk_ws_tensor_alloc(ctx->ws, ctx->meta_arena, dtype,
+                           (int[]){conv->input_c, conv->padded_h, conv->padded_w}, 3);
+
+    int oH = conv->filtered_h;
+    int oW = conv->filtered_w;
+    struct tk_tensor* filtered_pics = tk_ws_tensor_alloc(
+        ctx->ws, ctx->meta_arena, dtype,
+        (int[]){conv->num_filter, oH, oW}, 3);
+
+    if (ctx->rt_type == RT_DRYRUN) return filtered_pics;
+
+    int F   = conv->num_filter;
+    int C   = conv->input_c;
+    int kH  = conv->kernel_h;
+    int kW  = conv->kernel_w;
+    int sH  = conv->stride_h;
+    int sW  = conv->stride_w;
+    int pH  = conv->padding_h;
+    int pW  = conv->padding_w;
+    int inH = conv->input_h;
+    int inW = conv->input_w;
+
+    double* input_data  = (double*)dataset->samples->data;  /* [C, inH, inW] */
+    double* filter_data = (double*)conv->filters->data;      /* [F, C, kH, kW] */
+    double* out_data    = (double*)filtered_pics->data;       /* [F, oH, oW] */
+
+    memset(out_data, 0, (size_t)F * oH * oW * sizeof(double));
+
+    for (int f = 0; f < F; ++f) {
+        double* out_f = out_data + (size_t)f * oH * oW;
+        for (int c = 0; c < C; ++c) {
+            double* in_c  = input_data  + (size_t)c * inH * inW;
+            double* filt  = filter_data + ((size_t)f * C + c) * kH * kW;
+            for (int oh = 0; oh < oH; ++oh) {
+                for (int ow = 0; ow < oW; ++ow) {
+                    double sum = 0.0;
+                    for (int kh = 0; kh < kH; ++kh) {
+                        int ih = oh * sH + kh - pH;
+                        if (ih < 0 || ih >= inH) continue;
+                        for (int kw = 0; kw < kW; ++kw) {
+                            int iw = ow * sW + kw - pW;
+                            if (iw < 0 || iw >= inW) continue;
+                            sum += in_c[ih * inW + iw] * filt[kh * kW + kw];
+                        }
+                    }
+                    out_f[oh * oW + ow] += sum;
+                }
+            }
         }
     }
     return filtered_pics;

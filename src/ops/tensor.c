@@ -229,17 +229,34 @@ static void tk_tensor_padding_data_move(struct tk_tensor* dest, struct tk_tensor
 }
 
 void tk_tensor_padding(struct tk_tensor* src, struct tk_tensor* dest, int pad_h, int pad_w) {
-    int in_h = src->shape[src->ndims-1];
-    int in_w = src->shape[src->ndims-2];
-    int out_h = in_h + 2 * pad_h;
-    int out_w = in_w + 2 * pad_w;
+    if (pad_h == 0 && pad_w == 0) {
+        /* No padding — simple copy */
+        uint64_t bytes = shape_size_calc(src->shape, src->ndims) * tk_get_dtype_size(src->dtype);
+        memcpy(dest->data, src->data, (size_t)bytes);
+        return;
+    }
 
-    int out_shape[src->ndims];
-    memcpy(out_shape, src->shape, sizeof(int) * src->ndims);
-    out_shape[src->ndims-1] = out_h;
-    out_shape[src->ndims-2] = out_w;
+    int in_h = src->shape[src->ndims-2];
+    int in_w = src->shape[src->ndims-1];
+
+    int planes = 1;
+    for (int i = 0; i < src->ndims - 2; ++i)
+        planes *= src->shape[i];
+
+    int dst_h = in_h + 2 * pad_h;
+    int dst_w = in_w + 2 * pad_w;
+    size_t elem = tk_get_dtype_size(src->dtype);
+
     tk_tensor_fill_zero(dest);
-    tk_tensor_padding_data_move(dest, src, pad_h, pad_w);
+
+    for (int p = 0; p < planes; ++p) {
+        uint8_t* sp = (uint8_t*)src->data  + (size_t)p * in_h  * in_w  * elem;
+        uint8_t* dp = (uint8_t*)dest->data + (size_t)p * dst_h * dst_w * elem;
+        for (int h = 0; h < in_h; ++h)
+            memcpy(dp + ((size_t)(pad_h + h) * dst_w + pad_w) * elem,
+                   sp + (size_t)h * in_w * elem,
+                   (size_t)in_w * elem);
+    }
 }
 
 static void _tk_tensor_relu_2d(struct tk_tensor* src) {
@@ -264,11 +281,12 @@ void tk_tensor_relu(struct tk_tensor* src) {
         planes *= src->shape[i];
     }
 
-    int pic_plane_size = src->shape[src->ndims-2] * src->shape[src->ndims-1];
+    size_t pic_plane_size = (size_t)src->shape[src->ndims-2] * src->shape[src->ndims-1];
+    size_t elem_size = tk_get_dtype_size(src->dtype);
 
     for (int p = 0; p < planes; ++p) {
         struct tk_tensor pic_view = *src;
-        pic_view.data = src->data + (p * pic_plane_size);
+        pic_view.data = (uint8_t*)src->data + (size_t)p * pic_plane_size * elem_size;
 
         _tk_tensor_relu_2d(&pic_view);
     }
@@ -286,4 +304,78 @@ int tk_tensor_load_data(struct tk_tensor* dest, FILE* fp, size_t size) {
 
     fread(dest->data, tk_get_dtype_size(dest->dtype), size, fp);
     return 0;
+}
+
+static void tk_tensor_type_print(enum tk_dtype dtype) {
+    switch(dtype) {
+        case TK_F64:
+            printf("TK_F64");
+            break;
+        case TK_F32:
+            printf("TK_F32");
+            break;
+        case TK_I16:
+            printf("TK_I16");
+            break;
+        case TK_I8:
+            printf("TK_I8");
+            break;
+        case TK_U8:
+            printf("TK_U8");
+            break;
+        default:
+            printf("Unknown tensor data type");
+            break;
+    }
+}
+
+void tk_tensor_data_print(struct tk_tensor* src) {
+    TK_DISPATCH_TYPES(src->dtype, __func__, {
+        scalar_t* data_ptr = (scalar_t*)src->data;
+        int data_size = (int)shape_size_calc(src->shape, src->ndims);
+        if (data_size > TK_DEBUG_SIZE)
+            data_size = TK_DEBUG_SIZE;
+
+        printf("First %d data:\n[", data_size);
+        for (int i = 0; i < data_size; ++i) {
+            switch (src->dtype) {
+                case TK_F64:
+                case TK_F32:
+                    printf("%.6f", (double)data_ptr[i]);
+                    break;
+                case TK_I16:
+                    printf("%d", (int)(int16_t)data_ptr[i]);
+                    break;
+                case TK_I8:
+                    printf("%d", (int)(int8_t)data_ptr[i]);
+                    break;
+                case TK_U8:
+                    printf("%u", (unsigned)(uint8_t)data_ptr[i]);
+                    break;
+                default:
+                    printf("?");
+                    break;
+            }
+            if (i < data_size - 1) printf(", ");
+        }
+        printf("]\n");
+    });
+}
+
+void tk_tensor_print(struct tk_tensor* src) {
+    printf("Tensor data type: ");
+    tk_tensor_type_print(src->dtype);
+    printf("\n");
+    printf("Dimension: %d\n", src->ndims);
+    printf("shape: [");
+    for ( int i = 0 ; i < src->ndims-1 ; ++i ) {
+        printf("%d ", src->shape[i]);
+    }
+    printf("%d]\n", src->shape[src->ndims-1]);
+    printf("stride: [");
+    for ( int i = 0 ; i < src->ndims-1 ; ++i ) {
+        printf("%d ", src->strides[i]);
+    }
+    printf("%d]\n", src->strides[src->ndims-1]);
+    tk_tensor_data_print(src);
 }

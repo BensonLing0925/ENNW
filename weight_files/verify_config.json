@@ -1,0 +1,16 @@
+{
+    "mode": "TEST",
+    "seed": 0,
+    "imgPath": "C:\\Users\\BENSON~1\\AppData\\Local\\Temp\\tmpujfytguv\\imgs.idx",
+    "imgLabelPath": "C:\\Users\\BENSON~1\\AppData\\Local\\Temp\\tmpujfytguv\\lbls.idx",
+    "weights_path": "C:\\Users\\Benson Ling\\Desktop\\CNN\\weight_files\\verify_weights.bin",
+    "num_filter": 10,
+    "kernel_size": 3,
+    "pool_size": 2,
+    "tf_n_heads": 13,
+    "fc_layers": [
+        100,
+        50,
+        10
+    ]
+}

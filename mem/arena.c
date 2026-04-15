@@ -161,3 +161,13 @@ struct block* allocBlock(size_t block_size) {
 void freeBlock(struct block* b) {
     free(b);
 }
+
+size_t arena_get_total_used(struct arena* a) {
+    size_t total = 0;
+    struct block* b = a->head;
+    while (b) {
+        total += b->used;
+        b = b->next;
+    }
+    return total;
+}
