@@ -3,7 +3,6 @@
 #include <stdlib.h>
 #include "structDef.h"
 #include "loadPic.h"
-#include "Trie.h"
 #include "ops/tensor.h"
 #include "ops/tensor_ops.h"
 #include "runtime/rt_context.h"

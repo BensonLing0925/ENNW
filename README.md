@@ -1,4 +1,4 @@
-# ENNW: Efficient Neural Network Wrapper
+# ENNW: Efficient Neural Network
 
 **A pure C-based deep learning inference framework with custom memory management and Transformer support.**
 
@@ -14,6 +14,25 @@ Readable codebase — each layer is a single, auditable .c file
 This project was built to also deeply understand what happens below PyTorch.
 
 ## Build & Run
+
+### TL;DR (Quick Start)
+Assuming you have a C compiler (GCC/MinGW) and Python with PyTorch installed:
+
+```bash
+# 1. Clone & Enter the repository
+git clone "https://github.com/BensonLing0925/ENNW.git"
+cd ENNW
+
+# 2. Setup Environment (Dataset & Weights)
+python tools/download_mnist.py
+python tools/export_weights.py --config tools/config_infer.json --out weights.bin 
+
+# 3. Build & Inference
+make
+./nn tools/config_infer.json
+```
+
+## Makefile commands
 
 ```bash
 make            # Build (outputs nn.exe on Windows, nn on Linux)
@@ -126,4 +145,4 @@ To ensure the reliability of the C implementation, a comprehensive validation pi
 ### 3. Bit-Exact Numerical Verification (`tools/verify_engine.py`)
 This is the core validation tool that ensures the C engine's algorithmic correctness:Three-Way Comparison: It runs inference on the same sample through PyTorch Native, Python-based C-Simulation, and the Compiled C Executable.
 
-Parity Guarantee: It performs a sample-by-sample logit comparison. Achieving PASS confirms that custom pointer arithmetic, tensor strides, and Transformer attention kernels match industry-standard results within a $11^{-7}$ tolerance.
+Parity Guarantee: It performs a sample-by-sample logit comparison. Achieving PASS confirms that custom pointer arithmetic, tensor strides, and Transformer attention kernels match industry-standard results within a $10^{-7}$ tolerance.
