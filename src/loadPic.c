@@ -307,7 +307,7 @@ void loadImgLabel(struct tk_rt_ctx* ctx,
 	magic = littleToBigEndian32(magic);
 	num_sample = littleToBigEndian32(num_sample);
 
-    dataset->labels = tk_ws_tensor_alloc(ctx->ws, ctx->meta_arena, TK_U8, (int[]){num_sample}, 1);
+    tk_ws_tensor_alloc(ctx->ws, ctx->meta_arena, TK_U8, (int[]){num_sample}, 1, &dataset->labels);
     dataset->num_samples = num_sample;
 
     if (ctx->rt_type != RT_DRYRUN) {
@@ -341,7 +341,7 @@ void loadImgFile(struct tk_rt_ctx* ctx, Dataset* dataset, const char filePath[],
 
     num_sample = (sampleCnt == -1) ? total_num : sampleCnt;
 
-    dataset->samples = tk_ws_tensor_alloc(ctx->ws, ctx->meta_arena, TK_U8, (int[]){num_sample, rows, cols}, 3);
+    tk_ws_tensor_alloc(ctx->ws, ctx->meta_arena, TK_U8, (int[]){num_sample, rows, cols}, 3, &dataset->samples);
     dataset->rows = rows;
     dataset->cols = cols;
 

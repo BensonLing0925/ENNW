@@ -7,6 +7,10 @@ nn
 *.bin
 *.weights
 
+# raylib third-party (only need src/ to build, not examples/projects)
+src/raylib/examples/
+src/raylib/projects/
+
 # python cache
 __pycache__/
 .ipynb_checkpoints/

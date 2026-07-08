@@ -4,9 +4,14 @@
 #include <stdarg.h>
 
 #if defined(__STDC_VERSION__) && (__STDC_VERSION__ >= 201112L)
-#define RT_THREAD_LOCAL _Thread_local
+    #define RT_THREAD_LOCAL _Thread_local
+#elif defined(__GNUC__) || defined(__clang__)
+    #define RT_THREAD_LOCAL __thread
+#elif defined(_MSC_VER)
+    #define RT_THREAD_LOCAL __declspec(thread)
 #else
-#define RT_THREAD_LOCAL
+    #define RT_THREAD_LOCAL 
+    #warning "Thread local storage not supported on this platform."
 #endif
 
 static RT_THREAD_LOCAL struct rt_err_status g_rt_err_status;

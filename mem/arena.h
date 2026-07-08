@@ -12,6 +12,9 @@
 #define BLOCK_SIZE (1024u * 64u)
 #define ALIGN_UP(x, align) (((x) + ((align) - 1)) & ~((align) - 1))
 
+// used for boostrap arena
+#define ARENA_EMPTY(a) struct arena a = {.head = NULL, .current_block = NULL}
+
 struct block {
     struct block* next;
     size_t cap;

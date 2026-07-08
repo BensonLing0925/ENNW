@@ -2,6 +2,9 @@
 #include "arena.h"
 #include "tensor.h"
 #include <inttypes.h>
+#include <math.h>
+#include <stdio.h>
+#include <string.h>
 
 // stack alloc
 #define TK_TENSOR_INIT(tensor) \
@@ -81,19 +84,20 @@ void tk_tensor_data_reorder(struct tk_tensor* src, struct tk_tensor* dest) {
 }
 
 // heap alloc
-struct tk_tensor* tk_tensor_alloc(struct arena* a,
-                                  enum tk_dtype dtype,
-                                  int* shape,
-                                  int ndims) {
+int tk_tensor_alloc(struct arena* a,
+                    enum tk_dtype dtype,
+                    int* shape,
+                    int ndims,
+                    struct tk_tensor** out) {
     struct tk_tensor* tk = arena_alloc(a, sizeof(struct tk_tensor));
     if (!tk) {
-        RT_FAIL(RT_EOOM, "Out of memory"); 
+        RT_FAIL(RT_EOOM, "Out of memory");
     }
 
     uint64_t size = shape_size_calc(shape, ndims);
 
     TK_DISPATCH_TYPES(dtype, __func__, {
-                tk->data = (void*) arena_alloc(a, sizeof(scalar_t) * size); 
+                tk->data = (void*) arena_alloc(a, sizeof(scalar_t) * size);
                 tk->strides = (int*) arena_alloc(a, sizeof(int) * ndims);
                 strides_calc(tk->strides, shape, ndims);
                 tk->dtype = dtype;
@@ -103,7 +107,8 @@ struct tk_tensor* tk_tensor_alloc(struct arena* a,
     tk->shape = arena_alloc(a, sizeof(int) * ndims);
     memcpy(tk->shape, shape, sizeof(int) * ndims);
 
-    return tk;
+    *out = tk;
+    return 0;
 }
 
 int tk_tensor_reshape(struct arena* a, struct tk_tensor* src, struct tk_tensor** dest_ptr, int* new_shape, int new_ndims) {
@@ -123,8 +128,8 @@ int tk_tensor_reshape(struct arena* a, struct tk_tensor* src, struct tk_tensor**
 
     // transposed, need realloc and copy data
     if (!tk_tensor_is_contiguous(src)) {
-        dest = tk_tensor_alloc(a, src->dtype, src->shape, src->ndims);
-        tk_tensor_data_reorder(src, dest); 
+        RT_CHECK(tk_tensor_alloc(a, src->dtype, src->shape, src->ndims, &dest));
+        tk_tensor_data_reorder(src, dest);
     }
     else {
         dest = arena_alloc(a, sizeof(struct tk_tensor));
@@ -166,39 +171,48 @@ int tk_tensor_transpose(struct arena* a,
     return 0;
 }
 
-struct tk_tensor* tk_tensor_view(struct arena* a, struct tk_tensor* src, int* new_shape, int new_ndims) {
+int tk_tensor_view(struct arena* a, struct tk_tensor* src, int* new_shape, int new_ndims, struct tk_tensor** out) {
 
     if (!src)
-        return NULL;
+        RT_FAIL(RT_EINVAL, "src is NULL");
 
     // 只在 meta_arena 拿一個載體
     struct tk_tensor* view = arena_alloc(a, sizeof(struct tk_tensor));
-    
+    if (!view)
+        RT_FAIL(RT_EOOM, "Out of memory");
+
     view->dtype = src->dtype;
     view->shape = new_shape;
     view->ndims = new_ndims;
-    
+    view->strides = arena_alloc(a, sizeof(int) * new_ndims);
+    strides_calc(view->strides, new_shape, new_ndims);
+
     // 載體指向同一個 data，不需要調用 tk_ws_alloc，所以不增加 peak_offset
-    view->data = src->data; 
-    
-    return view;
+    view->data = src->data;
+
+    *out = view;
+    return 0;
 }
 
-struct tk_tensor* tk_tensor_copy(struct arena* meta_a, struct arena* data_a, struct tk_tensor* src) {
+int tk_tensor_copy(struct arena* meta_a, struct arena* data_a, struct tk_tensor* src, struct tk_tensor** out) {
     struct tk_tensor* dst = arena_alloc(meta_a, sizeof(struct tk_tensor));
-    
+    if (!dst)
+        RT_FAIL(RT_EOOM, "Out of memory");
+
     memcpy(dst, src, sizeof(struct tk_tensor));
 
     uint64_t num_elements = shape_size_calc(src->shape, src->ndims);
     uint64_t bytes = num_elements * tk_get_dtype_size(src->dtype);
 
     dst->data = arena_alloc(data_a, bytes);
+    if (!dst->data)
+        RT_FAIL(RT_EOOM, "Out of memory for tensor data");
 
-    if (src->data && dst->data) {
+    if (src->data)
         memcpy(dst->data, src->data, bytes);
-    }
 
-    return dst;
+    *out = dst;
+    return 0;
 }
 
 void tk_tensor_fill_zero(struct tk_tensor* tensor) {
@@ -306,7 +320,7 @@ int tk_tensor_load_data(struct tk_tensor* dest, FILE* fp, size_t size) {
     return 0;
 }
 
-static void tk_tensor_type_print(enum tk_dtype dtype) {
+void tk_tensor_type_print(enum tk_dtype dtype) {
     switch(dtype) {
         case TK_F64:
             printf("TK_F64");
@@ -327,6 +341,30 @@ static void tk_tensor_type_print(enum tk_dtype dtype) {
             printf("Unknown tensor data type");
             break;
     }
+}
+
+const char* tk_tensor_dtype_to_str(enum tk_dtype dtype) {
+    switch(dtype) {
+        case TK_F64: return "TK_F64";
+        case TK_F32: return "TK_F32";
+        case TK_I32: return "TK_I32";
+        case TK_I16: return "TK_I16";
+        case TK_I8:  return "TK_I8";
+        case TK_U8:  return "TK_U8";
+        default:     return "Unknown";
+    }
+}
+
+enum tk_dtype tk_dtype_from_str(const char* s) {
+    if (!s) return TK_F64;
+    if (strcmp(s, "f64") == 0 || strcmp(s, "F64") == 0) return TK_F64;
+    if (strcmp(s, "f32") == 0 || strcmp(s, "F32") == 0) return TK_F32;
+    if (strcmp(s, "i32") == 0 || strcmp(s, "I32") == 0) return TK_I32;
+    if (strcmp(s, "i16") == 0 || strcmp(s, "I16") == 0) return TK_I16;
+    if (strcmp(s, "i8")  == 0 || strcmp(s, "I8")  == 0) return TK_I8;
+    if (strcmp(s, "u8")  == 0 || strcmp(s, "U8")  == 0) return TK_U8;
+    fprintf(stderr, "[WARNING] Unknown dtype '%s', defaulting to f64\n", s);
+    return TK_F64;
 }
 
 void tk_tensor_data_print(struct tk_tensor* src) {
@@ -379,3 +417,38 @@ void tk_tensor_print(struct tk_tensor* src) {
     printf("%d]\n", src->strides[src->ndims-1]);
     tk_tensor_data_print(src);
 }
+
+/* decoder-specific related operations */
+int tk_tensor_casual_mask(struct tk_tensor* src) {
+
+    uint64_t num_batches = 1;
+    for (int i = 0; i < src->ndims - 2; ++i) {
+        num_batches *= src->shape[i];
+    }
+
+    int ndims = src->ndims;
+    uint64_t src_p = src->shape[ndims-2];       // row
+    uint64_t src_q = src->shape[ndims-1];       // col
+        
+    uint64_t batch_stride_s = (num_batches > 1) ? (src_p * src_q) : 0;
+
+    // inner loop deal with 2 dimensions matmul
+    TK_DISPATCH_TYPES(dest->dtype, __func__, {
+
+        scalar_t* src_base = src->data;
+
+        // outer batch loop
+        for (uint64_t b = 0; b < num_batches; ++b) {
+            // locate to the current batch's base
+            scalar_t* src_ptr = src_base + b * batch_stride_s;
+            for (uint64_t row = 0 ; row < src_p ; ++row) {
+                scalar_t* row_ptr = src_ptr + row * src_q;
+                for (uint64_t col = row + 1 ; col < src_q ; ++col) {
+                    row_ptr[col] = (scalar_t)-INFINITY; 
+                }
+            }
+        }
+    });
+    return 0;
+}
+

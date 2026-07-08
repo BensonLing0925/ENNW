@@ -37,7 +37,7 @@ void tk_pooling_setup(struct tk_pooling* pooling, struct tk_tensor* input) {
     pooling->params->pooled_w = pooling->pooled_w = pooled_w;
 }
 
-struct tk_tensor* tk_pooling_forward(struct tk_rt_ctx* ctx, struct tk_pooling* pooling, struct tk_tensor* input) {
+int tk_pooling_forward(struct tk_rt_ctx* ctx, struct tk_pooling* pooling, struct tk_tensor* input, struct tk_tensor** out) {
     tk_pooling_setup(pooling, input);
 
     int padded_shape[input->ndims];
@@ -45,13 +45,16 @@ struct tk_tensor* tk_pooling_forward(struct tk_rt_ctx* ctx, struct tk_pooling* p
     padded_shape[input->ndims-2] = pooling->padded_h;
     padded_shape[input->ndims-1] = pooling->padded_w;
 
-    struct tk_tensor* padded_input = tk_ws_tensor_alloc(ctx->ws, ctx->meta_arena, input->dtype, padded_shape, input->ndims);
-    struct tk_tensor* output = tk_ws_tensor_alloc(ctx->ws, ctx->meta_arena, input->dtype, (int[]){pooling->input_c, pooling->pooled_h, pooling->pooled_w}, 3);
+    struct tk_tensor* padded_input = NULL;
+    struct tk_tensor* output = NULL;
+    RT_CHECK(tk_ws_tensor_alloc(ctx->ws, ctx->meta_arena, input->dtype, padded_shape, input->ndims, &padded_input));
+    RT_CHECK(tk_ws_tensor_alloc(ctx->ws, ctx->meta_arena, input->dtype, (int[]){pooling->input_c, pooling->pooled_h, pooling->pooled_w}, 3, &output));
     if (ctx->rt_type != RT_DRYRUN) {
         tk_tensor_padding(input, padded_input,
                           pooling->padding_h, pooling->padding_w);
         tk_ops_pooling(pooling->params, padded_input, output);
     }
-    return output;
+    *out = output;
+    return 0;
 }
 

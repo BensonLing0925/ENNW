@@ -27,24 +27,22 @@ int tk_ln_weights_init(struct Linear* linear) {
     struct tk_tensor* weights = linear->weights;
     struct tk_tensor* bias    = linear->bias;
 
-    double* weight_data = (double*)weights->data;
-    double* bias_data   = (double*)bias->data;
-
-    /* Flat random init (Xavier-style small values) */
     uint64_t weight_total = shape_size_calc(weights->shape, weights->ndims);
-    for (uint64_t i = 0; i < weight_total; ++i)
-        weight_data[i] = ((double)rand() / RAND_MAX * 2.0 - 1.0) * 0.01;
-
-    int bias_size = bias->shape[0];
-    for (int i = 0; i < bias_size; ++i)
-        bias_data[i] = 0.0;
-
-    if (linear->is_training && linear->delta) {
-        double* delta_data = (double*)linear->delta->data;
-        uint64_t delta_total = shape_size_calc(linear->delta->shape, linear->delta->ndims);
-        for (uint64_t i = 0; i < delta_total; ++i)
-            delta_data[i] = 0.0;
-    }
+    TK_DISPATCH_TYPES(weights->dtype, "tk_ln_weights_init", {
+        scalar_t* weight_data = (scalar_t*)weights->data;
+        scalar_t* bias_data   = (scalar_t*)bias->data;
+        for (uint64_t i = 0; i < weight_total; ++i)
+            weight_data[i] = (scalar_t)(((double)rand() / RAND_MAX * 2.0 - 1.0) * 0.01);
+        int bias_size = bias->shape[0];
+        for (int i = 0; i < bias_size; ++i)
+            bias_data[i] = (scalar_t)0;
+        if (linear->is_training && linear->delta) {
+            scalar_t* delta_data = (scalar_t*)linear->delta->data;
+            uint64_t delta_total = shape_size_calc(linear->delta->shape, linear->delta->ndims);
+            for (uint64_t i = 0; i < delta_total; ++i)
+                delta_data[i] = (scalar_t)0;
+        }
+    });
     return 0;
 }
 
@@ -59,18 +57,18 @@ Linear* create_Linear(struct tk_rt_ctx* ctx, struct LinearConfig* config, struct
 
     /* weights: [in_dim, out_dim]  =>  GEMM: [N, in] x [in, out] -> [N, out] */
     int weight_shape[2] = { config->in_dim, config->out_dim };
-    linear->weights = tk_tensor_alloc(a, dtype, weight_shape, 2);
+    tk_tensor_alloc(a, dtype, weight_shape, 2, &linear->weights);
 
     int bias_shape[1] = { config->out_dim };
-    linear->bias = tk_tensor_alloc(a, dtype, bias_shape, 1);
+    tk_tensor_alloc(a, dtype, bias_shape, 1, &linear->bias);
 
     /* placeholder outputs tensor — overwritten every forward pass */
     int out_shape[2] = { 1, config->out_dim };
-    linear->outputs = tk_tensor_alloc(a, dtype, out_shape, 2);
+    tk_tensor_alloc(a, dtype, out_shape, 2, &linear->outputs);
 
     linear->delta = NULL;
     if (config->is_training) {
-        linear->delta = tk_tensor_alloc(a, dtype, weight_shape, 2);
+        tk_tensor_alloc(a, dtype, weight_shape, 2, &linear->delta);
     }
 
     tk_ln_weights_init(linear);
@@ -110,19 +108,15 @@ int fc_forward(struct tk_rt_ctx* ctx,
         /* weights: [in_dim, out_dim]  =>  current [N, in] x weights [in, out] -> dest [N, out] */
         int out_features = linear->weights->shape[1];
         int dest_shape[] = {N, out_features};
-        struct tk_tensor* dest = tk_ws_tensor_alloc(ctx->ws, ctx->meta_arena, TK_F64, dest_shape, 2);
+        struct tk_tensor* dest = NULL;
+        tk_ws_tensor_alloc(ctx->ws, ctx->meta_arena, inputs->dtype, dest_shape, 2, &dest);
 
         int err = tk_ops_gemm(current, linear->weights, dest);
         (void)err;
 
         /* Add bias: dest[n][j] += bias[j] */
-        if (linear->has_bias && linear->bias) {
-            double* bias_data = (double*)linear->bias->data;
-            double* dest_data = (double*)dest->data;
-            for (int n = 0; n < N; ++n)
-                for (int j = 0; j < out_features; ++j)
-                    dest_data[n * out_features + j] += bias_data[j];
-        }
+        if (linear->has_bias && linear->bias)
+            tk_ops_add(dest, linear->bias, dest);
 
         /* ReLU on all layers except the last */
         if (i < network->linear_count - 1)
@@ -136,21 +130,22 @@ int fc_forward(struct tk_rt_ctx* ctx,
     int num_classes = current->shape[1];
     double batch_loss = 0.0;
     int correct = 0;
+    size_t elem_size = tk_get_dtype_size(current->dtype);
 
     for (int n = 0; n < N; ++n) {
         /* Zero-copy row view into sample n */
-        double* row_ptr = (double*)current->data + (n * num_classes);
+        void* row_ptr = (char*)current->data + (size_t)n * num_classes * elem_size;
         int row_shape[] = { num_classes };
         struct tk_tensor row_view = {
             .data  = row_ptr,
             .shape = row_shape,
             .ndims = 1,
-            .dtype = TK_F64,
+            .dtype = current->dtype,
         };
 
-        softMax(&row_view);
+        tk_ops_softmax(&row_view, &row_view);
 
-        /* Find true class from one-hot label */
+        /* Find true class from one-hot label (labels always TK_F64) */
         int true_class = -1;
         double* label_row = (double*)labels->data + (n * num_classes);
         for (int c = 0; c < num_classes; ++c) {
@@ -159,7 +154,7 @@ int fc_forward(struct tk_rt_ctx* ctx,
 
         batch_loss += crossEntropyLoss(true_class, &row_view);
 
-        int pred = findMax((size_t)num_classes, (double*)row_view.data);
+        int pred = findMax(&row_view);
         if (pred == true_class) correct++;
     }
 

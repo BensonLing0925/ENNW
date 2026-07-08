@@ -1,5 +1,6 @@
 #include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
 #include <time.h>
 #include <math.h>
 #include <float.h>
@@ -13,6 +14,15 @@
 #include "structDef.h"
 #include "../config/config.h"
 #include "../weightio/weightio.h"
+#include "ops/tensor.h"
+
+static uint32_t tk_dtype_to_layer_dtype(enum tk_dtype dtype) {
+    switch (dtype) {
+        case TK_F32: return LAYER_DTYPE_F32;
+        case TK_F64: return LAYER_DTYPE_F64;
+        default:     return LAYER_DTYPE_F64;
+    }
+}
 
 /* ------------------------------------------------------------------ */
 /* Build model from config                                              */
@@ -75,7 +85,7 @@ static int build_model(struct tk_rt_ctx* ctx,
         lc_arr[i].out_dim     = fc_sizes[i];
         lc_arr[i].has_bias    = 1;
         lc_arr[i].is_training = (c->mode == MODE_TRAIN) ? 1 : 0;
-        lc_arr[i].dtype       = TK_F64;
+        lc_arr[i].dtype       = ctx->compute_dtype;
         prev_dim = (uint64_t)fc_sizes[i];
     }
     struct LinearConfigList cfgls = { .num_configs = fc_count, .configs = lc_arr };
@@ -96,15 +106,15 @@ static int build_model(struct tk_rt_ctx* ctx,
 
     model->layers_meta[0].layer_type  = LAYER_CONV2D;
     model->layers_meta[0].layer_index = 0;
-    model->layers_meta[0].dtype       = LAYER_DTYPE_F64;
+    model->layers_meta[0].dtype       = tk_dtype_to_layer_dtype(ctx->compute_dtype);
 
     model->layers_meta[1].layer_type  = LAYER_TF;
     model->layers_meta[1].layer_index = 1;
-    model->layers_meta[1].dtype       = LAYER_DTYPE_F64;
+    model->layers_meta[1].dtype       = tk_dtype_to_layer_dtype(ctx->compute_dtype);
 
     model->layers_meta[2].layer_type  = LAYER_FC;
     model->layers_meta[2].layer_index = 2;
-    model->layers_meta[2].dtype       = LAYER_DTYPE_F64;
+    model->layers_meta[2].dtype       = tk_dtype_to_layer_dtype(ctx->compute_dtype);
 
     /* ---- Conv layer ---- */
     struct tk_conv2d* conv = tk_conv2D_create(ctx);
@@ -113,7 +123,7 @@ static int build_model(struct tk_rt_ctx* ctx,
     int sample_shape[3]   = { 1, picSize, picSize };
     int sample_strides[3] = { picSize * picSize, picSize, 1 };
     struct tk_tensor sample_meta = {
-        .dtype   = TK_F64,
+        .dtype   = ctx->compute_dtype,
         .data    = NULL,
         .ndims   = 3,
         .shape   = sample_shape,
@@ -130,8 +140,12 @@ static int build_model(struct tk_rt_ctx* ctx,
     *out_pooling = pooling;
 
     /* ---- Transformer block ---- */
-    struct TransformerBlock* tf_block = tf_block_create(ctx);
-    tf_block_alloc(ctx, tf_block, tf_seq, tf_hidden, tf_heads);
+    struct TransformerBlock* tf_block = tk_tf_block_create(ctx);
+    tf_block->config.seq_length = tf_seq;
+    tf_block->config.hidden_dim = tf_hidden;
+    tf_block->config.n_heads    = tf_heads;
+    tf_block->config.dtype      = ctx->compute_dtype;
+    tk_tf_block_alloc(ctx, tf_block);
     *out_tf = tf_block;
 
     /* ---- Wire layer meta ---- */
@@ -165,26 +179,32 @@ static void forward_sample(struct tk_rt_ctx* ctx,
                             const uint8_t* raw_sample,
                             int H, int W,
                             int tf_seq, int tf_hidden,
-                            double* flat_buf_row,
+                            void* flat_buf_row,
                             uint64_t input_size) {
     size_t sample_ws = ctx->ws->cur_offset;
+    enum tk_dtype dtype = ctx->compute_dtype;
 
-    /* U8 -> F64 [1, H, W] */
+    /* U8 -> compute_dtype [1, H, W] */
     int s_shape[3] = { 1, H, W };
-    struct tk_tensor* s_f64 = tk_ws_tensor_alloc(ctx->ws, ctx->meta_arena,
-                                                  TK_F64, s_shape, 3);
-    double* sf = (double*)s_f64->data;
-    for (int k = 0; k < H * W; ++k)
-        sf[k] = raw_sample[k] / 255.0;
+    struct tk_tensor* s_input = NULL;
+    tk_ws_tensor_alloc(ctx->ws, ctx->meta_arena, dtype, s_shape, 3, &s_input);
+    TK_DISPATCH_TYPES(dtype, "forward_sample_u8_convert", {
+        scalar_t* sf = (scalar_t*)s_input->data;
+        for (int k = 0; k < H * W; ++k)
+            sf[k] = (scalar_t)(raw_sample[k] / 255.0);
+    });
 
     /* Conv forward */
-    struct tk_tensor* filtered = tk_conv_forward(ctx, conv,
-        &(struct Dataset){ .samples = s_f64, .rows = H, .cols = W,
-                           .num_samples = 1, .labels = NULL });
+    struct tk_tensor* filtered = NULL;
+    tk_conv_forward(ctx, conv,
+                    &(struct Dataset){ .samples = s_input, .rows = H, .cols = W,
+                                       .num_samples = 1, .labels = NULL },
+                    &filtered);
 
     /* Pooling */
     tk_pooling_setup(pooling, filtered);
-    struct tk_tensor* pooled = tk_pooling_forward(ctx, pooling, filtered);
+    struct tk_tensor* pooled = NULL;
+    tk_pooling_forward(ctx, pooling, filtered, &pooled);
 
     /* ReLU in-place */
     tk_tensor_relu(pooled);
@@ -193,18 +213,16 @@ static void forward_sample(struct tk_rt_ctx* ctx,
     int tf_shape[2]   = { tf_seq, tf_hidden };
     int tf_strides[2] = { tf_hidden, 1 };
     struct tk_tensor tf_input = {
-        .dtype   = TK_F64,
+        .dtype   = pooled->dtype,
         .data    = pooled->data,
         .ndims   = 2,
         .shape   = tf_shape,
         .strides = tf_strides,
     };
-    tf_block_forward(ctx, tf_block, &tf_input);
+    tk_tf_block_forward(ctx, tf_block, &tf_input);
 
     /* Copy flat output */
-    double* src = (double*)pooled->data;
-    for (uint64_t k = 0; k < input_size; ++k)
-        flat_buf_row[k] = src[k];
+    memcpy(flat_buf_row, pooled->data, input_size * tk_get_dtype_size(dtype));
 
     ctx->ws->cur_offset = sample_ws;
 }
@@ -236,6 +254,9 @@ int main(int argc, char* argv[]) {
     config_init(&c);
     if (load_json(argv[1], &misc_arena, &c) != 0)
         return -1;
+
+    ctx->compute_dtype = tk_dtype_from_str(c.dtype);
+    printf("[INFO] compute dtype: %s\n", tk_tensor_dtype_to_str(ctx->compute_dtype));
 
     if (c.mode == MODE_NONE) {
         fprintf(stderr, "Config error: 'mode' must be TRAIN or TEST\n");
@@ -282,8 +303,8 @@ int main(int argc, char* argv[]) {
     /* ---- One-hot labels ---- */
     int num_classes = network->linears[network->linear_count - 1].num_neurons;
     int onehot_shape[] = { dataset->num_samples, num_classes };
-    struct tk_tensor* onehot = tk_ws_tensor_alloc(ctx->ws, ctx->meta_arena,
-                                                   TK_F64, onehot_shape, 2);
+    struct tk_tensor* onehot = NULL;
+    tk_ws_tensor_alloc(ctx->ws, ctx->meta_arena, TK_F64, onehot_shape, 2, &onehot);
     if (tk_ops_onehot(dataset->labels, onehot) != 0)
         return -1;
 
@@ -296,13 +317,14 @@ int main(int argc, char* argv[]) {
 
     ctx->rt_type = RT_DRYRUN;
     int flat_shape[2] = { N, (int)input_size };
-    struct tk_tensor* flat_buf = tk_ws_tensor_alloc(ctx->ws, ctx->meta_arena,
-                                                         TK_F64, flat_shape, 2);
+    struct tk_tensor* flat_buf = NULL;
+    tk_ws_tensor_alloc(ctx->ws, ctx->meta_arena, ctx->compute_dtype, flat_shape, 2, &flat_buf);
     for (int n = 0; n < 1; ++n) {
+        size_t row_bytes = input_size * tk_get_dtype_size(ctx->compute_dtype);
         forward_sample(ctx, conv, pooling, tf_block,
                        raw + (size_t)n * H * W,
                        H, W, tf_seq, tf_hidden,
-                       (double*)flat_buf->data + (size_t)n * input_size,
+                       (char*)flat_buf->data + (size_t)n * row_bytes,
                        input_size);
     }
 
@@ -333,14 +355,15 @@ int main(int argc, char* argv[]) {
         ctx->ws->cur_offset = ws_base;
 
         int flat_shape[2] = { N, (int)input_size };
-        struct tk_tensor* flat_buf = tk_ws_tensor_alloc(ctx->ws, ctx->meta_arena,
-                                                         TK_F64, flat_shape, 2);
+        struct tk_tensor* flat_buf = NULL;
+        tk_ws_tensor_alloc(ctx->ws, ctx->meta_arena, ctx->compute_dtype, flat_shape, 2, &flat_buf);
 
+        size_t row_bytes = input_size * tk_get_dtype_size(ctx->compute_dtype);
         for (int n = 0; n < N; ++n) {
             forward_sample(ctx, conv, pooling, tf_block,
                            raw + (size_t)n * H * W,
                            H, W, tf_seq, tf_hidden,
-                           (double*)flat_buf->data + (size_t)n * input_size,
+                           (char*)flat_buf->data + (size_t)n * row_bytes,
                            input_size);
         }
 
@@ -376,14 +399,15 @@ int main(int argc, char* argv[]) {
         loss            = 0.0;
 
         int flat_shape[2] = { N, (int)input_size };
-        struct tk_tensor* flat_buf = tk_ws_tensor_alloc(ctx->ws, ctx->meta_arena,
-                                                         TK_F64, flat_shape, 2);
+        struct tk_tensor* flat_buf = NULL;
+        tk_ws_tensor_alloc(ctx->ws, ctx->meta_arena, ctx->compute_dtype, flat_shape, 2, &flat_buf);
 
+        size_t row_bytes = input_size * tk_get_dtype_size(ctx->compute_dtype);
         for (int n = 0; n < N; ++n) {
             forward_sample(ctx, conv, pooling, tf_block,
                            raw + (size_t)n * H * W,
                            H, W, tf_seq, tf_hidden,
-                           (double*)flat_buf->data + (size_t)n * input_size,
+                           (char*)flat_buf->data + (size_t)n * row_bytes,
                            input_size);
         }
 

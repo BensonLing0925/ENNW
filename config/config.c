@@ -19,6 +19,8 @@ void config_init(struct Config* c) {
     c->fc_num_layers = 0;
     /* inference */
     c->weights_path  = NULL;
+    /* dtype */
+    c->dtype = NULL;
 }
 
 static char* read_entire_file_arena(const char* path, struct arena* a) {
@@ -134,6 +136,12 @@ int load_json(const char* path, struct arena* a,struct Config* c) {
     weights_path = cJSON_GetObjectItemCaseSensitive(json, "weights_path");
     if (cJSON_IsString(weights_path) && (weights_path->valuestring != NULL))
         c->weights_path = arena_strdup(a, weights_path->valuestring);
+
+    const cJSON* dtype_j = cJSON_GetObjectItemCaseSensitive(json, "dtype");
+    if (cJSON_IsString(dtype_j) && dtype_j->valuestring != NULL)
+        c->dtype = arena_strdup(a, dtype_j->valuestring);
+    else
+        printf("[INFO] No dtype specified, using default f64\n");
 
     /* ---- Architecture (all optional) ---- */
     const cJSON* num_filter_j = cJSON_GetObjectItemCaseSensitive(json, "num_filter");

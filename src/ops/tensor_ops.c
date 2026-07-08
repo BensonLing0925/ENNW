@@ -1,46 +1,42 @@
+#include <omp.h>
+#include <stdint.h>
 #include "../error/rt_error.h"
 #include "float.h"
 #include "math.h"
 #include "tensor.h"
+#include "tensor_check.h"
 #include "../modules/pooling/pooling.h"
-
-int shape_equal_check(struct tk_tensor* src1, struct tk_tensor* src2) {
-    if (src1->ndims != src2->ndims)
-        RT_FAIL(RT_EINVAL, "Number of shape dimensions mismatch. src1: %d, src2: %d\n", src1->ndims, src2->ndims);
-
-    for ( int i = 0 ; i < src1->ndims ; ++i )
-        if (src1->shape[i] != src2->shape[i])
-            RT_FAIL(RT_EINVAL, "Shape mismatch at index %d, with src1: %d and src2: %d", i, src1->shape[i], src2->shape[i]);
-
-    return 0;
-}
-
-int mult_shape_equal_check(struct tk_tensor* tensor_arr, uint32_t size) {
-    int err = 0;
-    for ( uint32_t i = 0 ; i < size-1 ; ++i ) {
-        err = shape_equal_check(&tensor_arr[i], &tensor_arr[i+1]);
-        if (err != 0)
-            return err;
-    }
-    return 0;
-}
-
-int batch_shape_equal_check(struct tk_tensor* src1, struct tk_tensor* src2) {
-
-    if (src1->ndims != src2->ndims)
-        RT_FAIL(RT_EINVAL, "Number of shape dimensions mismatch. src1: %d, src2: %d\n", src1->ndims, src2->ndims);
-
-    for ( int i = 0 ; i < src1->ndims-2 ; ++i )
-        if (src1->shape[i] != src2->shape[i])
-            RT_FAIL(RT_EINVAL, "Shape mismatch at index %d, with src1: %d and src2: %d", i, src1->shape[i], src2->shape[i]);
-
-    return 0;
-}
+#include "../profiler/tk_profiler.h"
 
 // caller should allocate the correct dest data shape and space
 int tk_ops_add(struct tk_tensor* src1, struct tk_tensor* src2,
                struct tk_tensor* dest) {
-    
+
+    // fast path: broadcast 1-D bias [N] onto [..., N]
+    if (src2->ndims == 1 && src1->ndims >= 1 &&
+        src1->shape[src1->ndims - 1] == src2->shape[0]) {
+
+        int err = shape_equal_check(src1, dest);
+        if (err != 0) return err;
+
+        if (!tk_tensor_is_contiguous(src1) || !tk_tensor_is_contiguous(src2) ||
+            !tk_tensor_is_contiguous(dest))
+            RT_FAIL(RT_EINVAL, "Incontiguous tensor detected\n");
+
+        uint64_t rows = shape_size_calc(src1->shape, src1->ndims - 1);
+        int      cols = src2->shape[0];
+
+        TK_DISPATCH_TYPES(dest->dtype, __func__, {
+            scalar_t* s1   = src1->data;
+            scalar_t* bias = src2->data;
+            scalar_t* d    = dest->data;
+            for (uint64_t r = 0; r < rows; ++r)
+                for (int c = 0; c < cols; ++c)
+                    d[r * cols + c] = s1[r * cols + c] + bias[c];
+        });
+        return 0;
+    }
+
     int err = shape_equal_check(src1, src2);
     if (err != 0)
         return err;
@@ -121,6 +117,7 @@ int tk_ops_gemm(struct tk_tensor* src1, struct tk_tensor* src2, struct tk_tensor
             scalar_t* dest_ptr  = dest_base  + b * batch_stride_dest;
 
             // this part can be optimized using omp for parallelism
+            /*
             for ( int p = 0 ; p < src1->shape[src1->ndims-2] ; ++p )
                 for ( int r = 0 ; r < src2->shape[src2->ndims-1] ; ++r ) {
                     scalar_t sum = 0;
@@ -132,12 +129,74 @@ int tk_ops_gemm(struct tk_tensor* src1, struct tk_tensor* src2, struct tk_tensor
                     } 
                     dest_ptr[p * src2_r + r] = sum;
                 }
+            */
+
+            /* cache friendly version of naive gemm */
+            /*
+            for ( int p = 0 ; p < src1_p ; ++p )
+                for ( int q = 0 ; q < src1_q ; ++q ) {
+                    scalar_t val = src1_ptr[p * src1_q + q];
+                    for ( int r = 0 ; r < src2_r ; ++r ) {
+                        dest_ptr[p * src2_r + r] += val * src2_ptr[q * src2_r + r];
+                    } 
+                }
+            */
+
+            /* TILING gemm */
+            /*
+            int tile_q = 32;
+            int tile_r = 32;
+            // tile gemm is accumulated, clear zero first
+            memset(dest_ptr, 0, src1_p * src2_r * sizeof(scalar_t));
+
+            for ( int qq = 0 ; qq < src1_q ; qq += tile_q ) {
+                int q_limit = (qq + tile_q > src1_q) ? src1_q : (qq + tile_q);
+                for ( int rr = 0 ; rr < src2_r ; rr += tile_r ) {
+                    int r_limit = (rr + tile_r > src2_r) ? src2_r : (rr + tile_r);
+                    _Pragma("omp parallel for")
+                    for ( int p = 0 ; p < src1_p ; ++p ) {
+                        for ( int q = qq ; q < q_limit ; ++q ) {
+                            scalar_t val = src1_ptr[p * src1_q + q];
+
+                            for ( int r = rr ; r < r_limit ; ++r ) {
+                                dest_ptr[p * src2_r + r] += val * src2_ptr[q * src2_r + r];
+                            }
+                        }
+                    }
+                    
+                }
+            }
+            */
+            int tile_q = 32;
+            int tile_r = 32;
+            _Pragma("omp parallel for")
+            for (int p = 0; p < src1_p; ++p) {
+                scalar_t* dest_row = dest_ptr + p * src2_r;
+                memset(dest_row, 0, src2_r * sizeof(scalar_t));
+
+                for (int qq = 0; qq < src1_q; qq += tile_q) {
+                    int q_limit = (qq + tile_q > src1_q) ? src1_q : (qq + tile_q);
+                    
+                    for (int rr = 0; rr < src2_r; rr += tile_r) {
+                        int r_limit = (rr + tile_r > src2_r) ? src2_r : (rr + tile_r);
+
+                        for (int q = qq; q < q_limit; ++q) {
+                            scalar_t val = src1_ptr[p * src1_q + q];
+                            for (int r = rr; r < r_limit; ++r) {
+                                dest_row[r] += val * src2_ptr[q * src2_r + r];
+                            }
+                        }
+                    }
+                }
+            }
         }
     });
     return 0;
 }
 
 int tk_ops_layernorm(struct tk_tensor* src, struct tk_tensor* gamma, struct tk_tensor* beta, struct tk_tensor* dest) {
+
+    double eps = 1e-12;
 
     // src and dest must have identical shape
     int err = shape_equal_check(src, dest);
@@ -159,7 +218,6 @@ int tk_ops_layernorm(struct tk_tensor* src, struct tk_tensor* gamma, struct tk_t
     
     uint64_t num_rows = shape_size_calc(src->shape, src->ndims - 1);
     int dim = src->shape[src->ndims - 1];
-    double eps = 1e-5;
 
     TK_DISPATCH_TYPES(src->dtype, __func__, {
         scalar_t* s_ptr = (scalar_t*)src->data;
@@ -194,7 +252,139 @@ int tk_ops_layernorm(struct tk_tensor* src, struct tk_tensor* gamma, struct tk_t
     return 0;
 }
 
-void tk_ops_gelu(struct tk_tensor* src, struct tk_tensor* dest) {
+/* ---- fused add and layernorm --- */
+int tk_ops_fused_add_norm(struct tk_tensor* x, struct tk_tensor* residual,
+                          struct tk_tensor* gamma, struct tk_tensor* beta,
+                          struct tk_tensor* out) {
+
+    uint64_t num_rows = shape_size_calc(out->shape, out->ndims - 1);
+    int dim = out->shape[out->ndims-1];
+    double eps = 1e-12;
+    TK_DISPATCH_TYPES(x->dtype, __func__, {
+        scalar_t* x_ptr = (scalar_t*)x->data;
+        scalar_t* r_ptr = (scalar_t*)residual->data;
+        scalar_t* g_ptr = (scalar_t*)gamma->data;
+        scalar_t* b_ptr = (scalar_t*)beta->data;
+        scalar_t* o_ptr = (scalar_t*)out->data;
+        for ( uint64_t i = 0 ; i < num_rows ; ++i ) {
+            scalar_t* row_x = x_ptr + i * dim;
+            scalar_t* row_r = r_ptr + i * dim;
+            scalar_t* row_o = o_ptr + i * dim;
+            double sum = 0.0;
+            double sum_sq = 0.0;
+            for ( int j = 0 ; j < dim ; ++j ) {
+                row_o[j] = row_x[j] + row_r[j]; 
+                double val = row_o[j];
+                sum += val;
+                sum_sq += val * val;
+            }
+            double mean = sum / dim;
+            double var = (sum_sq / dim) - (mean * mean);
+            if (var < 0) var = 0.0;
+            double inv_std = 1.0 / sqrt(var + eps);
+
+            for ( int k = 0 ; k < dim ; k++ ) {
+                row_o[k] = (scalar_t)((row_o[k] - mean) * inv_std * g_ptr[k] + b_ptr[k]);
+            }
+
+        }
+
+    });
+	return 0;
+}
+
+int tk_ops_fused_gemm_bias_gelu(struct tk_tensor* src1, struct tk_tensor* src2,
+                          struct tk_tensor* bias, struct tk_tensor* dest) {
+
+    // if multiple dimensions for matmul, eg. A = [1, 12, 128, 64], B = [1, 12, 64, 256]
+    // check A and B's dimensions before the last 2 dimensions matches or able to broadcast
+    int err = batch_shape_equal_check(src1, src2);
+    if (err != 0)
+        return err;
+
+    // check inner dimension between 2 dimensions
+    int src1_p = src1->shape[src1->ndims-2];
+    int src1_q = src1->shape[src1->ndims-1];
+    int src2_q = src2->shape[src2->ndims-2];
+    int src2_r = src2->shape[src2->ndims-1];
+    // check inner dimension between 2 dimensions
+    if (src1_q != src2_q)
+        RT_FAIL(RT_EINVAL, "GEMM inner dimension shape mismatch. src1 inner dim: %d, src2 inner dim: %d\n", 
+                           src1_q,
+                           src2_q);
+
+    // check dest dimensions
+    if ((dest->shape[dest->ndims-2] != src1_p) || (dest->shape[dest->ndims-1] != src2_r))
+        RT_FAIL(RT_EINVAL, "GEMM dest dimension shape mismatch with src1 and src2. src1 last 2 dims: (%d, %d), src2 last 2 dims: (%d, %d)\n", src1_p, src1_q, src2_q, src2_r);
+
+    if (!tk_tensor_is_contiguous(src1) || !tk_tensor_is_contiguous(src2) || !tk_tensor_is_contiguous(dest))
+        RT_FAIL(RT_EINVAL, "Incontiguous tensor detected\n");
+    
+    uint64_t num_batches = 1;
+    for (int i = 0; i < src1->ndims - 2; ++i) {
+        num_batches *= src1->shape[i];
+    }
+
+    uint64_t batch_stride_s1 = (num_batches > 1) ? (src1_p * src1_q) : 0;
+    uint64_t batch_stride_s2 = (num_batches > 1) ? (src2_q * src2_r) : 0;
+    uint64_t batch_stride_dest = src1_p * src2_r;
+
+    // inner loop deal with 2 dimensions matmul
+    TK_DISPATCH_TYPES(dest->dtype, __func__, {
+
+        scalar_t* src1_base = src1->data;
+        scalar_t* src2_base = src2->data;
+        scalar_t* dest_base = dest->data;
+        scalar_t* bias_ptr = bias->data;
+
+        // outer batch loop
+        for (uint64_t b = 0; b < num_batches; ++b) {
+            // locate to the current batch's base
+            scalar_t* src1_ptr = src1_base + b * batch_stride_s1;
+            scalar_t* src2_ptr = src2_base + b * batch_stride_s2;
+            scalar_t* dest_ptr  = dest_base  + b * batch_stride_dest;
+
+            int tile_q = 32;
+            int tile_r = 32;
+            _Pragma("omp parallel for")
+            for (int p = 0; p < src1_p; ++p) {
+                scalar_t* dest_row = dest_ptr + p * src2_r;
+                memset(dest_row, 0, src2_r * sizeof(scalar_t));
+
+                for (int qq = 0; qq < src1_q; qq += tile_q) {
+                    int q_limit = (qq + tile_q > src1_q) ? src1_q : (qq + tile_q);
+                    
+                    for (int rr = 0; rr < src2_r; rr += tile_r) {
+                        int r_limit = (rr + tile_r > src2_r) ? src2_r : (rr + tile_r);
+
+                        for (int q = qq; q < q_limit; ++q) {
+                            scalar_t val = src1_ptr[p * src1_q + q];
+                            for (int r = rr; r < r_limit; ++r) {
+                                dest_row[r] += val * src2_ptr[q * src2_r + r];
+                            }
+                        }
+                    }
+                }
+                
+                // add bias immediately to achieve cache locality 
+                // bias need to be broadcasted (only one row)
+                for ( int i = 0 ; i < src2_r ; ++i ) {
+                    dest_row[i] += bias_ptr[i];
+                }
+
+                // GELU takes a number and output a number
+                for ( int i = 0 ; i < src2_r ; ++i ) {
+                        double x = (double)dest_row[i];
+                        dest_row[i] = (scalar_t)(0.5 * x * (1.0 + erf(x * 0.7071067811865476)));
+                    }
+                }
+            }
+        }
+    });
+    return 0;
+}
+
+int tk_ops_gelu(struct tk_tensor* src, struct tk_tensor* dest) {
     uint64_t total_size = shape_size_calc(dest->shape, dest->ndims);
     
     TK_DISPATCH_TYPES(dest->dtype, __func__, {
@@ -207,11 +397,13 @@ void tk_ops_gelu(struct tk_tensor* src, struct tk_tensor* dest) {
 
         for (uint64_t n = 0; n < total_size; ++n) {
             double x = (double)s_ptr[n];
-            double x_cube = x * x * x;
-            double inner = sqrt_2_over_pi * (x + coeff * x_cube);
-            d_ptr[n] = (scalar_t)(0.5 * x * (1.0 + tanh(inner)));
+            // double x_cube = x * x * x;
+            // double inner = sqrt_2_over_pi * (x + coeff * x_cube);
+            // d_ptr[n] = (scalar_t)(0.5 * x * (1.0 + tanh(inner)));
+            d_ptr[n] = (scalar_t)(0.5 * x * (1.0 + erf(x * 0.7071067811865476)));
         }
     });
+    return 0;
 }
 
 int tk_ops_scale(struct tk_tensor* tensor, double scale) {
@@ -396,3 +588,44 @@ int tk_ops_pooling(struct tk_pooling_params* pooling, struct tk_tensor* src, str
     });
     return 0;
 }
+
+/* embedding related operations */
+
+int tk_ops_embedding_lookup(struct tk_tensor* input, struct tk_tensor* emb_weights, struct tk_tensor* output) {
+    
+    // check if the first(only) dim is the same as output's first dim
+    if (shape_equal_check_n(input, output, 1)) return -1;
+    
+    if (output->ndims < 2)
+        RT_FAIL(RT_EINVAL, "Output tensor should at least have two dimension\n");
+
+    // emb weight requirements
+    if (emb_weights->ndims < 2)
+        RT_FAIL(RT_EINVAL, "Embedding tensor should at least have two dimension\n");
+
+    if (output->shape[1] != emb_weights->shape[1])
+        RT_FAIL(RT_EINVAL, "Dimension mismatch between output and embedding tensor, output->shape[1]: %d, emb_weights->shape[1]: %d\n",
+                            output->shape[1], emb_weights->shape[1]);
+
+    if (emb_weights->dtype != output->dtype)
+        RT_FAIL(RT_EINVAL, "Data type mismatch between output and emb_weight, output->dtype: %s, emb_weights->dtype: %s\n", tk_tensor_dtype_to_str(output->dtype), tk_tensor_dtype_to_str(emb_weights->dtype));
+    
+    // naive lookup using index
+    int seq_len = input->shape[0];
+    int hidden_dim = emb_weights->shape[1];
+    TK_DISPATCH_TYPES(output->dtype, __func__, {
+        int* input_ptr = (int*)input->data;
+        scalar_t* src_ptr = (scalar_t*)emb_weights->data;
+        scalar_t* dest_ptr = (scalar_t*)output->data;
+        for (int i = 0 ; i < seq_len ; ++i) {
+            int idx = input_ptr[i];
+            if (idx < 0 || idx >= emb_weights->shape[0])
+                RT_FAIL(RT_EINVAL, "Index out of range, idx: %d, emb_weights shape[0]: %d\n",
+                        idx, emb_weights->shape[0]);
+            memcpy(dest_ptr + (i * hidden_dim), src_ptr + (idx * hidden_dim), hidden_dim * sizeof(scalar_t));
+        }
+    });
+    return 0;
+}
+
+/* decoder-specific related operations */

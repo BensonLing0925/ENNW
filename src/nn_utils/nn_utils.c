@@ -9,16 +9,18 @@
 #include "../ops/tensor.h"
 #include "nn_utils.h"
 
-int findMax(size_t outSize, double* prob) {
-	double max = -99999;
-	int index = -1;
-	for ( size_t i = 0 ; i < outSize ; ++i ) {
-		if (prob[i] > max) {
-			index = i;
-			max = prob[i];
-		}		
-	}		
-	return index;
+int findMax(struct tk_tensor* t) {
+    size_t n = shape_size_calc(t->shape, t->ndims);
+    int index = -1;
+    TK_DISPATCH_TYPES(t->dtype, "findMax", {
+        scalar_t* data = (scalar_t*)t->data;
+        scalar_t max = data[0];
+        index = 0;
+        for (size_t i = 1; i < n; ++i) {
+            if (data[i] > max) { max = data[i]; index = (int)i; }
+        }
+    });
+    return index;
 }
 // 5x5 for now
 double* flatten(double** input, int colSize, int rowSize) {
@@ -49,43 +51,20 @@ double sigmoid(double x) {
 }
 
 void softMax(struct tk_tensor* tk_output) {
-    // before softMax must be double
-    double* hid_layer_output = tk_output->data;
-    // usually the last dimension of outputs;
-    int n = tk_output->shape[tk_output->ndims-1];
-    double max = hid_layer_output[0];
-    double sum = 0;
-
-    // Find the maximum value in the input array
-    for (int i = 1; i < n; ++i) {
-        if (hid_layer_output[i] > max) {
-            max = hid_layer_output[i];
-        }
-    }
-
-    // Calculate the exponentials and sum them up
-    for (int i = 0; i < n; ++i) {
-        hid_layer_output[i] = exp(hid_layer_output[i] - max);  // Subtract max for stability
-        sum += hid_layer_output[i];
-	//	printf("Exp Value[%d]: %f\n", i, hid_layer_output[i]); // Debug print
-    }
-
-    // Normalize to get probabilities
-    for (int i = 0; i < n; ++i) {
-        hid_layer_output[i] /= sum;
-	//	printf("Softmax Output[%d]: %f\n", i, hid_layer_output[i]); // Debug print
-    }
+    tk_ops_softmax(tk_output, tk_output);
 }
 
 // ans should be either 0 or 1(0 means not the answer, 1 means is the answer)
 // eg. ans = [0, 1, 0, 0, 0, 0, 0, 0, 0, 0]
 // predict is the probability that the machine calculate if the choice is the answer.
 double crossEntropyLoss( int ansIndex, struct tk_tensor* softmaxOut ) {
-    // softmaxOut = [num_samples, num_class] or [1, num_class]?
-    double* sfm_out = (double*)softmaxOut->data;
-	double prob = fmax(sfm_out[ansIndex], DBL_MIN);
-	double singleSampleLoss = -1 * log(prob);
-	return singleSampleLoss;
+    double prob = 0.0;
+    TK_DISPATCH_TYPES(softmaxOut->dtype, "crossEntropyLoss", {
+        scalar_t* sfm_out = (scalar_t*)softmaxOut->data;
+        prob = (double)sfm_out[ansIndex];
+    });
+    prob = fmax(prob, DBL_MIN);
+    return -log(prob);
 }
 
 double totalLoss(int sampleCount, double* lossArr) {

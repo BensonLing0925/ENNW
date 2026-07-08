@@ -59,6 +59,6 @@ struct tk_pooling_config {
 void tk_pooling_init(struct tk_pooling* pooling, struct tk_pooling_config cfg);
 struct tk_pooling* tk_pooling_create(struct tk_rt_ctx* ctx);
 void tk_pooling_setup(struct tk_pooling* pooling, struct tk_tensor* input);
-struct tk_tensor* tk_pooling_forward(struct tk_rt_ctx* ctx, struct tk_pooling* pooling, struct tk_tensor* input);
+int tk_pooling_forward(struct tk_rt_ctx* ctx, struct tk_pooling* pooling, struct tk_tensor* input, struct tk_tensor** out);
 
 #endif

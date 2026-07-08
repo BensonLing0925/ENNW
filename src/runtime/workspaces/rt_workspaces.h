@@ -13,9 +13,10 @@ struct tk_workspace {
     size_t cur_offset;
     size_t peak_offset;
     int is_dryrun;
+    int last_err;
 };
 
 struct tk_workspace* tk_ws_create(struct arena* root_arena, void* data_ptr);
-void* tk_ws_alloc(struct tk_workspace* ws, size_t size);
-struct tk_tensor* tk_ws_tensor_alloc(struct tk_workspace* ws, struct arena* meta_arena, enum tk_dtype dtype, int* shape, int ndims);
+int tk_ws_alloc(struct tk_workspace* ws, size_t size, void** out);
+int tk_ws_tensor_alloc(struct tk_workspace* ws, struct arena* meta_arena, enum tk_dtype dtype, int* shape, int ndims, struct tk_tensor** out);
 #endif

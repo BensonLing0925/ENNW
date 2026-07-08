@@ -1,6 +1,8 @@
 #ifndef RTERR_H
 #define RTERR_H
 
+#include <stdio.h>
+
 typedef enum rt_errc {
     RT_OK = 0,
     RT_EINVAL = 1,
@@ -22,6 +24,9 @@ struct rt_err_status {
 int rt_err_set(rt_errc code, int sys_errno,
                const char* file, int line, const char* func,
                const char* fmt, ...);
+
+void rt_err_print(FILE* out);
+const struct rt_err_status* rt_err_last(void);
 
 #define RT_FAIL(code, fmt, ...) \
     return rt_err_set((code), 0, __FILE__, __LINE__, __func__, (fmt), ##__VA_ARGS__);

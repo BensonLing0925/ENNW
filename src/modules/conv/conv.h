@@ -65,5 +65,5 @@ void tk_conv2d_init(struct tk_conv2d* conv, struct tk_conv2d_config config);
 void tk_conv2d_setup(struct tk_conv2d* conv, struct tk_tensor* input);
 int tk_conv2d_load_weights(struct tk_conv2d* conv, FILE* fp);
 void tk_conv2d_alloc(struct tk_rt_ctx* ctx, struct tk_conv2d* conv);
-struct tk_tensor* tk_conv_forward(struct tk_rt_ctx* ctx, struct tk_conv2d* conv, struct Dataset* dataset);
+int tk_conv_forward(struct tk_rt_ctx* ctx, struct tk_conv2d* conv, struct Dataset* dataset, struct tk_tensor** out);
 #endif

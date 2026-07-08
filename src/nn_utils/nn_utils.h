@@ -9,7 +9,7 @@
 #include "../ops/tensor.h"
 #include "../ops/tensor_ops.h"
 
-int findMax(size_t outSize, double* prob);
+int findMax(struct tk_tensor* t);
 double* flatten(double** input, int colSize, int rowSize);
 double dotProd(size_t n, double* w, double* input, double b);
 double sigmoid(double x);

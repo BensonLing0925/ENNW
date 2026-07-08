@@ -29,6 +29,9 @@ struct Config {
 
     /* Inference */
     char* weights_path; /* path to .bin weights (for TEST mode) */
+
+    /* Compute dtype: "f64" (default), "f32", "i8", etc. */
+    char* dtype;
 };
 
 void config_init(struct Config* c);
