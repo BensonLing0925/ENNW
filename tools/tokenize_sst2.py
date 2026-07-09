@@ -48,7 +48,7 @@ def main() -> None:
     seq_len = args.seq_len
 
     print(f"Loading SST-2 '{args.split}' split...")
-    dataset = load_dataset("glue", "sst2", split=args.split)
+    dataset = load_dataset("nyu-mll/glue", "sst2", split=args.split)
     print(f"  {len(dataset)} samples")
 
     print(f"Loading tokenizer '{args.tokenizer}'...")

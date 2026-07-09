@@ -433,7 +433,7 @@ int tk_tensor_casual_mask(struct tk_tensor* src) {
     uint64_t batch_stride_s = (num_batches > 1) ? (src_p * src_q) : 0;
 
     // inner loop deal with 2 dimensions matmul
-    TK_DISPATCH_TYPES(dest->dtype, __func__, {
+    TK_DISPATCH_TYPES(src->dtype, __func__, {
 
         scalar_t* src_base = src->data;
 

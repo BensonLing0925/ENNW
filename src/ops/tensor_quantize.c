@@ -68,7 +68,7 @@ int tk_ops_gemm_i8f32(struct tk_tensor* src1, struct tk_tensor* src2,
     if (dst->dtype != TK_F32)
         RT_FAIL(RT_EINVAL, "tk_ops_gemm_i8f32: dst tensor must be TK_F32\n");
 
-    int err = batch_shape_equal_check(src1, src2);
+    int err = tk_check_shape_equal_batch(src1, src2);
     if (err) return err;
 
     float act_scale = src1->scale;

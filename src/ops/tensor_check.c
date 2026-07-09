@@ -1,3 +1,4 @@
+#include "../error/rt_error.h"
 #include "tensor_check.h"
 
 int tk_check_shape_equal(struct tk_tensor* src1, struct tk_tensor* src2) {
@@ -36,7 +37,7 @@ int tk_check_shape_equal_batch(struct tk_tensor* src1, struct tk_tensor* src2) {
 int tk_check_shape_equal_mult(struct tk_tensor* tensor_arr, uint32_t size) {
     int err = 0;
     for ( uint32_t i = 0 ; i < size-1 ; ++i ) {
-        err = shape_equal_check(&tensor_arr[i], &tensor_arr[i+1]);
+        err = tk_check_shape_equal(&tensor_arr[i], &tensor_arr[i+1]);
         if (err != 0)
             return err;
     }
@@ -62,7 +63,7 @@ int tk_check_vec_matches_last_dim(struct tk_tensor* base, struct tk_tensor* vec,
 int tk_check_gemm_shape(struct tk_tensor* src1, struct tk_tensor* src2,
                             struct tk_tensor* dest,
                             int* out_p, int* out_q, int* out_r) {
-    RT_CHECK(batch_shape_equal_check(src1, src2));
+    RT_CHECK(tk_check_shape_equal_batch(src1, src2));
 
     int p = src1->shape[src1->ndims-2];
     int q = src1->shape[src1->ndims-1];
@@ -78,4 +79,6 @@ int tk_check_gemm_shape(struct tk_tensor* src1, struct tk_tensor* src2,
     return 0;
 }
 
-
+int tk_check_weight_is_i8(struct tk_tensor* weight) {
+    return weight->dtype == TK_I8;
+}

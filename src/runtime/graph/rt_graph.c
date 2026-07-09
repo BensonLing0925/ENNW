@@ -35,15 +35,16 @@ int tk_rt_node_append(struct tk_rt_ctx* ctx, struct tk_rt_graph* g, struct tk_rt
 
 const char* tk_rt_op_type(enum rt_op_type op_type) {
     switch (op_type) {
-        case TK_OP_GEMM:           return "TK_OP_GEMM";
-        case TK_OP_ADD:            return "TK_OP_ADD";
-        case TK_OP_GELU:           return "TK_OP_GELU";
-        case TK_OP_LAYERNORM:      return "TK_OP_LAYERNORM";
-        case TK_OP_QUANTIZE:       return "TK_OP_QUANTIZE";
-        case TK_OP_ATTENTION:      return "TK_OP_ATTENTION";
-        case TK_OP_FFN:            return "TK_OP_FFN";
-        case TK_OP_FUSED_ADD_NORM: return "TK_OP_FUSED_ADD_NORM";
-        default:                   return "TK_OP_UNKNOWN";
+        case TK_OP_GEMM:           		return "TK_OP_GEMM";
+        case TK_OP_ADD:            		return "TK_OP_ADD";
+        case TK_OP_GELU:           		return "TK_OP_GELU";
+        case TK_OP_LAYERNORM:      		return "TK_OP_LAYERNORM";
+        case TK_OP_QUANTIZE:       		return "TK_OP_QUANTIZE";
+        case TK_OP_ATTENTION:      		return "TK_OP_ATTENTION";
+        case TK_OP_FFN:            		return "TK_OP_FFN";
+        case TK_OP_FUSED_ADD_NORM: 		return "TK_OP_FUSED_ADD_NORM";
+        case TK_OP_FUSED_GEMM_ADD_GELU:	return "TK_OP_FUSED_GEMM_ADD_GELU";
+        default:                   		return "TK_OP_UNKNOWN";
     }
 }
 
@@ -109,6 +110,12 @@ int tk_rt_graph_exec(struct tk_rt_ctx* ctx) {
                 break;
 
             case TK_OP_QUANTIZE:
+            	TK_PROF_SCOPE(ctx, TK_EV_OP_BEGIN, "QUANTIZE", ctx->ws->cur_offset);            		
+               	RT_CHECK(ctx->ops->quantize(ctx,
+                   	node->inputs[0], node->outputs[0],
+                   	node->params.quantize.calib_scale));   
+				TK_PROF_SCOPE(ctx, TK_EV_OP_END, "QUANTIZE", ctx->ws->cur_offset);         		
+				/*
             	if (ctx->use_int8) {
             		TK_PROF_SCOPE(ctx, TK_EV_OP_BEGIN, "QUANTIZE", ctx->ws->cur_offset);            		
                 	RT_CHECK(ctx->ops->quantize(ctx,
@@ -116,7 +123,7 @@ int tk_rt_graph_exec(struct tk_rt_ctx* ctx) {
                     	node->params.quantize.calib_scale));   
 					TK_PROF_SCOPE(ctx, TK_EV_OP_END, "QUANTIZE", ctx->ws->cur_offset);         		
 				}
-
+				*/
                 break;
 
             /* Fused residual-add + LayerNorm (post-norm transformer blocks).
@@ -135,6 +142,12 @@ int tk_rt_graph_exec(struct tk_rt_ctx* ctx) {
                     node->outputs[0], node->inputs[2], node->inputs[3],
                     node->outputs[0]));
                 */
+                break;
+            case TK_OP_FUSED_GEMM_ADD_GELU:
+            	TK_PROF_SCOPE(ctx, TK_EV_OP_BEGIN, "FUSED_GEMM_ADD_GELU", ctx->ws->cur_offset);
+                RT_CHECK(tk_ops_fused_gemm_bias_gelu(node->inputs[0], node->inputs[1],
+                                               		 node->inputs[2], node->outputs[0]));
+                TK_PROF_SCOPE(ctx, TK_EV_OP_END, "FUSED_GEMM_ADD_GELU", ctx->ws->cur_offset);
                 break;
 
             /* High-level attention node: calling the forward function re-uses
@@ -218,6 +231,58 @@ static int tk_rt_fuse_add_norm(struct tk_rt_ctx* ctx, struct tk_rt_graph* g) {
     return 0;
 }
 
+/*
+ * GEMM + ADD + GELU fusion.
+ *
+ * Pattern: consecutive nodes
+ *	 GEMM (src1, src2, -> out)
+ *	 ADD  (out, bias -> out) 
+ *	 GELU (out -> out)
+ *
+ * Only fires when ADD.outputs[0] == LAYERNORM.inputs[0] (same tensor pointer).
+ */
+static int tk_rt_fuse_gemm_bias_gelu(struct tk_rt_ctx* ctx, struct tk_rt_graph* g) {
+    int fused = 0;
+
+    for (int i = 0; i + 1 < g->node_count; i++) {
+		struct tk_rt_node* gemm = &g->nodes[i];
+        struct tk_rt_node* a = &g->nodes[i + 1];
+        struct tk_rt_node* gelu = &g->nodes[i + 2];
+
+        if (gemm->skip || a->skip || gelu->skip)	continue;
+        if (gemm->op_type != TK_OP_GEMM)	continue;
+        if (a->op_type != TK_OP_ADD)	 continue;
+        if (gelu->op_type != TK_OP_GELU)	continue;
+        if ((gemm->outputs[0] != a->inputs[0]) || 
+			(a->outputs[0] != gelu->inputs[0]))	continue;  /* must be the same tensor */
+
+        /* Re-use GEMM node as FUSED_GEMM_ADD_GELU with 4 inputs */
+        gemm->op_type     = TK_OP_FUSED_GEMM_ADD_GELU;
+        gemm->input_count = 3;
+
+        struct tk_tensor** merged = arena_alloc(ctx->meta_arena, 3 * sizeof(struct tk_tensor*));
+        gemm->ws_cursor_before = gelu->ws_cursor_before;
+        a->ws_cursor_before = gelu->ws_cursor_before;
+        merged[0] = gemm->inputs[0];  /* residual / running hidden */
+        merged[1] = gemm->inputs[1];  /* sublayer output           */
+        merged[2] = a->inputs[1];  /* gamma                     */
+        gemm->inputs = merged;
+
+        /* Output is whatever the LayerNorm was writing to */
+        gemm->outputs[0] = gelu->outputs[0];
+
+        a->skip = 1;
+        gelu->skip = 1;
+		++fused;
+    }
+
+    if (fused) {
+        printf("[Optimize] Fused %d GEMM+ADD+GELU triplet(s) into FUSED_GEMM_ADD_GELU\n", fused);
+    }
+    return 0;
+}
+
 int tk_rt_graph_optimize(struct tk_rt_ctx* ctx) {
-    return tk_rt_fuse_add_norm(ctx, ctx->static_graph);
+	tk_rt_fuse_add_norm(ctx, ctx->static_graph);
+	return tk_rt_fuse_gemm_bias_gelu(ctx, ctx->static_graph);
 }

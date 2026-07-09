@@ -42,7 +42,6 @@ EXAMPLES_DIR := examples
 
 TARGET                  := nn$(EXEEXT)
 DISTILBERT_INFER_TARGET := distilbert_infer$(EXEEXT)
-SST2_INFER_TARGET       := sst2_infer$(EXEEXT)
 SST2_EVAL_TARGET        := sst2_eval$(EXEEXT)
 
 # ---- Include paths ----
@@ -53,13 +52,12 @@ INCLUDES := -I$(SRC_DIR) -I$(MODULES_DIR) -I$(FC_DIR) -I$(CONV_DIR) -I$(NNUTILS_
 			-I$(RT_SG_DIR)
 			
 # Math library (needed on Linux if using exp/sqrt/etc)
-LDLIBS ?= -lm -fopenmp -Wl,--wrap=GOMP_parallel 
-
+LDLIBS ?= -lm -fopenmp 
 # Add PROF=1 to enable profiler
 ifeq ($(PROF),1)
     PROF_FLAGS := -DPROF
     INCLUDES   += -I$(PROF_DIR) -I$(RAYLIB_DIR)
-	LDLIBS     += $(RAYLIB_LIB) 
+	LDLIBS     += $(RAYLIB_LIB) -Wl,--wrap=GOMP_parallel 
 	ifeq ($(OS),Windows_NT)
         LDLIBS += -lgdi32 -lwinmm -lopengl32   # ← 加 -lopengl32
     else
@@ -179,7 +177,7 @@ run-sst2-eval: $(SST2_EVAL_TARGET)
 
 clean:
 	-$(RM) $(LIB_OBJ) $(NN_OBJ) $(DISTILBERT_INFER_OBJ) $(SST2_INFER_OBJ) $(SST2_EVAL_OBJ) $(OBJ_C89) \
-	       $(TARGET) $(DISTILBERT_INFER_TARGET) $(SST2_INFER_TARGET) $(SST2_EVAL_TARGET)
+	       $(TARGET) $(DISTILBERT_INFER_TARGET)	$(SST2_EVAL_TARGET)
 
 print:
 	@echo TARGET=$(TARGET)

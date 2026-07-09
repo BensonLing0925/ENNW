@@ -4,7 +4,7 @@
 #include "tensor.h"
 #include "../modules/pooling/pooling.h"
 
-int shape_equal_check_n(struct tk_tensor* src1, struct tk_tensor* src2, 
+int tk_check_shape_equal_n(struct tk_tensor* src1, struct tk_tensor* src2, 
                         size_t n) {
     if (n > (size_t)src1->ndims || n > (size_t)src2->ndims)
         RT_FAIL(RT_EINVAL, "Number of dimension too large: %zu\n", n);
@@ -14,7 +14,7 @@ int shape_equal_check_n(struct tk_tensor* src1, struct tk_tensor* src2,
     return 0;
 }
 
-int shape_equal_check(struct tk_tensor* src1, struct tk_tensor* src2) {
+int tk_check_shape_equal(struct tk_tensor* src1, struct tk_tensor* src2) {
     if (src1->ndims != src2->ndims)
         RT_FAIL(RT_EINVAL, "Number of shape dimensions mismatch. src1: %d, src2: %d\n", src1->ndims, src2->ndims);
 
@@ -25,17 +25,17 @@ int shape_equal_check(struct tk_tensor* src1, struct tk_tensor* src2) {
     return 0;
 }
 
-int mult_shape_equal_check(struct tk_tensor* tensor_arr, uint32_t size) {
+int tk_check_shape_equal_mult(struct tk_tensor* tensor_arr, uint32_t size) {
     int err = 0;
     for ( uint32_t i = 0 ; i < size-1 ; ++i ) {
-        err = shape_equal_check(&tensor_arr[i], &tensor_arr[i+1]);
+        err = tk_check_shape_equal(&tensor_arr[i], &tensor_arr[i+1]);
         if (err != 0)
             return err;
     }
     return 0;
 }
 
-int batch_shape_equal_check(struct tk_tensor* src1, struct tk_tensor* src2) {
+int tk_check_shape_equal_batch(struct tk_tensor* src1, struct tk_tensor* src2) {
 
     if (src1->ndims != src2->ndims)
         RT_FAIL(RT_EINVAL, "Number of shape dimensions mismatch. src1: %d, src2: %d\n", src1->ndims, src2->ndims);
@@ -55,7 +55,7 @@ int tk_ops_add(struct tk_tensor* src1, struct tk_tensor* src2,
     if (src2->ndims == 1 && src1->ndims >= 1 &&
         src1->shape[src1->ndims - 1] == src2->shape[0]) {
 
-        int err = shape_equal_check(src1, dest);
+        int err = tk_check_shape_equal(src1, dest);
         if (err != 0) return err;
 
         if (!tk_tensor_is_contiguous(src1) || !tk_tensor_is_contiguous(src2) ||
@@ -76,11 +76,11 @@ int tk_ops_add(struct tk_tensor* src1, struct tk_tensor* src2,
         return 0;
     }
 
-    int err = shape_equal_check(src1, src2);
+    int err = tk_check_shape_equal(src1, src2);
     if (err != 0)
         return err;
 
-    err = shape_equal_check(src1, dest);
+    err = tk_check_shape_equal(src1, dest);
     if (err != 0) {
         return err;
     }
@@ -110,7 +110,7 @@ int tk_ops_gemm(struct tk_tensor* src1, struct tk_tensor* src2, struct tk_tensor
     
     // if multiple dimensions for matmul, eg. A = [1, 12, 128, 64], B = [1, 12, 64, 256]
     // check A and B's dimensions before the last 2 dimensions matches or able to broadcast
-    int err = batch_shape_equal_check(src1, src2);
+    int err = tk_check_shape_equal_batch(src1, src2);
     if (err != 0)
         return err;
 
@@ -297,7 +297,7 @@ int tk_ops_gemm(struct tk_tensor* src1, struct tk_tensor* src2, struct tk_tensor
 int tk_ops_layernorm(struct tk_tensor* src, struct tk_tensor* gamma, struct tk_tensor* beta, struct tk_tensor* dest) {
 
     // src and dest must have identical shape
-    int err = shape_equal_check(src, dest);
+    int err = tk_check_shape_equal(src, dest);
     if (err != 0)
         return err;
 
@@ -390,7 +390,7 @@ int tk_ops_scale(struct tk_tensor* tensor, double scale) {
 
 int tk_ops_softmax(struct tk_tensor* src, struct tk_tensor* dest) {
 
-    int err = shape_equal_check(src, dest);
+    int err = tk_check_shape_equal(src, dest);
     if (err != 0)
         return err;
 
@@ -565,7 +565,7 @@ int tk_ops_pooling(struct tk_pooling_params* pooling, struct tk_tensor* src, str
 int tk_ops_embedding_lookup(struct tk_tensor* input, struct tk_tensor* emb_weights, struct tk_tensor* output) {
     
     // check if the first(only) dim is the same as output's first dim
-    if (shape_equal_check_n(input, output, 1)) return -1;
+    if (tk_check_shape_equal_n(input, output, 1)) return -1;
     
     if (output->ndims < 2)
         RT_FAIL(RT_EINVAL, "Output tensor should at least have two dimension\n");

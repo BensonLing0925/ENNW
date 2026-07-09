@@ -69,6 +69,21 @@ int record_gelu(struct tk_rt_ctx* ctx, struct tk_tensor* src, struct tk_tensor* 
 
 int record_quantize(struct tk_rt_ctx* ctx, struct tk_tensor* src, struct tk_tensor* dest, float calib) {
     struct tk_rt_graph* g = ctx->static_graph;
+
+
+	if (g->capacity <= g->node_count)
+		RT_FAIL(RT_EINVAL, "Number of graph node exceeded\n");
+	struct tk_rt_node_config config = {.op_type = TK_OP_QUANTIZE,
+									   .input_count = 1,
+									   .output_count = 1};
+	struct tk_rt_node* out_node = NULL;
+	tk_rt_node_append(ctx, g, config, &out_node);
+	out_node->ws_cursor_before = ctx->ws->cur_offset;
+	out_node->inputs[0] = src;
+	out_node->outputs[0] = dest;
+	out_node->params.quantize.calib_scale = calib;
+
+	/*
     if (dest->dtype == TK_I8) {
         if (g->capacity <= g->node_count)
             RT_FAIL(RT_EINVAL, "Number of graph node exceeded\n");
@@ -82,6 +97,7 @@ int record_quantize(struct tk_rt_ctx* ctx, struct tk_tensor* src, struct tk_tens
         out_node->outputs[0] = dest;
         out_node->params.quantize.calib_scale = calib;
     }
+	*/
     return 0;
 }
 

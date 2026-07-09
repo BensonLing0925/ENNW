@@ -16,7 +16,7 @@ int tk_ops_add(struct tk_tensor* src1, struct tk_tensor* src2,
     if (src2->ndims == 1 && src1->ndims >= 1 &&
         src1->shape[src1->ndims - 1] == src2->shape[0]) {
 
-        int err = shape_equal_check(src1, dest);
+        int err = tk_check_shape_equal(src1, dest);
         if (err != 0) return err;
 
         if (!tk_tensor_is_contiguous(src1) || !tk_tensor_is_contiguous(src2) ||
@@ -37,11 +37,11 @@ int tk_ops_add(struct tk_tensor* src1, struct tk_tensor* src2,
         return 0;
     }
 
-    int err = shape_equal_check(src1, src2);
+    int err = tk_check_shape_equal(src1, src2);
     if (err != 0)
         return err;
 
-    err = shape_equal_check(src1, dest);
+    err = tk_check_shape_equal(src1, dest);
     if (err != 0) {
         return err;
     }
@@ -71,7 +71,7 @@ int tk_ops_gemm(struct tk_tensor* src1, struct tk_tensor* src2, struct tk_tensor
     
     // if multiple dimensions for matmul, eg. A = [1, 12, 128, 64], B = [1, 12, 64, 256]
     // check A and B's dimensions before the last 2 dimensions matches or able to broadcast
-    int err = batch_shape_equal_check(src1, src2);
+    int err = tk_check_shape_equal_batch(src1, src2);
     if (err != 0)
         return err;
 
@@ -199,7 +199,7 @@ int tk_ops_layernorm(struct tk_tensor* src, struct tk_tensor* gamma, struct tk_t
     double eps = 1e-12;
 
     // src and dest must have identical shape
-    int err = shape_equal_check(src, dest);
+    int err = tk_check_shape_equal(src, dest);
     if (err != 0)
         return err;
 
@@ -298,7 +298,7 @@ int tk_ops_fused_gemm_bias_gelu(struct tk_tensor* src1, struct tk_tensor* src2,
 
     // if multiple dimensions for matmul, eg. A = [1, 12, 128, 64], B = [1, 12, 64, 256]
     // check A and B's dimensions before the last 2 dimensions matches or able to broadcast
-    int err = batch_shape_equal_check(src1, src2);
+    int err = tk_check_shape_equal_batch(src1, src2);
     if (err != 0)
         return err;
 
@@ -376,7 +376,6 @@ int tk_ops_fused_gemm_bias_gelu(struct tk_tensor* src1, struct tk_tensor* src2,
                 for ( int i = 0 ; i < src2_r ; ++i ) {
                         double x = (double)dest_row[i];
                         dest_row[i] = (scalar_t)(0.5 * x * (1.0 + erf(x * 0.7071067811865476)));
-                    }
                 }
             }
         }
@@ -423,7 +422,7 @@ int tk_ops_scale(struct tk_tensor* tensor, double scale) {
 
 int tk_ops_softmax(struct tk_tensor* src, struct tk_tensor* dest) {
 
-    int err = shape_equal_check(src, dest);
+    int err = tk_check_shape_equal(src, dest);
     if (err != 0)
         return err;
 
@@ -594,7 +593,7 @@ int tk_ops_pooling(struct tk_pooling_params* pooling, struct tk_tensor* src, str
 int tk_ops_embedding_lookup(struct tk_tensor* input, struct tk_tensor* emb_weights, struct tk_tensor* output) {
     
     // check if the first(only) dim is the same as output's first dim
-    if (shape_equal_check_n(input, output, 1)) return -1;
+    if (tk_check_shape_equal_n(input, output, 1)) return -1;
     
     if (output->ndims < 2)
         RT_FAIL(RT_EINVAL, "Output tensor should at least have two dimension\n");

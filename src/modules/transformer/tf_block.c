@@ -183,7 +183,7 @@ int tk_tf_attention_forward(struct tk_rt_ctx* ctx,
     RT_CHECK(tk_ws_tensor_alloc(ctx->ws, ctx->meta_arena, dtype, out_shape,   2, &atten_out));
 
     /* int8 mode: pre-allocate activation buffer so dryrun measures peak correctly */
-    int use_i8 = (tf->q_weights->dtype == TK_I8);
+    int use_i8 = tk_check_weight_is_i8(tf->q_weights);
     struct tk_tensor* input_i8 = NULL;
     RT_CHECK(tk_ws_tensor_alloc(ctx->ws, ctx->meta_arena, 
                             use_i8 ? TK_I8 : TK_F32, 
@@ -311,7 +311,7 @@ int tk_tf_ffn_forward(struct tk_rt_ctx* ctx,
     struct tk_tensor* out = NULL;
     RT_CHECK(tk_ws_tensor_alloc(ctx->ws, ctx->meta_arena, dtype, out_shape, 2, &out));
 
-    enum tk_dtype act_dtype = (tf->ffn_up_weights->dtype == TK_I8) ? TK_I8 : TK_F32;
+    enum tk_dtype act_dtype = tk_check_weight_is_i8(tf->ffn_up_weights) ? TK_I8 : TK_F32;
 
     struct tk_tensor* inp_i8 = NULL;
     int inp_shape[2] = { seq, hidden };
@@ -322,7 +322,7 @@ int tk_tf_ffn_forward(struct tk_rt_ctx* ctx,
 
     if (ctx->rt_type == RT_DRYRUN) {
         *ffn_out_ptr = out;
-        return 0;
+		// return 0;
     }
 
     // --- Up-projection (hidden -> inter) ---
@@ -381,7 +381,8 @@ int tk_tf_block_forward(struct tk_rt_ctx* ctx,
         ctx->ops->layernorm(ctx, input, tf->ln2_gamma, tf->ln2_beta, ln2_out);
 
         struct tk_tensor* ffn_out = NULL;
-        RT_CHECK(ctx->ops->ffn(ctx, tf, ln2_out, &ffn_out));
+        // RT_CHECK(ctx->ops->ffn(ctx, tf, ln2_out, &ffn_out));
+        RT_CHECK(tk_tf_ffn_forward(ctx, tf, ln2_out, &ffn_out));
         ctx->ops->add(ctx, input, ffn_out, input);
 
     } else {
@@ -393,7 +394,8 @@ int tk_tf_block_forward(struct tk_rt_ctx* ctx,
         ctx->ops->layernorm(ctx, input, tf->ln1_gamma, tf->ln1_beta, input);
 
         struct tk_tensor* ffn_out = NULL;
-        RT_CHECK(ctx->ops->ffn(ctx, tf, input, &ffn_out));
+        // RT_CHECK(ctx->ops->ffn(ctx, tf, input, &ffn_out));
+        RT_CHECK(tk_tf_ffn_forward(ctx, tf, input, &ffn_out));
         RT_CHECK(ctx->ops->add(ctx, input, ffn_out, input));
         ctx->ops->layernorm(ctx, input, tf->ln2_gamma, tf->ln2_beta, input);
     }

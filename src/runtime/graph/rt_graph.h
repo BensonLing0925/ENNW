@@ -16,6 +16,7 @@ enum rt_op_type {
     TK_OP_ATTENTION,
     TK_OP_FFN,
     TK_OP_FUSED_ADD_NORM,  /* fused residual-add + layer-norm (post-norm only) */
+	TK_OP_FUSED_GEMM_ADD_GELU,
 };
 
 struct tk_rt_node {

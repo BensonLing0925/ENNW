@@ -85,16 +85,15 @@ struct tk_prof_manager {
     static inline void tk_prof_shutdown() {}
     static inline void tk_prof_record(struct tk_prof_manager* manager, enum tk_event_type type, const char* label, size_t offset) {}
     static inline int tk_prof_thread_attach(struct tk_prof_manager* manager) {return 0;}
-    struct tk_prof_manager* tk_prof_create(int max_threads, size_t max_events_per_thread) {return NULL;}
-    void tk_prof_emit(struct tk_rt_ctx* ctx, int type, const char* label, size_t offset) {}
-    // void event_print(struct tk_event* ev) {}
-    void event_print(struct tk_event* ev, size_t mem_diff) {}
-    void thread_print(struct tk_prof_thread_buf* buf) {}
-    struct tk_prof_manager* tk_prof_get_my_manager(void) {}
-    void   tk_prof_set_offset(size_t offset) {}
-	size_t tk_prof_get_offset(void) {}
-	void tk_prof_set_last_omp_threads(int n) {}
-	int  tk_prof_get_last_omp_threads(void) {}
+    static inline struct tk_prof_manager* tk_prof_create(int max_threads, size_t max_events_per_thread) {return NULL;}
+    static inline void tk_prof_emit(struct tk_rt_ctx* ctx, int type, const char* label, size_t offset) {}
+    static inline void event_print(struct tk_event* ev, size_t mem_diff) {}
+    static inline void thread_print(struct tk_prof_thread_buf* buf) {}
+    static inline struct tk_prof_manager* tk_prof_get_my_manager(void) {}
+    static inline void   tk_prof_set_offset(size_t offset) {}
+	static inline size_t tk_prof_get_offset(void) {}
+	static inline void tk_prof_set_last_omp_threads(int n) {}
+	static inline int  tk_prof_get_last_omp_threads(void) {}
     #define TK_PROF_SCOPE(ctx, type, label, offset) do {} while(0)
 #endif
 

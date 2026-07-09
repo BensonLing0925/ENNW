@@ -13,5 +13,6 @@ int tk_check_vec_matches_last_dim(struct tk_tensor* base, struct tk_tensor* vec,
 int tk_check_gemm_shape(struct tk_tensor* src1, struct tk_tensor* src2,
                             struct tk_tensor* dest,
                             int* out_p, int* out_q, int* out_r);
+int tk_check_weight_is_i8(struct tk_tensor* weight);
 
 #endif
