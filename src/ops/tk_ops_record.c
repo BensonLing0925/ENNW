@@ -1,4 +1,5 @@
 #include "tk_ops.h"
+#include "tensor_ops_config.h"
 #include "../runtime/graph/rt_graph.h"
 #include "../runtime/rt_context.h"
 #include "../modules/transformer/tf_block.h"
@@ -52,7 +53,9 @@ int record_layernorm(struct tk_rt_ctx* ctx, struct tk_tensor* src, struct tk_ten
     return 0;
 }
 
-int record_gelu(struct tk_rt_ctx* ctx, struct tk_tensor* src, struct tk_tensor* dest) {
+int record_gelu(struct tk_rt_ctx* ctx, struct tk_ops_config* oc, 
+				struct tk_rt_node* node, struct tk_tensor* src, struct tk_tensor* dest) {
+	(void)node;
     struct tk_rt_graph* g = ctx->static_graph;
     if (g->capacity <= g->node_count)
         RT_FAIL(RT_EINVAL, "Number of graph node exceeded\n");
@@ -61,6 +64,12 @@ int record_gelu(struct tk_rt_ctx* ctx, struct tk_tensor* src, struct tk_tensor* 
                                        .output_count = 1};
     struct tk_rt_node* out_node = NULL;
     tk_rt_node_append(ctx, g, config, &out_node);
+
+	/* flatten oc */
+	out_node->params.single.gelu.gelu_variant = oc->gelu_variant;
+	out_node->params.single.gelu.gelu_fn = oc->gelu_fn;
+	out_node->params.single.gelu.gelu_fn_raw = oc->gelu_fn_raw;
+
     out_node->ws_cursor_before = ctx->ws->cur_offset;
     out_node->inputs[0] = src;
     out_node->outputs[0] = dest;
@@ -81,7 +90,7 @@ int record_quantize(struct tk_rt_ctx* ctx, struct tk_tensor* src, struct tk_tens
 	out_node->ws_cursor_before = ctx->ws->cur_offset;
 	out_node->inputs[0] = src;
 	out_node->outputs[0] = dest;
-	out_node->params.quantize.calib_scale = calib;
+	out_node->params.single.quantize.calib_scale = calib;
 
 	/*
     if (dest->dtype == TK_I8) {
@@ -121,7 +130,7 @@ int record_attention(struct tk_rt_ctx* ctx, struct TransformerBlock* tf,
     node->ws_cursor_before    = cursor_before;
     node->inputs[0]           = input;
     node->outputs[0]          = *out;
-    node->params.attention.tf = tf;
+    node->params.single.attention.tf = tf;
     return 0;
 }
 
@@ -143,7 +152,7 @@ int record_ffn(struct tk_rt_ctx* ctx, struct TransformerBlock* tf,
     node->ws_cursor_before = cursor_before;
     node->inputs[0]        = input;
     node->outputs[0]       = *out;
-    node->params.ffn.tf    = tf;
+    node->params.single.ffn.tf    = tf;
     return 0;
 }
 

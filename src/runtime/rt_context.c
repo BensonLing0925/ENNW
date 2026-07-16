@@ -127,6 +127,18 @@ int tk_rt_prepare(struct tk_rt_ctx* ctx) {
     return 0;
 }
 
+void tk_rt_ctx_set_mode(struct tk_rt_ctx* ctx, enum rt_type type) {
+    ctx->rt_type = type;
+    switch (type) {
+        case RT_INFERENCE:
+            ctx->ops = &tk_exec_vtable;
+            break;
+        case RT_DRYRUN:
+            ctx->ops = &tk_record_vtable;
+            break;
+    }
+}
+
 void tk_rt_ctx_destroy(struct tk_rt_ctx* ctx) {
     if (ctx->manager)
     	arena_destroy(ctx->manager->prof_arena);

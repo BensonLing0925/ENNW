@@ -294,7 +294,8 @@ int tk_ops_fused_add_norm(struct tk_tensor* x, struct tk_tensor* residual,
 }
 
 int tk_ops_fused_gemm_bias_gelu(struct tk_tensor* src1, struct tk_tensor* src2,
-                          struct tk_tensor* bias, struct tk_tensor* dest) {
+                          		struct tk_tensor* bias, struct tk_tensor* dest,
+								int (*_gelu_fn) (void* src_data, void* dest_data, enum tk_dtype dtype, size_t size)) {
 
     // if multiple dimensions for matmul, eg. A = [1, 12, 128, 64], B = [1, 12, 64, 256]
     // check A and B's dimensions before the last 2 dimensions matches or able to broadcast
@@ -373,35 +374,63 @@ int tk_ops_fused_gemm_bias_gelu(struct tk_tensor* src1, struct tk_tensor* src2,
                 }
 
                 // GELU takes a number and output a number
+				/*
                 for ( int i = 0 ; i < src2_r ; ++i ) {
                         double x = (double)dest_row[i];
                         dest_row[i] = (scalar_t)(0.5 * x * (1.0 + erf(x * 0.7071067811865476)));
                 }
+				*/
+				_gelu_fn((void*)dest_row, (void*)dest_row, dest->dtype, src2_r);
             }
         }
     });
     return 0;
 }
 
-int tk_ops_gelu(struct tk_tensor* src, struct tk_tensor* dest) {
-    uint64_t total_size = shape_size_calc(dest->shape, dest->ndims);
-    
-    TK_DISPATCH_TYPES(dest->dtype, __func__, {
-        scalar_t* s_ptr = (scalar_t*)src->data;
-        scalar_t* d_ptr = (scalar_t*)dest->data;
+/* Because of fused operation, we need a raw pointer version of both gelu */
+int _tk_ops_gelu_erf(void*  src_data, void* dest_data, enum tk_dtype dtype, size_t size) {
+	TK_DISPATCH_TYPES(dtype, __func__, {
+        scalar_t* s_ptr = (scalar_t*)src_data;
+        scalar_t* d_ptr = (scalar_t*)dest_data;
+
+        for (uint64_t n = 0; n < size; ++n) {
+            double x = (double)s_ptr[n];
+            d_ptr[n] = (scalar_t)(0.5 * x * (1.0 + erf(x * 0.7071067811865476)));
+        }
+
+	});
+	return 0;
+}
+
+int _tk_ops_gelu_tanh(void* src_data, void* dest_data, enum tk_dtype dtype, size_t size) {
+	TK_DISPATCH_TYPES(dtype, __func__, {
+        scalar_t* s_ptr = (scalar_t*)src_data;
+        scalar_t* d_ptr = (scalar_t*)dest_data;
 
         // GeLU(x) formula: 0.5x * (1 + tanh(sqrt(2/pi) * (x + 0.044715 * x^3)))
         const double sqrt_2_over_pi = 0.7978845608028654;
         const double coeff = 0.044715;
 
-        for (uint64_t n = 0; n < total_size; ++n) {
+        for (uint64_t n = 0; n < size; ++n) {
             double x = (double)s_ptr[n];
-            // double x_cube = x * x * x;
-            // double inner = sqrt_2_over_pi * (x + coeff * x_cube);
-            // d_ptr[n] = (scalar_t)(0.5 * x * (1.0 + tanh(inner)));
-            d_ptr[n] = (scalar_t)(0.5 * x * (1.0 + erf(x * 0.7071067811865476)));
+            double x_cube = x * x * x;
+            double inner = sqrt_2_over_pi * (x + coeff * x_cube);
+            d_ptr[n] = (scalar_t)(0.5 * x * (1.0 + tanh(inner)));
         }
-    });
+	});
+	return 0;
+}
+
+
+int tk_ops_gelu_erf(struct tk_tensor* src, struct tk_tensor* dest) {
+    uint64_t total_size = shape_size_calc(dest->shape, dest->ndims);
+	_tk_ops_gelu_erf((void*)src->data, (void*)dest->data, dest->dtype, total_size);
+    return 0;
+}
+
+int tk_ops_gelu_tanh(struct tk_tensor* src, struct tk_tensor* dest) {
+    uint64_t total_size = shape_size_calc(dest->shape, dest->ndims);
+	_tk_ops_gelu_tanh((void*)src->data, (void*)dest->data, dest->dtype, total_size);
     return 0;
 }
 

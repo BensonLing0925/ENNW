@@ -2,7 +2,7 @@
 #define TK_TENSOR_H
 
 #include <stdint.h>
-#include "arena.h"
+#include "../../mem/arena.h"
 
 #define TK_DEBUG_SIZE 15
 
@@ -63,4 +63,5 @@ void tk_tensor_data_print(struct tk_tensor* src);
 void tk_tensor_print(struct tk_tensor* src);
 const char* tk_tensor_dtype_to_str(enum tk_dtype dtype);
 enum tk_dtype tk_dtype_from_str(const char* s);
+int tk_tensor_causal_mask(struct tk_tensor* src) ;
 #endif

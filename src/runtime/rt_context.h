@@ -55,7 +55,7 @@ struct tk_rt_ctx* tk_runtime_ctx_create(struct arena* root_arena);
 struct tk_rt_ctx* tk_runtime_ctx_create_config(struct arena* root_arena, struct tk_rt_ctx_config config);
 int tk_rt_prepare(struct tk_rt_ctx* ctx);
 void tk_rt_ctx_destroy(struct tk_rt_ctx* ctx);
-
+void tk_rt_ctx_set_mode(struct tk_rt_ctx* ctx, enum rt_type type);
 // configuration getter
 int tk_rt_is_prof_enabled(struct tk_rt_ctx* ctx);
 

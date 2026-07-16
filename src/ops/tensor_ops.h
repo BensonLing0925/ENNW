@@ -17,11 +17,22 @@ int tk_ops_add(struct tk_tensor* src1, struct tk_tensor* src2,
                struct tk_tensor* dest);
 int tk_ops_gemm(struct tk_tensor* src1, struct tk_tensor* src2, struct tk_tensor* dest);
 int tk_ops_layernorm(struct tk_tensor* src, struct tk_tensor* gamma, struct tk_tensor* beta, struct tk_tensor* dest);
-int tk_ops_gelu(struct tk_tensor* src, struct tk_tensor* dest);
+int tk_ops_gelu_erf(struct tk_tensor* src, struct tk_tensor* dest);
+int tk_ops_gelu_tanh(struct tk_tensor* src, struct tk_tensor* dest);
+int _tk_ops_gelu_erf(void* src_data, void* dest_data, enum tk_dtype dtype, size_t size);
+int _tk_ops_gelu_tanh(void* src_data, void* dest_data, enum tk_dtype dtype, size_t size);
 int tk_ops_softmax(struct tk_tensor* src, struct tk_tensor* dest);
 int tk_ops_scale(struct tk_tensor* tensor, double scale);
+
+/*
 int tk_ops_fused_gemm_bias_gelu(struct tk_tensor* src1, struct tk_tensor* src2,
                           struct tk_tensor* bias, struct tk_tensor* dest);
+*/
+
+int tk_ops_fused_gemm_bias_gelu(struct tk_tensor* src1, struct tk_tensor* src2,
+                          		struct tk_tensor* bias, struct tk_tensor* dest,
+								int (*_gelu_fn) (void* src_data, void* dest_data, enum tk_dtype dtype, size_t size));
+
 int tk_ops_fused_add_norm(struct tk_tensor* x, struct tk_tensor* residual,
                           struct tk_tensor* gamma, struct tk_tensor* beta,
                           struct tk_tensor* out);

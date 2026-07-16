@@ -250,6 +250,11 @@ int tk_tf_attention_forward(struct tk_rt_ctx* ctx,
             ctx->ops->gemm(ctx, qh, kh_T, score);
             // ctx->ops->scale(ctx, score, scale);
             tk_ops_scale(score, scale);
+
+			if (tf->config.use_causal) {
+				tk_tensor_causal_mask(score);
+			}
+
             tk_ops_softmax(score, score);
 
             /* out_h = score [seq, seq] x vh [seq, hdim] -> [seq, hdim] */
@@ -333,7 +338,7 @@ int tk_tf_ffn_forward(struct tk_rt_ctx* ctx,
         RT_CHECK(ctx->ops->add(ctx, inter_buf, tf->ffn_up_bias, inter_buf));
 
     // GELU 運算（輸出維持 F32）
-    RT_CHECK(ctx->ops->gelu(ctx, inter_buf, inter_buf));
+    RT_CHECK(ctx->ops->gelu(ctx, &tf->config.ops_config, NULL, inter_buf, inter_buf));
 
     // --- Down-projection (inter -> hidden) ---
     // 再次量化：將 GELU 後的結果轉回 I8 以供下一層矩陣乘法使用

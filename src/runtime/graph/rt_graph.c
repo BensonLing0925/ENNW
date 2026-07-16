@@ -96,7 +96,7 @@ int tk_rt_graph_exec(struct tk_rt_ctx* ctx) {
 
             case TK_OP_GELU:
             	TK_PROF_SCOPE(ctx, TK_EV_OP_BEGIN, "GELU", ctx->ws->cur_offset);
-                RT_CHECK(ctx->ops->gelu(ctx,
+                RT_CHECK(ctx->ops->gelu(ctx, NULL, node,
                     node->inputs[0], node->outputs[0]));
                 TK_PROF_SCOPE(ctx, TK_EV_OP_END, "GELU", ctx->ws->cur_offset);
                 break;
@@ -113,7 +113,7 @@ int tk_rt_graph_exec(struct tk_rt_ctx* ctx) {
             	TK_PROF_SCOPE(ctx, TK_EV_OP_BEGIN, "QUANTIZE", ctx->ws->cur_offset);            		
                	RT_CHECK(ctx->ops->quantize(ctx,
                    	node->inputs[0], node->outputs[0],
-                   	node->params.quantize.calib_scale));   
+                   	node->params.single.quantize.calib_scale));   
 				TK_PROF_SCOPE(ctx, TK_EV_OP_END, "QUANTIZE", ctx->ws->cur_offset);         		
 				/*
             	if (ctx->use_int8) {
@@ -146,7 +146,8 @@ int tk_rt_graph_exec(struct tk_rt_ctx* ctx) {
             case TK_OP_FUSED_GEMM_ADD_GELU:
             	TK_PROF_SCOPE(ctx, TK_EV_OP_BEGIN, "FUSED_GEMM_ADD_GELU", ctx->ws->cur_offset);
                 RT_CHECK(tk_ops_fused_gemm_bias_gelu(node->inputs[0], node->inputs[1],
-                                               		 node->inputs[2], node->outputs[0]));
+                                               		 node->inputs[2], node->outputs[0],
+													 node->params.fused.ops[2].params.gelu.gelu_fn_raw));
                 TK_PROF_SCOPE(ctx, TK_EV_OP_END, "FUSED_GEMM_ADD_GELU", ctx->ws->cur_offset);
                 break;
 
@@ -157,7 +158,7 @@ int tk_rt_graph_exec(struct tk_rt_ctx* ctx) {
             case TK_OP_ATTENTION: {
             	TK_PROF_SCOPE(ctx, TK_EV_OP_BEGIN, "ATTENTION", ctx->ws->cur_offset);
                 struct tk_tensor* out = NULL;
-                RT_CHECK(ctx->ops->attention(ctx, node->params.attention.tf, node->inputs[0], &out));
+                RT_CHECK(ctx->ops->attention(ctx, node->params.single.attention.tf, node->inputs[0], &out));
                 TK_PROF_SCOPE(ctx, TK_EV_OP_END, "ATTENTION", ctx->ws->cur_offset);
                 break;
             }
@@ -165,7 +166,7 @@ int tk_rt_graph_exec(struct tk_rt_ctx* ctx) {
             case TK_OP_FFN: {
             	TK_PROF_SCOPE(ctx, TK_EV_OP_BEGIN, "FFN", ctx->ws->cur_offset);
                 struct tk_tensor* out = NULL;
-                RT_CHECK(ctx->ops->ffn(ctx, node->params.ffn.tf, node->inputs[0], &out));
+                RT_CHECK(ctx->ops->ffn(ctx, node->params.single.ffn.tf, node->inputs[0], &out));
                 TK_PROF_SCOPE(ctx, TK_EV_OP_END, "FFN", ctx->ws->cur_offset);
                 break;
             }
@@ -259,6 +260,15 @@ static int tk_rt_fuse_gemm_bias_gelu(struct tk_rt_ctx* ctx, struct tk_rt_graph* 
         /* Re-use GEMM node as FUSED_GEMM_ADD_GELU with 4 inputs */
         gemm->op_type     = TK_OP_FUSED_GEMM_ADD_GELU;
         gemm->input_count = 3;
+
+		union tk_rt_ops_params gemm_params = gemm->params.single;
+		gemm->params.fused = (struct tk_rt_fused_params){ .count = 3 };
+		gemm->params.fused.ops[0].op_type = gelu->op_type;
+		gemm->params.fused.ops[0].params  = gemm_params;
+		gemm->params.fused.ops[1].op_type = a->op_type;
+		gemm->params.fused.ops[1].params  = a->params.single;
+		gemm->params.fused.ops[2].op_type = gelu->op_type;
+		gemm->params.fused.ops[2].params  = gelu->params.single;
 
         struct tk_tensor** merged = arena_alloc(ctx->meta_arena, 3 * sizeof(struct tk_tensor*));
         gemm->ws_cursor_before = gelu->ws_cursor_before;

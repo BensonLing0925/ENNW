@@ -36,13 +36,16 @@ RAYLIB_LIB  := $(RAYLIB_DIR)/libraylib.a
 
 CFG_DIR      := config
 CJSON_DIR    := $(CFG_DIR)/cJSON
-MEM_DIR      := mem
-WEIGHTIO_DIR := weightio
-EXAMPLES_DIR := examples
+
+MEM_DIR      	:= mem
+WEIGHTIO_DIR 	:= weightio
+EXAMPLES_DIR 	:= examples
+TEST_DIR		:= test
 
 TARGET                  := nn$(EXEEXT)
 DISTILBERT_INFER_TARGET := distilbert_infer$(EXEEXT)
 SST2_EVAL_TARGET        := sst2_eval$(EXEEXT)
+OPS_TEST_TARGET			:= ops_test$(EXEEXT)
 
 # ---- Include paths ----
 INCLUDES := -I$(SRC_DIR) -I$(MODULES_DIR) -I$(FC_DIR) -I$(CONV_DIR) -I$(NNUTILS_DIR) \
@@ -100,7 +103,6 @@ LIB_SRC := $(wildcard $(FC_DIR)/*.c) \
            $(filter-out $(WEIGHTIO_DIR)/test_weightio.c, $(wildcard $(WEIGHTIO_DIR)/*.c))
 
 ifeq ($(PROF), 1)
-    # 這裡過濾掉 test_ 開頭的檔案，只取核心實作
     PROF_CORE_SRC := $(filter-out $(PROF_DIR)/test_%.c, $(wildcard $(PROF_DIR)/*.c))
     LIB_SRC += $(PROF_CORE_SRC)
 endif
@@ -118,6 +120,9 @@ SST2_INFER_SRC := $(EXAMPLES_DIR)/sst2_infer.c
 # sst2_eval-specific source (its own main)
 SST2_EVAL_SRC := $(EXAMPLES_DIR)/sst2_eval.c
 
+# ops_test-specific source
+OPS_TEST_SRC := $(TEST_DIR)/ops_test.c
+
 # cJSON source (compile as C89)
 SRC_C89 := $(CJSON_DIR)/cJSON.c
 
@@ -127,11 +132,12 @@ NN_OBJ               := $(NN_SRC:.c=.o)
 DISTILBERT_INFER_OBJ := $(DISTILBERT_INFER_SRC:.c=.o)
 SST2_INFER_OBJ       := $(SST2_INFER_SRC:.c=.o)
 SST2_EVAL_OBJ        := $(SST2_EVAL_SRC:.c=.o)
+OPS_TEST_OBJ         := $(OPS_TEST_SRC:.c=.o)
 OBJ_C89              := $(SRC_C89:.c=.o)
 
 # ---- Default target ----
 .PHONY: all
-all: $(TARGET) $(DISTILBERT_INFER_TARGET) $(SST2_INFER_TARGET) $(SST2_EVAL_TARGET)
+all: $(TARGET) $(DISTILBERT_INFER_TARGET) $(SST2_INFER_TARGET) $(SST2_EVAL_TARGET) $(OPS_TEST_TARGET)
 
 # ---- Link ----
 $(TARGET): $(NN_OBJ) $(LIB_OBJ) $(OBJ_C89)
@@ -144,6 +150,9 @@ $(SST2_INFER_TARGET): $(SST2_INFER_OBJ) $(LIB_OBJ) $(OBJ_C89)
 	$(CC) $^ -o $@ $(LDLIBS)
 
 $(SST2_EVAL_TARGET): $(SST2_EVAL_OBJ) $(LIB_OBJ) $(OBJ_C89)
+	$(CC) $^ -o $@ $(LDLIBS)
+
+$(OPS_TEST_TARGET): $(OPS_TEST_OBJ) $(LIB_OBJ) $(OBJ_C89)
 	$(CC) $^ -o $@ $(LDLIBS)
 
 # ---- Pattern rules by standard ----
@@ -175,9 +184,12 @@ run-sst2: $(SST2_INFER_TARGET)
 run-sst2-eval: $(SST2_EVAL_TARGET)
 	./$(SST2_EVAL_TARGET)
 
+run-ops-test: $(OPS_TEST_TARGET)
+	./$(OPS_TEST_TARGET)
+
 clean:
 	-$(RM) $(LIB_OBJ) $(NN_OBJ) $(DISTILBERT_INFER_OBJ) $(SST2_INFER_OBJ) $(SST2_EVAL_OBJ) $(OBJ_C89) \
-	       $(TARGET) $(DISTILBERT_INFER_TARGET)	$(SST2_EVAL_TARGET)
+	       $(TARGET) $(DISTILBERT_INFER_TARGET)	$(SST2_EVAL_TARGET) $(OPS_TEST_TARGET)
 
 print:
 	@echo TARGET=$(TARGET)

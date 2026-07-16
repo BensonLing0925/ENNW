@@ -21,6 +21,13 @@ static void distilbert_block_config(struct tk_distilbert_block* block,
         .use_ffn_bias    = config.use_ffn_bias,
         .pre_norm        = 0,  /* DistilBERT uses post-norm */
         .dtype           = dtype,
+
+		/* Hardcoded ops_config for now */
+		.ops_config = (struct tk_ops_config) {
+			.gelu_variant = TK_OPS_GELU_ERF,
+			.gelu_fn = &tk_ops_gelu_erf,
+			.gelu_fn_raw = &_tk_ops_gelu_erf,
+		},
     };
 }
 

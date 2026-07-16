@@ -1,5 +1,5 @@
 #include "../error/rt_error.h"
-#include "arena.h"
+#include "../../mem/arena.h"
 #include "tensor.h"
 #include <inttypes.h>
 #include <math.h>
@@ -419,7 +419,7 @@ void tk_tensor_print(struct tk_tensor* src) {
 }
 
 /* decoder-specific related operations */
-int tk_tensor_casual_mask(struct tk_tensor* src) {
+int tk_tensor_causal_mask(struct tk_tensor* src) {
 
     uint64_t num_batches = 1;
     for (int i = 0; i < src->ndims - 2; ++i) {

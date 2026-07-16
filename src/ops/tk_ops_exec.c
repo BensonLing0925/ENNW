@@ -3,6 +3,7 @@
 #include "../error/rt_error.h"
 #include "../profiler/tk_profiler.h"
 #include "../runtime/rt_context.h"
+#include "../runtime/graph/rt_graph.h"
 #include "../modules/transformer/tf_block.h"
 
 int exec_add(struct tk_rt_ctx* ctx, struct tk_tensor* src1, struct tk_tensor* src2, struct tk_tensor* dest) {
@@ -20,8 +21,11 @@ int exec_layernorm(struct tk_rt_ctx* ctx, struct tk_tensor* src, struct tk_tenso
     return 0;
 }
 
-int exec_gelu(struct tk_rt_ctx* ctx, struct tk_tensor* src, struct tk_tensor* dest) {
-    RT_CHECK(tk_ops_gelu(src, dest));
+int exec_gelu(struct tk_rt_ctx* ctx, struct tk_ops_config* oc, 
+			  struct tk_rt_node* node, struct tk_tensor* src, struct tk_tensor* dest) {
+	(void)oc;
+	RT_CHECK(node->params.single.gelu.gelu_fn(src, dest));
+    // RT_CHECK(tk_ops_gelu(src, dest));
     return 0;
 }
 

@@ -7,18 +7,6 @@
 
 struct tk_rt_ctx;
 
-enum rt_op_type {
-    TK_OP_GEMM,
-    TK_OP_ADD,
-    TK_OP_GELU,
-    TK_OP_LAYERNORM,
-    TK_OP_QUANTIZE,
-    TK_OP_ATTENTION,
-    TK_OP_FFN,
-    TK_OP_FUSED_ADD_NORM,  /* fused residual-add + layer-norm (post-norm only) */
-	TK_OP_FUSED_GEMM_ADD_GELU,
-};
-
 struct tk_rt_node {
     enum rt_op_type op_type;
     int input_count;
@@ -27,16 +15,10 @@ struct tk_rt_node {
     size_t ws_cursor_before;   /* workspace cur_offset when this node was recorded */
     struct tk_tensor** inputs;
     struct tk_tensor** outputs;
-
-    union {
-        struct tk_rt_gemm_params        gemm;
-        struct tk_rt_add_params         add;
-        struct tk_rt_gelu_params        gelu;
-        struct tk_rt_layernorm_params   layernorm;
-        struct tk_rt_attention_params   attention;
-        struct tk_rt_ffn_params         ffn;
-        struct tk_rt_quantize_params    quantize;
-    } params;
+	union {
+		union tk_rt_ops_params single;
+		struct tk_rt_fused_params fused;
+	} params;
 };
 
 struct tk_rt_node_config {

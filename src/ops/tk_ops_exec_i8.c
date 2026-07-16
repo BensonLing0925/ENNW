@@ -7,7 +7,7 @@
 struct TransformerBlock;
 extern int exec_add(struct tk_rt_ctx* ctx, struct tk_tensor* src1, struct tk_tensor* src2, struct tk_tensor* dest);
 extern int exec_layernorm(struct tk_rt_ctx* ctx, struct tk_tensor* src, struct tk_tensor* gamma, struct tk_tensor* beta, struct tk_tensor* dest);
-extern int exec_gelu(struct tk_rt_ctx* ctx, struct tk_tensor* src, struct tk_tensor* dest);
+extern int exec_gelu(struct tk_rt_ctx* ctx, struct tk_ops_config* oc, struct tk_tensor* src, struct tk_tensor* dest);
 extern int exec_attention(struct tk_rt_ctx* ctx, struct TransformerBlock* tf, struct tk_tensor* input, struct tk_tensor** out);
 extern int exec_ffn(struct tk_rt_ctx* ctx, struct TransformerBlock* tf, struct tk_tensor* input, struct tk_tensor** out);
 

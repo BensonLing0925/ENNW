@@ -1,7 +1,7 @@
 #ifndef POOLING_H
 #define POOLING_H
 
-#include "../runtime/rt_context.h"
+#include "../../runtime/rt_context.h"
 #include "../../ops/tensor_ops.h"
 
 typedef enum {

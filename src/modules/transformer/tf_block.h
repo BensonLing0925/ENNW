@@ -2,22 +2,10 @@
 #define BLOCK_H
 
 #include "../../ops/tensor.h"
+#include "tf_config.h"
 
 /* Forward-declare runtime types to avoid heavy header chain in this header */
 struct tk_rt_ctx;
-
-struct tk_tf_block_config {
-    int seq_length;
-    int hidden_dim;
-    int n_heads;
-    int inter_dim;    // 0 = automatically set to 4 * hidden_dim
-    int use_qkv_bias;
-    int use_o_proj;
-    int use_o_proj_bias;
-    int use_ffn_bias;
-    int pre_norm;     // 1 = pre-norm (GPT-style), 0 = post-norm (BERT/DistilBERT-style)
-    enum tk_dtype dtype;
-};
 
 struct TransformerBlock {
 
