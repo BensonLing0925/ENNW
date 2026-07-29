@@ -123,7 +123,7 @@ int main(int argc, char* argv[]) {
         print_verify_layer(0, hidden);  /* 0 = after embedding */
 
         for (int i = 0; i < model->num_layers; ++i) {
-            if (tk_tf_block_forward(ctx, model->blocks[i]->base, hidden) != 0) {
+            if (tk_tf_block_forward(ctx, model->blocks[i]->base, hidden, ctx->ops->attention) != 0) {
                 fprintf(stderr, "block %d forward failed\n", i); return 1;
             }
             print_verify_layer(i + 1, hidden);  /* 1..6 = after each transformer layer */

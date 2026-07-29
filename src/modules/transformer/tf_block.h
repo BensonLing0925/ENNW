@@ -7,6 +7,13 @@
 /* Forward-declare runtime types to avoid heavy header chain in this header */
 struct tk_rt_ctx;
 
+// Decoder model currently avoid static graph optimization path (means also avoid vtable)
+// since decoder primary have to stage, prefill and decode, this typedef is used to specify
+// which stage to use
+// For encoder-only models, like DistilBERT, use ..._forward(..., attn_fn = ctx->ops->attention...)
+typedef int (*tk_attn_fn)(struct tk_rt_ctx* ctx, struct TransformerBlock* tf,
+                          struct tk_tensor* input, struct tk_tensor** out);
+
 struct TransformerBlock {
 
     struct tk_tf_block_config config;
@@ -51,6 +58,10 @@ struct TransformerBlock {
     float o_proj_in_act_scale;    /* input to O_proj            */
     float ffn_up_in_act_scale;    /* input to FFN up            */
     float ffn_down_in_act_scale;  /* input to FFN down (post-GELU) */
+
+	/* kv cache */
+	struct tk_tensor* k_cache;
+	struct tk_tensor* v_cache;
 };
 
 
@@ -82,6 +93,15 @@ int tk_tf_attention_forward(struct tk_rt_ctx* ctx,
  */
 int tk_tf_block_forward(struct tk_rt_ctx* ctx,
                      struct TransformerBlock* tf_block,
-                     struct tk_tensor* input);
+                     struct tk_tensor* input,
+					 tk_attn_fn attn_fn);
+
+void tk_tf_kv_cache_alloc(struct tk_rt_ctx* ctx,
+                       	  struct TransformerBlock* tf);
+
+int tk_tf_attention_forward_decode(struct tk_rt_ctx* ctx,
+                             	struct TransformerBlock* tf,
+                            	struct tk_tensor* input,
+                             	struct tk_tensor** attn_out_ptr);
 
 #endif

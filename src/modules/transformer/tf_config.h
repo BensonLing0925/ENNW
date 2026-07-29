@@ -6,6 +6,7 @@
 
 struct tk_tf_block_config {
 
+	int max_seq_len;
     int seq_length;
     int hidden_dim;
     int n_heads;

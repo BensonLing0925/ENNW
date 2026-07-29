@@ -27,6 +27,7 @@ PL_DIR          := $(MODULES_DIR)/pooling
 TRANSFORMER_DIR := $(MODULES_DIR)/transformer
 EMB_DIR         := $(TRANSFORMER_DIR)/embedding
 DISTILBERT_DIR  := $(TRANSFORMER_DIR)/distilbert
+GPT2_DIR  		:= $(TRANSFORMER_DIR)/gpt2
 OPS_DIR         := $(SRC_DIR)/ops
 NNUTILS_DIR     := $(SRC_DIR)/nn_utils
 ERROR_DIR       := $(SRC_DIR)/error
@@ -45,14 +46,15 @@ TEST_DIR		:= test
 TARGET                  := nn$(EXEEXT)
 DISTILBERT_INFER_TARGET := distilbert_infer$(EXEEXT)
 SST2_EVAL_TARGET        := sst2_eval$(EXEEXT)
-OPS_TEST_TARGET			:= ops_test$(EXEEXT)
+OPS_TEST_TARGET			:= $(TEST_DIR)/ops_test$(EXEEXT)
+GPT2_TEST_TARGET			:= $(TEST_DIR)/gpt2_test$(EXEEXT)
 
 # ---- Include paths ----
 INCLUDES := -I$(SRC_DIR) -I$(MODULES_DIR) -I$(FC_DIR) -I$(CONV_DIR) -I$(NNUTILS_DIR) \
             -I$(CFG_DIR) -I$(CJSON_DIR) -I$(MEM_DIR) -I$(ERROR_DIR) \
             -I$(OPS_DIR) -I$(RT_DIR) -I$(RT_WS_DIR) -I$(PL_DIR) -I$(TRANSFORMER_DIR) \
             -I$(WEIGHTIO_DIR) -I$(EMB_DIR) -I$(DISTILBERT_DIR) -I$(EXAMPLES_DIR)	 \
-			-I$(RT_SG_DIR)
+			-I$(RT_SG_DIR) -I$(GPT2_DIR)
 			
 # Math library (needed on Linux if using exp/sqrt/etc)
 LDLIBS ?= -lm -fopenmp 
@@ -97,6 +99,7 @@ LIB_SRC := $(wildcard $(FC_DIR)/*.c) \
            $(wildcard $(TRANSFORMER_DIR)/*.c) \
            $(wildcard $(EMB_DIR)/*.c) \
            $(wildcard $(DISTILBERT_DIR)/*.c) \
+           $(wildcard $(GPT2_DIR)/*.c) \
            $(CFG_DIR)/config.c \
            $(MEM_DIR)/arena.c \
            $(ERROR_DIR)/rt_error.c \
@@ -123,6 +126,9 @@ SST2_EVAL_SRC := $(EXAMPLES_DIR)/sst2_eval.c
 # ops_test-specific source
 OPS_TEST_SRC := $(TEST_DIR)/ops_test.c
 
+# gpt2_test-specific source
+GPT2_TEST_SRC := $(TEST_DIR)/gpt2_test.c
+
 # cJSON source (compile as C89)
 SRC_C89 := $(CJSON_DIR)/cJSON.c
 
@@ -133,11 +139,12 @@ DISTILBERT_INFER_OBJ := $(DISTILBERT_INFER_SRC:.c=.o)
 SST2_INFER_OBJ       := $(SST2_INFER_SRC:.c=.o)
 SST2_EVAL_OBJ        := $(SST2_EVAL_SRC:.c=.o)
 OPS_TEST_OBJ         := $(OPS_TEST_SRC:.c=.o)
+GPT2_TEST_OBJ         := $(GPT2_TEST_SRC:.c=.o)
 OBJ_C89              := $(SRC_C89:.c=.o)
 
 # ---- Default target ----
 .PHONY: all
-all: $(TARGET) $(DISTILBERT_INFER_TARGET) $(SST2_INFER_TARGET) $(SST2_EVAL_TARGET) $(OPS_TEST_TARGET)
+all: $(TARGET) $(DISTILBERT_INFER_TARGET) $(SST2_INFER_TARGET) $(SST2_EVAL_TARGET) $(OPS_TEST_TARGET) $(GPT2_TEST_TARGET)
 
 # ---- Link ----
 $(TARGET): $(NN_OBJ) $(LIB_OBJ) $(OBJ_C89)
@@ -153,6 +160,9 @@ $(SST2_EVAL_TARGET): $(SST2_EVAL_OBJ) $(LIB_OBJ) $(OBJ_C89)
 	$(CC) $^ -o $@ $(LDLIBS)
 
 $(OPS_TEST_TARGET): $(OPS_TEST_OBJ) $(LIB_OBJ) $(OBJ_C89)
+	$(CC) $^ -o $@ $(LDLIBS)
+
+$(GPT2_TEST_TARGET): $(GPT2_TEST_OBJ) $(LIB_OBJ) $(OBJ_C89)
 	$(CC) $^ -o $@ $(LDLIBS)
 
 # ---- Pattern rules by standard ----
@@ -187,9 +197,12 @@ run-sst2-eval: $(SST2_EVAL_TARGET)
 run-ops-test: $(OPS_TEST_TARGET)
 	./$(OPS_TEST_TARGET)
 
+run-gpt2-test: $(GPT2_TEST_TARGET)
+	./$(GPT2_TEST_TARGET)
+
 clean:
 	-$(RM) $(LIB_OBJ) $(NN_OBJ) $(DISTILBERT_INFER_OBJ) $(SST2_INFER_OBJ) $(SST2_EVAL_OBJ) $(OBJ_C89) \
-	       $(TARGET) $(DISTILBERT_INFER_TARGET)	$(SST2_EVAL_TARGET) $(OPS_TEST_TARGET)
+	       $(TARGET) $(DISTILBERT_INFER_TARGET)	$(SST2_EVAL_TARGET) $(OPS_TEST_TARGET) $(GPT2_TEST_TARGET)
 
 print:
 	@echo TARGET=$(TARGET)

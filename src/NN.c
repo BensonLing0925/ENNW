@@ -15,6 +15,7 @@
 #include "../config/config.h"
 #include "../weightio/weightio.h"
 #include "ops/tensor.h"
+#include "ops/tk_ops.h"
 
 static uint32_t tk_dtype_to_layer_dtype(enum tk_dtype dtype) {
     switch (dtype) {
@@ -219,7 +220,7 @@ static void forward_sample(struct tk_rt_ctx* ctx,
         .shape   = tf_shape,
         .strides = tf_strides,
     };
-    tk_tf_block_forward(ctx, tf_block, &tf_input);
+    tk_tf_block_forward(ctx, tf_block, &tf_input, ctx->ops->attention);
 
     /* Copy flat output */
     memcpy(flat_buf_row, pooled->data, input_size * tk_get_dtype_size(dtype));

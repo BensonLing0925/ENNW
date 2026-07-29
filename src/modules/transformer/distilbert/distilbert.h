@@ -4,6 +4,7 @@
 #include "distilbert_emb.h"
 #include "distilbert_block.h"
 #include "../../../ops/tensor_ops.h"
+#include "../../../ops/tk_ops.h"
 #include "../../../runtime/rt_context.h"
 
 struct tk_distilbert {

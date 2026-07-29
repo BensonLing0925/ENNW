@@ -9,7 +9,7 @@ static const struct tk_rt_ctx_config DEFAULT_CONFIG = {
     .use_int8 = 0,
     .use_prof = 0,
     .use_graph_optimize = 1,
-    .graph_capacity = 1024
+    .graph_capacity = 1024,
 };
 
 struct tk_rt_ctx* tk_runtime_ctx_create_config(struct arena* root_arena, struct tk_rt_ctx_config config) {
@@ -21,6 +21,9 @@ struct tk_rt_ctx* tk_runtime_ctx_create_config(struct arena* root_arena, struct 
 
     ctx->data_arena = arena_alloc(root_arena, sizeof(struct arena));
     arena_init(ctx->data_arena);
+
+    ctx->kv_arena = arena_alloc(root_arena, sizeof(struct arena));
+    arena_init(ctx->kv_arena);
 
     ctx->compute_dtype = TK_F64;
     ctx->ws = tk_ws_create(root_arena, NULL);
@@ -49,6 +52,8 @@ struct tk_rt_ctx* tk_runtime_ctx_create_config(struct arena* root_arena, struct 
         int max_events_per_thread = 4096;
         ctx->manager = tk_prof_create(max_threads, max_events_per_thread);
     }
+	else
+		ctx->manager = NULL;
     /*
     if (ctx->use_int8)
         ctx->ops = (struct tk_ops_vtable*)&tk_exec_i8_vtable;
@@ -144,6 +149,7 @@ void tk_rt_ctx_destroy(struct tk_rt_ctx* ctx) {
     	arena_destroy(ctx->manager->prof_arena);
 	arena_destroy(ctx->data_arena);
     arena_destroy(ctx->meta_arena);
+    arena_destroy(ctx->kv_arena);
 }
 
 /* configuration getter */

@@ -147,27 +147,46 @@ int tk_tensor_reshape(struct arena* a, struct tk_tensor* src, struct tk_tensor**
     return 0;
 }
 
-int tk_tensor_transpose(struct arena* a,
-                        struct tk_tensor* tk_tensor, 
-                        int dim1,
-                        int dim2) {
-    // check index and stride length
-    if (tk_tensor->ndims < dim1 || tk_tensor->ndims < dim2)
-        RT_FAIL(RT_EINVAL, "Out of bound dimension index. tk_tensor->ndims: %d, dim1: %d, dim2: %d\n",
-                            tk_tensor->ndims, dim1, dim2);
-        
-    // eager transpose
-    // make tensor incontiguous
-    int tmp_stride = tk_tensor->strides[dim1];
-    tk_tensor->strides[dim1] = tk_tensor->strides[dim2];
-    tk_tensor->strides[dim2] = tmp_stride;
+int tk_tensor_transpose(struct arena* a, struct tk_tensor* src, int dim1, int dim2,
+                         struct tk_tensor** out) {
+    if (src->ndims <= dim1 || src->ndims <= dim2)
+        RT_FAIL(RT_EINVAL, "Out of bound dimension index. src->ndims: %d, dim1: %d, dim2: %d\n",
+                            src->ndims, dim1, dim2);
 
-    int tmp_shape = tk_tensor->shape[dim1];
-    tk_tensor->shape[dim1] = tk_tensor->shape[dim2];
-    tk_tensor->shape[dim2] = tmp_shape;
+    /* build a NEW shape/strides array — do not touch src's own metadata */
+    int* new_shape   = arena_alloc(a, sizeof(int) * src->ndims);
+    int* new_strides = arena_alloc(a, sizeof(int) * src->ndims);
+    memcpy(new_shape,   src->shape,   sizeof(int) * src->ndims);
+    memcpy(new_strides, src->strides, sizeof(int) * src->ndims);
 
-    // we use arena, just update the pointer and we are done
-    tk_tensor_reshape(a, tk_tensor, &tk_tensor, tk_tensor->shape, tk_tensor->ndims);
+    int tmp = new_shape[dim1];
+    new_shape[dim1] = new_shape[dim2];
+    new_shape[dim2] = tmp;
+
+    tmp = new_strides[dim1];
+    new_strides[dim1] = new_strides[dim2];
+    new_strides[dim2] = tmp;
+
+    /* construct a temporary view with swapped metadata, to feed into reshape's
+     * contiguity check + data reorder logic — src itself is left untouched */
+    struct tk_tensor view = *src;
+    view.shape   = new_shape;
+    view.strides = new_strides;
+
+    if (!tk_tensor_is_contiguous(&view)) {
+        /* genuinely non-contiguous after the swap: physically reorder the data
+         * into a fresh, contiguous buffer matching the new shape */
+        struct tk_tensor* dest = NULL;
+        RT_CHECK(tk_tensor_alloc(a, src->dtype, new_shape, src->ndims, &dest));
+        tk_tensor_data_reorder(&view, dest);
+        *out = dest;
+    } else {
+        /* rare case: swap happens to still be contiguous (e.g. a dim of size 1) */
+        struct tk_tensor* dest = arena_alloc(a, sizeof(struct tk_tensor));
+        *dest = view;
+        *out = dest;
+    }
+
     return 0;
 }
 
@@ -176,7 +195,7 @@ int tk_tensor_view(struct arena* a, struct tk_tensor* src, int* new_shape, int n
     if (!src)
         RT_FAIL(RT_EINVAL, "src is NULL");
 
-    // 只在 meta_arena 拿一個載體
+	// allocate another struct
     struct tk_tensor* view = arena_alloc(a, sizeof(struct tk_tensor));
     if (!view)
         RT_FAIL(RT_EOOM, "Out of memory");
@@ -187,7 +206,6 @@ int tk_tensor_view(struct arena* a, struct tk_tensor* src, int* new_shape, int n
     view->strides = arena_alloc(a, sizeof(int) * new_ndims);
     strides_calc(view->strides, new_shape, new_ndims);
 
-    // 載體指向同一個 data，不需要調用 tk_ws_alloc，所以不增加 peak_offset
     view->data = src->data;
 
     *out = view;
@@ -220,6 +238,18 @@ void tk_tensor_fill_zero(struct tk_tensor* tensor) {
     TK_DISPATCH_TYPES(tensor->dtype, __func__, {
                 memset(tensor->data, 0, sizeof(scalar_t) * size);
                 });
+}
+
+void tk_tensor_rand_init(struct tk_tensor* tensor, float scale) {
+    uint64_t size = shape_size_calc(tensor->shape, tensor->ndims);
+    TK_DISPATCH_TYPES(tensor->dtype, __func__, {
+        scalar_t* data = (scalar_t*)tensor->data;
+        for (uint64_t i = 0; i < size; ++i) {
+            /* uniform in [-scale, scale] */
+            float r = ((float)rand() / (float)RAND_MAX) * 2.0f - 1.0f;
+            data[i] = (scalar_t)(r * scale);
+        }
+    });
 }
 
 static void tk_tensor_padding_data_move(struct tk_tensor* dest, struct tk_tensor* src,

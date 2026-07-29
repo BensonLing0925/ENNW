@@ -23,9 +23,18 @@ struct tk_rt_ctx {
     struct tk_ops_vtable* ops;
 
     enum tk_dtype compute_dtype;
+
+	/* arena */
     struct arena* prof_arena;
     struct arena* meta_arena;
     struct arena* data_arena;
+
+	/* should kv_arena belongs to ctx is a question worth considering */
+	struct arena* kv_arena;
+
+	/* kv cache united current index  */
+	int kv_cur_len;
+
     struct tk_workspace* ws;
     struct Model* model;
 

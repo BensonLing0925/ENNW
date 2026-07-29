@@ -23,9 +23,13 @@ int exec_layernorm(struct tk_rt_ctx* ctx, struct tk_tensor* src, struct tk_tenso
 
 int exec_gelu(struct tk_rt_ctx* ctx, struct tk_ops_config* oc, 
 			  struct tk_rt_node* node, struct tk_tensor* src, struct tk_tensor* dest) {
-	(void)oc;
-	RT_CHECK(node->params.single.gelu.gelu_fn(src, dest));
-    // RT_CHECK(tk_ops_gelu(src, dest));
+    int (*gelu_fn)(struct tk_tensor*, struct tk_tensor*);
+    if (node) {
+        gelu_fn = node->params.single.gelu.gelu_fn;
+    } else {
+        gelu_fn = oc->gelu_fn;
+    }
+    RT_CHECK(gelu_fn(src, dest));
     return 0;
 }
 
@@ -41,9 +45,16 @@ int exec_attention(struct tk_rt_ctx* ctx, struct TransformerBlock* tf,
                    struct tk_tensor* input, struct tk_tensor** out) {
 
     RT_CHECK(tk_tf_attention_forward(ctx, tf, input, out));
-
     return 0;
 }
+
+/*
+int exec_attention_decode(struct tk_rt_ctx* ctx, struct TransformerBlock* tf,
+                   		  struct tk_tensor* input, struct tk_tensor** out) {
+	RT_CHECK(tk_tf_attention_forward_decode(ctx, tf, input, out));
+	return 0;
+}
+*/
 
 int exec_ffn(struct tk_rt_ctx* ctx, struct TransformerBlock* tf,
              struct tk_tensor* input, struct tk_tensor** out) {

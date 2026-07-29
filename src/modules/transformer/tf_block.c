@@ -127,6 +127,24 @@ void tk_tf_block_alloc(struct tk_rt_ctx* ctx,
     tf->o_proj_in_act_scale   = 0.0f;
     tf->ffn_up_in_act_scale   = 0.0f;
     tf->ffn_down_in_act_scale = 0.0f;
+
+	/* initialize kv cache */
+	tf->k_cache = NULL;
+	tf->v_cache = NULL;
+}
+
+void tk_tf_kv_cache_alloc(struct tk_rt_ctx* ctx,
+                       	  struct TransformerBlock* tf) {
+
+    struct arena* a = ctx->kv_arena;
+
+    struct tk_tf_block_config* config = &tf->config;
+    enum tk_dtype dtype  = (config->dtype == TK_NONE) ? TK_F64 : config->dtype;
+
+    int cache_size[2] = { config->max_seq_len, config->hidden_dim  };
+    tk_tensor_alloc(a, dtype, cache_size, 2, &tf->k_cache);
+    tk_tensor_alloc(a, dtype, cache_size, 2, &tf->v_cache);
+
 }
 
 /* ------------------------------------------------------------------ */
@@ -140,6 +158,9 @@ void tk_tf_block_alloc(struct tk_rt_ctx* ctx,
  *
  * Strategy: per-head loop with explicit gather/scatter to avoid
  * non-contiguous tensor issues.  No tk_tensor_view used.
+ *
+ * This function is also used to prefill tokens into kv cache
+ *
  */
 int tk_tf_attention_forward(struct tk_rt_ctx* ctx,
                              struct TransformerBlock* tf,
@@ -221,6 +242,19 @@ int tk_tf_attention_forward(struct tk_rt_ctx* ctx,
     ctx->ops->gemm(ctx, input_i8, tf->v_weights, v_buf);
     if (tf->v_bias) ctx->ops->add(ctx, v_buf, tf->v_bias, v_buf);
 
+	if (tf->k_cache && tf->v_cache) {
+		TK_DISPATCH_TYPES(dtype, "tk_tf_attention_forward_kv_prefill", {
+			scalar_t* k_src   = (scalar_t*)k_buf->data;
+			scalar_t* v_src   = (scalar_t*)v_buf->data;
+			scalar_t* k_dest   = (scalar_t*)tf->k_cache->data;
+			scalar_t* v_dest   = (scalar_t*)tf->v_cache->data;
+
+			memcpy(k_dest, k_src, seq * hidden * sizeof(scalar_t));
+			memcpy(v_dest, v_src, seq * hidden * sizeof(scalar_t));
+		});
+		ctx->kv_cur_len = seq;
+	}
+
     TK_DISPATCH_TYPES(dtype, "tk_tf_attention_forward", {
         scalar_t* q_data   = (scalar_t*)q_buf->data;
         scalar_t* k_data   = (scalar_t*)k_buf->data;
@@ -266,6 +300,169 @@ int tk_tf_attention_forward(struct tk_rt_ctx* ctx,
                 for (int j = 0; j < hdim; ++j)
                     out_data[s * hidden + h * hdim + j] = oh[s * hdim + j];
         }
+
+
+    });
+
+    if (tf->o_proj_weights) {
+        /* o_proj cannot write in-place into atten_out (GEMM aliasing bug). */
+        struct tk_tensor* proj_out = NULL;
+        RT_CHECK(tk_ws_tensor_alloc(ctx->ws, ctx->meta_arena, dtype, out_shape, 2, &proj_out));
+
+        struct tk_tensor* ao_quant = NULL;
+        enum tk_dtype target_dtype = (tf->o_proj_weights->dtype == TK_I8) ? TK_I8 : TK_F32;
+        RT_CHECK(tk_ws_tensor_alloc(ctx->ws, ctx->meta_arena, target_dtype, out_shape, 2, &ao_quant));
+
+        RT_CHECK(ctx->ops->quantize(ctx, atten_out, ao_quant, tf->o_proj_in_act_scale));
+        RT_CHECK(ctx->ops->gemm(ctx, ao_quant, tf->o_proj_weights, proj_out));
+
+        if (tf->o_proj_bias)
+            RT_CHECK(ctx->ops->add(ctx, proj_out, tf->o_proj_bias, proj_out));
+
+        *attn_out_ptr = proj_out;
+        return 0;
+    }
+
+    *attn_out_ptr = atten_out;
+    return 0;
+}
+
+int tk_tf_attention_forward_decode(struct tk_rt_ctx* ctx,
+                             	struct TransformerBlock* tf,
+                            	struct tk_tensor* input,
+                             	struct tk_tensor** attn_out_ptr) {
+
+	if (!tf->k_cache || !tf->v_cache)
+		RT_FAIL(RT_EINVAL, "KV cache not allocated — call tk_tf_kv_cache_alloc first\n");
+
+    int seq    = tf->config.seq_length;
+    int hidden = tf->config.hidden_dim;
+    int heads  = tf->config.n_heads;
+    int hdim   = tf->config.hidden_dim / tf->config.n_heads;
+    double scale = 1.0 / sqrt((double)hdim);
+    int dryrun = (ctx->rt_type == RT_DRYRUN);
+    enum tk_dtype dtype = input->dtype;
+
+	int kv_cur_len = ctx->kv_cur_len;
+	int new_cur_len = kv_cur_len + 1;
+
+    /* ---- workspace allocations ---- */
+    int qkv_shape[2]   = { 1, hidden };
+    int score_shape[2] = { 1, new_cur_len };
+    int head_shape[2]  = { new_cur_len, hdim };
+    int headT_shape[2] = { hdim, new_cur_len };
+	int qhead_shape[2] = { 1, hdim };	// also for outh_shape
+    int outh_shape[2]   = { 1, hdim };
+    int out_shape[2]   = { 1, hidden };
+
+    struct tk_tensor* q_buf    = NULL;
+    struct tk_tensor* k_buf    = NULL;
+    struct tk_tensor* v_buf    = NULL;
+    struct tk_tensor* score    = NULL;
+    struct tk_tensor* qh       = NULL;
+    struct tk_tensor* kh_T     = NULL;
+    struct tk_tensor* vh       = NULL;
+    struct tk_tensor* out_h    = NULL;
+    struct tk_tensor* atten_out= NULL;
+    RT_CHECK(tk_ws_tensor_alloc(ctx->ws, ctx->meta_arena, dtype, qkv_shape,   2, &q_buf));
+    RT_CHECK(tk_ws_tensor_alloc(ctx->ws, ctx->meta_arena, dtype, qkv_shape,   2, &k_buf));
+    RT_CHECK(tk_ws_tensor_alloc(ctx->ws, ctx->meta_arena, dtype, qkv_shape,   2, &v_buf));
+    RT_CHECK(tk_ws_tensor_alloc(ctx->ws, ctx->meta_arena, dtype, score_shape, 2, &score));
+    RT_CHECK(tk_ws_tensor_alloc(ctx->ws, ctx->meta_arena, dtype, qhead_shape,  2, &qh));
+    RT_CHECK(tk_ws_tensor_alloc(ctx->ws, ctx->meta_arena, dtype, headT_shape, 2, &kh_T));
+    RT_CHECK(tk_ws_tensor_alloc(ctx->ws, ctx->meta_arena, dtype, head_shape,  2, &vh));
+    RT_CHECK(tk_ws_tensor_alloc(ctx->ws, ctx->meta_arena, dtype, outh_shape,  2, &out_h));
+    RT_CHECK(tk_ws_tensor_alloc(ctx->ws, ctx->meta_arena, dtype, out_shape,   2, &atten_out));
+
+    /* int8 mode: pre-allocate activation buffer so dryrun measures peak correctly */
+    int use_i8 = tk_check_weight_is_i8(tf->q_weights);
+    struct tk_tensor* input_i8 = NULL;
+    RT_CHECK(tk_ws_tensor_alloc(ctx->ws, ctx->meta_arena, 
+                            use_i8 ? TK_I8 : TK_F32, 
+                            qkv_shape, 2, &input_i8));
+
+    /* In dry-run mode we only need workspace sizing — skip computation.
+     * IMPORTANT: allocate the same tensors that inference would allocate so
+     * the recorded output pointer matches the inference output pointer.
+     * When o_proj is present, inference returns proj_out (not atten_out), so
+     * we must also allocate proj_out/ao_quant here and return proj_out. */
+    if (dryrun) {
+        if (tf->o_proj_weights) {
+            struct tk_tensor* proj_out = NULL;
+            RT_CHECK(tk_ws_tensor_alloc(ctx->ws, ctx->meta_arena, dtype, out_shape, 2, &proj_out));
+            struct tk_tensor* ao_quant = NULL;
+            enum tk_dtype target_dtype = (tf->o_proj_weights->dtype == TK_I8) ? TK_I8 : TK_F32;
+            RT_CHECK(tk_ws_tensor_alloc(ctx->ws, ctx->meta_arena, target_dtype, out_shape, 2, &ao_quant));
+            (void)ao_quant;
+            *attn_out_ptr = proj_out;
+        } else {
+            *attn_out_ptr = atten_out;
+        }
+        return 0;
+    }
+
+    /* ---- QKV projections: [1, hidden] x [hidden, hidden] -> [1, hidden] ---- */
+    // if use_i8, input_i8 is int8
+    // if not use_i8, input_i8 is actually fp32
+    // using input_i8 to unite function calls
+    ctx->ops->quantize(ctx, input, input_i8, tf->attn_in_act_scale);
+    ctx->ops->gemm(ctx, input_i8, tf->q_weights, q_buf);
+    if (tf->q_bias) ctx->ops->add(ctx, q_buf, tf->q_bias, q_buf);
+    ctx->ops->gemm(ctx, input_i8, tf->k_weights, k_buf);
+    if (tf->k_bias) ctx->ops->add(ctx, k_buf, tf->k_bias, k_buf);
+    ctx->ops->gemm(ctx, input_i8, tf->v_weights, v_buf);
+    if (tf->v_bias) ctx->ops->add(ctx, v_buf, tf->v_bias, v_buf);
+
+	TK_DISPATCH_TYPES(dtype, "tk_tf_attention_forward_kv_decode", {
+		scalar_t* k_src   = (scalar_t*)k_buf->data;
+		scalar_t* v_src   = (scalar_t*)v_buf->data;
+		scalar_t* k_dest   = (scalar_t*)tf->k_cache->data + hidden * kv_cur_len;
+		scalar_t* v_dest   = (scalar_t*)tf->v_cache->data + hidden * kv_cur_len;
+
+		memcpy(k_dest, k_src, hidden * sizeof(scalar_t));
+		memcpy(v_dest, v_src, hidden * sizeof(scalar_t));
+	});
+
+    TK_DISPATCH_TYPES(dtype, "tk_tf_attention_forward_decode", {
+        scalar_t* q_data   = (scalar_t*)q_buf->data;
+        scalar_t* k_data   = (scalar_t*)k_buf->data;
+        scalar_t* v_data   = (scalar_t*)v_buf->data;
+        scalar_t* k_cache   = (scalar_t*)tf->k_cache->data;
+        scalar_t* v_cache   = (scalar_t*)tf->v_cache->data;
+        scalar_t* qh_data  = (scalar_t*)qh->data;
+        scalar_t* khT_data = (scalar_t*)kh_T->data;
+        scalar_t* vh_data  = (scalar_t*)vh->data;
+        scalar_t* out_data = (scalar_t*)atten_out->data;
+
+        for (int h = 0; h < heads; ++h) {
+            /* Gather head h's slice (stride = hidden in the full projection) */
+            for (int j = 0; j < hdim; ++j) {
+                qh_data[j] = q_data[h * hdim + j];
+            }
+
+            /* Transpose K: [new_cur_len, hdim] -> [hdim, new_cur_len] for score = Q * K^T */
+			for ( int i = 0 ; i < new_cur_len ; ++i ) {
+				for (int j = 0; j < hdim; ++j) {
+					khT_data[j * new_cur_len + i] = k_cache[i * hidden + h * hdim + j];
+					vh_data[i * hdim + j] = v_cache[i * hidden + h * hdim + j];
+				}
+			}	
+
+            /* score = qh [1, hdim] x kh_T [hdim, new_cur_len] -> [1, new_cur_len] */
+            ctx->ops->gemm(ctx, qh, kh_T, score);
+            // ctx->ops->scale(ctx, score, scale);
+            tk_ops_scale(score, scale);
+
+            tk_ops_softmax(score, score);
+
+            /* out_h = score [1, new_cur_len] x vh [new_cur_len, hdim] -> [1, hdim] */
+            ctx->ops->gemm(ctx, score, vh, out_h);
+
+            /* Scatter back into atten_out */
+			scalar_t* oh = (scalar_t*)out_h->data;
+			for (int j = 0; j < hdim; ++j)
+				out_data[h * hdim + j] = oh[j];
+			}
     });
 
     if (tf->o_proj_weights) {
@@ -337,11 +534,9 @@ int tk_tf_ffn_forward(struct tk_rt_ctx* ctx,
     if (tf->config.use_ffn_bias)
         RT_CHECK(ctx->ops->add(ctx, inter_buf, tf->ffn_up_bias, inter_buf));
 
-    // GELU 運算（輸出維持 F32）
     RT_CHECK(ctx->ops->gelu(ctx, &tf->config.ops_config, NULL, inter_buf, inter_buf));
 
     // --- Down-projection (inter -> hidden) ---
-    // 再次量化：將 GELU 後的結果轉回 I8 以供下一層矩陣乘法使用
     RT_CHECK(ctx->ops->quantize(ctx, inter_buf, inter_i8, tf->ffn_down_in_act_scale));
     RT_CHECK(ctx->ops->gemm(ctx, inter_i8, tf->ffn_down_weights, out));
 
@@ -363,7 +558,8 @@ int tk_tf_ffn_forward(struct tk_rt_ctx* ctx,
  */
 int tk_tf_block_forward(struct tk_rt_ctx* ctx,
                      struct TransformerBlock* tf,
-                     struct tk_tensor* input) {
+                     struct tk_tensor* input,
+					 tk_attn_fn attn_fn) {
 
     int seq    = tf->config.seq_length;
     int hidden = tf->config.hidden_dim;
@@ -378,7 +574,8 @@ int tk_tf_block_forward(struct tk_rt_ctx* ctx,
         ctx->ops->layernorm(ctx, input, tf->ln1_gamma, tf->ln1_beta, ln1_out);
 
         struct tk_tensor* attn_out = NULL;
-        RT_CHECK(ctx->ops->attention(ctx, tf, ln1_out, &attn_out));
+        // RT_CHECK(ctx->ops->attention(ctx, tf, ln1_out, &attn_out));
+		RT_CHECK(attn_fn(ctx, tf, ln1_out, &attn_out));
         ctx->ops->add(ctx, input, attn_out, input);
 
         struct tk_tensor* ln2_out = NULL;
@@ -394,7 +591,8 @@ int tk_tf_block_forward(struct tk_rt_ctx* ctx,
         /* ---- Post-norm (BERT/DistilBERT-style): sublayer -> residual -> LN ---- */
 
         struct tk_tensor* attn_out = NULL;
-        RT_CHECK(ctx->ops->attention(ctx, tf, input, &attn_out));
+        // RT_CHECK(ctx->ops->attention(ctx, tf, input, &attn_out));
+		RT_CHECK(attn_fn(ctx, tf, input, &attn_out));
         RT_CHECK(ctx->ops->add(ctx, input, attn_out, input));
         ctx->ops->layernorm(ctx, input, tf->ln1_gamma, tf->ln1_beta, input);
 

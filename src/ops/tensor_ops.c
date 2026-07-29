@@ -381,6 +381,7 @@ int tk_ops_fused_gemm_bias_gelu(struct tk_tensor* src1, struct tk_tensor* src2,
                 }
 				*/
 				_gelu_fn((void*)dest_row, (void*)dest_row, dest->dtype, src2_r);
+				// printf("[fused] gelu_fn ptr = %p\n", (void*)_gelu_fn);
             }
         }
     });
@@ -618,7 +619,6 @@ int tk_ops_pooling(struct tk_pooling_params* pooling, struct tk_tensor* src, str
 }
 
 /* embedding related operations */
-
 int tk_ops_embedding_lookup(struct tk_tensor* input, struct tk_tensor* emb_weights, struct tk_tensor* output) {
     
     // check if the first(only) dim is the same as output's first dim

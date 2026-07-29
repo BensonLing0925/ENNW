@@ -134,6 +134,29 @@ int record_attention(struct tk_rt_ctx* ctx, struct TransformerBlock* tf,
     return 0;
 }
 
+/*
+int record_attention_decode(struct tk_rt_ctx* ctx, struct TransformerBlock* tf,
+                     		struct tk_tensor* input, struct tk_tensor** out) {
+    struct tk_rt_graph* g = ctx->static_graph;
+    if (g->capacity <= g->node_count)
+        RT_FAIL(RT_EINVAL, "Number of graph node exceeded\n");
+
+    size_t cursor_before = ctx->ws->cur_offset;
+
+    RT_CHECK(tk_tf_attention_forward(ctx, tf, input, out));
+
+    struct tk_rt_node_config config = { .op_type = TK_OP_ATTENTION,
+                                        .input_count = 1, .output_count = 1 };
+    struct tk_rt_node* node = NULL;
+    tk_rt_node_append(ctx, g, config, &node);
+    node->ws_cursor_before    = cursor_before;
+    node->inputs[0]           = input;
+    node->outputs[0]          = *out;
+    node->params.single.attention.tf = tf;
+    return 0;
+}
+*/
+
 int record_ffn(struct tk_rt_ctx* ctx, struct TransformerBlock* tf,
                struct tk_tensor* input, struct tk_tensor** out) {
     struct tk_rt_graph* g = ctx->static_graph;

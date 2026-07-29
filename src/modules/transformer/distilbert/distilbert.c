@@ -81,6 +81,8 @@ int tk_distilbert_forward(struct tk_rt_ctx* ctx,
                           struct tk_tensor* input_ids,
                           struct tk_tensor** output_ptr) {
 
+	tk_attn_fn attn_fn = ctx->ops->attention;
+
     /* Embedding: token IDs -> [seq, hidden] (workspace tensor at offset 0) */
     struct tk_tensor* hidden = NULL;
     RT_CHECK(tk_distilbert_emb_forward(ctx, distilbert->emb, input_ids, &hidden));
@@ -92,7 +94,7 @@ int tk_distilbert_forward(struct tk_rt_ctx* ctx,
     } else {
         /* Dry-run and no-graph-optimise paths: run blocks normally. */
         for (int i = 0; i < distilbert->num_layers; ++i)
-            RT_CHECK(tk_tf_block_forward(ctx, distilbert->blocks[i]->base, hidden));
+            RT_CHECK(tk_tf_block_forward(ctx, distilbert->blocks[i]->base, hidden, attn_fn));
     }
 
     *output_ptr = hidden;
