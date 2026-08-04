@@ -5,9 +5,9 @@
 #include <math.h>
 #include <float.h>
 #include <stdio.h>
-#include "../mem/arena.h"
-#include "../ops/tensor.h"
-#include "../ops/tensor_ops.h"
+#include "arena.h"
+#include "tensor.h"
+#include "tensor_ops.h"
 
 int findMax(struct tk_tensor* t);
 double* flatten(double** input, int colSize, int rowSize);

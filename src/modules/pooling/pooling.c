@@ -1,5 +1,5 @@
 #include "pooling.h"
-#include "../../runtime/rt_context.h"
+#include "rt_context.h"
 
 struct tk_pooling* tk_pooling_create(struct tk_rt_ctx* ctx) {
     struct tk_pooling* pooling = arena_alloc(ctx->meta_arena, sizeof(struct tk_pooling));

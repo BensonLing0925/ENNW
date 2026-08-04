@@ -2,7 +2,7 @@
 #define RT_WORKSPACE_H
 
 #include <stdint.h>
-#include "../../ops/tensor.h"
+#include "tensor.h"
 
 #define TK_WS_BEGIN(ctx) size_t _ws_save = (ctx)->ws->cur_offset
 #define TK_WS_END(ctx) (ctx)->ws->cur_offset = _ws_save

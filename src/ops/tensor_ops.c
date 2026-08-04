@@ -1,12 +1,12 @@
 #include <omp.h>
 #include <stdint.h>
-#include "../error/rt_error.h"
+#include "rt_error.h"
 #include "float.h"
 #include "math.h"
 #include "tensor.h"
 #include "tensor_check.h"
-#include "../modules/pooling/pooling.h"
-#include "../profiler/tk_profiler.h"
+#include "pooling.h"
+#include "tk_profiler.h"
 
 // caller should allocate the correct dest data shape and space
 int tk_ops_add(struct tk_tensor* src1, struct tk_tensor* src2,
@@ -196,7 +196,8 @@ int tk_ops_gemm(struct tk_tensor* src1, struct tk_tensor* src2, struct tk_tensor
 
 int tk_ops_layernorm(struct tk_tensor* src, struct tk_tensor* gamma, struct tk_tensor* beta, struct tk_tensor* dest) {
 
-    double eps = 1e-12;
+    // double eps = 1e-12;
+	double eps = 1e-5; // gpt2
 
     // src and dest must have identical shape
     int err = tk_check_shape_equal(src, dest);
@@ -259,7 +260,8 @@ int tk_ops_fused_add_norm(struct tk_tensor* x, struct tk_tensor* residual,
 
     uint64_t num_rows = shape_size_calc(out->shape, out->ndims - 1);
     int dim = out->shape[out->ndims-1];
-    double eps = 1e-12;
+    // double eps = 1e-12;
+    double eps = 1e-5;
     TK_DISPATCH_TYPES(x->dtype, __func__, {
         scalar_t* x_ptr = (scalar_t*)x->data;
         scalar_t* r_ptr = (scalar_t*)residual->data;

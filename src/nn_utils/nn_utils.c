@@ -5,8 +5,8 @@
 #include <math.h>
 #include <float.h>
 #include <stdio.h>
-#include "../mem/arena.h"
-#include "../ops/tensor.h"
+#include "arena.h"
+#include "tensor.h"
 #include "nn_utils.h"
 
 int findMax(struct tk_tensor* t) {

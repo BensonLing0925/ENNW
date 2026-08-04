@@ -1,4 +1,4 @@
-#include "../error/rt_error.h"
+#include "rt_error.h"
 #include "tensor_check.h"
 
 int tk_check_shape_equal(struct tk_tensor* src1, struct tk_tensor* src2) {

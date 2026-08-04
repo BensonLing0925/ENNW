@@ -3,7 +3,7 @@
 
 #define MAX_FUSED_OPS 4
 
-#include "../../ops/tensor_ops_config.h"
+#include "tensor_ops_config.h"
 
 enum rt_op_type {
     TK_OP_GEMM,
@@ -13,6 +13,7 @@ enum rt_op_type {
     TK_OP_QUANTIZE,
     TK_OP_ATTENTION,
     TK_OP_FFN,
+	TK_OP_EMBEDDING,
     TK_OP_FUSED_ADD_NORM,  /* fused residual-add + layer-norm (post-norm only) */
 	TK_OP_FUSED_GEMM_ADD_GELU,
 };
@@ -31,6 +32,11 @@ struct tk_rt_gelu_params {
 	int (*gelu_fn) (struct tk_tensor* src, struct tk_tensor* dest);
 	int (*gelu_fn_raw) (void* src_data, void* dest_data,
                      	enum tk_dtype, size_t size);
+};
+
+struct tk_rt_embedding_params {
+    struct tk_gpt2_emb* table;
+    int pos_offset;
 };
 
 struct tk_rt_add_params {
@@ -59,6 +65,7 @@ union tk_rt_ops_params {
 	struct tk_rt_layernorm_params   layernorm;
 	struct tk_rt_attention_params   attention;
 	struct tk_rt_ffn_params         ffn;
+	struct tk_rt_embedding_params embedding;
 	struct tk_rt_quantize_params    quantize;
 };
 

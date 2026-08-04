@@ -2,7 +2,7 @@
 #define CONFIG_H
 
 #define MAX_STR_LEN 1024
-#include "../mem/arena.h"
+#include "arena.h"
 
 enum Mode {
     MODE_NONE,

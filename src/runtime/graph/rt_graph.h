@@ -2,8 +2,8 @@
 #define RT_GRAPH_H
 
 #include "rt_params.h"
-#include "../../ops/tensor.h"
-#include "../rt_context.h"
+#include "tensor.h"
+#include "rt_context.h"
 
 struct tk_rt_ctx;
 

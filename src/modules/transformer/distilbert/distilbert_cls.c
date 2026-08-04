@@ -1,9 +1,9 @@
 #include "distilbert_cls.h"
-#include "../../../ops/tensor.h"
-#include "../../../ops/tensor_ops.h"
-#include "../../../runtime/rt_context.h"
-#include "../../../runtime/workspaces/rt_workspaces.h"
-#include "../../../error/rt_error.h"
+#include "tensor.h"
+#include "tensor_ops.h"
+#include "rt_context.h"
+#include "rt_workspaces.h"
+#include "rt_error.h"
 
 struct tk_sst2_cls_head* tk_sst2_cls_create(struct tk_rt_ctx* ctx) {
     return arena_alloc(ctx->meta_arena, sizeof(struct tk_sst2_cls_head));

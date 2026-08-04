@@ -2,8 +2,8 @@
 #define TK_PROFILER_H
 
 #include <stdatomic.h>
-#include "../../mem/arena.h"
-#include "../runtime/rt_context.h"
+#include "arena.h"
+#include "rt_context.h"
 
 #define TK_MAX_THREAD 32
 

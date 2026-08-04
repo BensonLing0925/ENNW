@@ -3,10 +3,10 @@
 
 #include <stdio.h>
 #include <stdlib.h>
-#include "../mem/arena.h"
-#include "../../ops/tensor.h"
-#include "../../ops/tensor_ops.h"
-#include "../../structDef.h"
+#include "arena.h"
+#include "tensor.h"
+#include "tensor_ops.h"
+#include "structDef.h"
 
 typedef struct tk_conv2d {
     /* requisite */

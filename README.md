@@ -1,23 +1,42 @@
 # ENNW: Efficient Neural Network
 
-**A pure C-based deep learning inference framework with custom memory management and Transformer support.**
+**A pure C-based deep learning inference engine focused on edge deployment and inference optimization for Transformer architectures.**
 
-This project aim to make a high-performance inference framework written in pure C (C99 and C23). It focuses on manual memory optimization, featuring a dual-tier arena allocation system and support for hybrid CNN-Transformer architectures.
+ENNW minimizes runtime dependencies by implementing all core logic and operators directly in C (C99/C23). It currently supports a fully optimized DistilBERT encoder and a GPT-2 decoder with KV cache and causal masking, targeting resource-constrained edge platforms such as the AMD Kria KV260 and NVIDIA Jetson Orin Nano.
+
+## Current Status
+
+[OK] DistilBERT encoder — INT8 quantization, operator fusion, arena-based memory management
+[OK] GPT-2 decoder — causal masking, multi-layer KV cache, weight-tied LM head
+[WIP] GPT-2 weight loading from exported checkpoints
+[ ] FPGA-accelerated operator offload on KV260
+
+## Key Result
+
+Benchmarked on the AMD Kria KV260 (Cortex-A53), ENNW achieves a **13.37x speedup** over a PyTorch eager-mode baseline on 100-sentence DistilBERT inference (12.42s vs. 166s).
+
+Both implementations call the same OpenBLAS backend for matrix multiplication (via CBLAS in the C engine), isolating the improvement to ENNW's memory management (arena allocation, dry-run pre-sizing) and operator fusion (GEMM + bias + GELU), rather than differences in the underlying compute kernel. Compiled with `-O3`.
+
+<!-- TODO before publishing: confirm the PyTorch baseline was also measured on the KV260 itself (not the x86 dev machine) — device parity matters as much as BLAS-backend parity. -->
 
 ## Why ENNW?
-Most ML inference frameworks carry heavy runtime dependencies — Python runtimes, dynamic allocators, BLAS libraries. ENNW takes the opposite approach:
+Most ML inference frameworks carry heavy runtime dependencies — Python runtimes, dynamic allocators, BLAS libraries. 
+Using these dependencies brings convenience for simple deployment of deep learning models, but for those
+who want greater control over the system and underlying logic, dependencies could unintentionally obfuscate the code.
+Therefore, ENNW takes the opposite approach:
 
-Predictable Memory Model — Minimal stdlib dependency. Uses an Arena-based allocation strategy that eliminates runtime heap calls
-Attention-native — scaled dot-product attention implemented from scratch
-Readable codebase — each layer is a single, auditable .c file
+Minimal dependency - user only needs a GNU C Compiler to compile the inference engine
+Predictable Memory Model - arena-based allocation eliminates dynamic runtime heap calls
+Attention-native - scaled dot-product attention and other crucial tensor operations are implemented from scratch
+Readable codebase - each layer is a single, auditable .c file.
 
-This project was built to also deeply understand what happens below PyTorch.
+This project was built to deeply understand what happens below PyTorch.
 
 ## Build & Run
 
 ### TL;DR (Quick Start)
 Assuming you have a C compiler (GCC/MinGW) and Python with PyTorch installed:
-
+```
 ```bash
 # 1. Clone & Enter the repository
 git clone "https://github.com/BensonLing0925/ENNW.git"

@@ -2,11 +2,11 @@
 #include <stdlib.h>
 #include "structDef.h"
 #include "conv.h"
-#include "../mem/arena.h"
-#include "../../nn_utils/nn_utils.h"
-#include "../../ops/tensor.h"
-#include "../../ops/tensor_ops.h"
-#include "../../runtime/rt_context.h"
+#include "arena.h"
+#include "nn_utils.h"
+#include "tensor.h"
+#include "tensor_ops.h"
+#include "rt_context.h"
 
 struct tk_conv2d* tk_conv2D_create(struct tk_rt_ctx* ctx) {
     struct tk_conv2d* conv = arena_alloc(ctx->meta_arena, sizeof(struct tk_conv2d));

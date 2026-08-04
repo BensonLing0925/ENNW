@@ -1,5 +1,5 @@
-#include "../error/rt_error.h"
-#include "../../mem/arena.h"
+#include "rt_error.h"
+#include "arena.h"
 #include "tensor.h"
 #include <inttypes.h>
 #include <math.h>

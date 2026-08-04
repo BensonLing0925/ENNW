@@ -1,7 +1,7 @@
 #ifndef TK_DISTILBERT_EMB_H
 #define TK_DISTILBERT_EMB_H
 
-#include "../embedding/embedding.h"
+#include "embedding.h"
 #include "rt_context.h"
 
 struct tk_distilbert_emb_config {

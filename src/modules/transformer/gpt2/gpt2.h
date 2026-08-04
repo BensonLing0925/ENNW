@@ -3,9 +3,9 @@
 
 #include "gpt2_emb.h"
 #include "gpt2_block.h"
-#include "../../../ops/tensor_ops.h"
-#include "../../../ops/tk_ops.h"
-#include "../../../runtime/rt_context.h"
+#include "tensor_ops.h"
+#include "tk_ops.h"
+#include "rt_context.h"
 
 enum tk_gpt2_forward_mode {
     TK_GPT2_PREFILL,
@@ -13,7 +13,7 @@ enum tk_gpt2_forward_mode {
 };
 
 struct tk_gpt2 {
-    struct tk_gpt2_emb* emb;
+    struct tk_emb_block* emb;
     struct tk_gpt2_block** blocks;  // array of pointers
 	struct tk_tensor* final_ln_gamma;
 	struct tk_tensor* final_ln_beta;

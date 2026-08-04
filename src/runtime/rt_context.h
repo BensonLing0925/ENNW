@@ -3,10 +3,10 @@
 
 #define RESERVED 2048
 
-#include "../../mem/arena.h"
-#include "../error/rt_error.h"
-#include "../profiler/tk_profiler.h"
-#include "workspaces/rt_workspaces.h"
+#include "arena.h"
+#include "rt_error.h"
+#include "tk_profiler.h"
+#include "rt_workspaces.h"
 
 enum rt_type {
     RT_TRAIN,

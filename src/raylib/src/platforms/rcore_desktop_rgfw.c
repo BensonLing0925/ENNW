@@ -63,7 +63,7 @@
     #undef ShowCursor
     #undef LoadImage
 
-    #include "../external/fix_win32_compatibility.h"
+    #include "fix_win32_compatibility.h"
 #endif
 
 #if defined(PLATFORM_WEB_RGFW)
@@ -142,14 +142,14 @@ extern "C" {
 // minigamepad used for gamepad support
 #define MG_MAX_GAMEPADS MAX_GAMEPADS // copy raylibs define into minigamepad
 #define MG_IMPLEMENTATION
-#include "../external/RGFW/deps/minigamepad.h"
+#include "minigamepad.h"
 
 #define RGFW_ALLOC RL_MALLOC
 #define RGFW_FREE RL_FREE
 #define RGFW_CALLOC RL_CALLOC
 #define RGFW_INT_DEFINED 1 // to avoid issues with minigamepad+RGFW definitions
 
-#include "../external/RGFW/RGFW.h"
+#include "RGFW.h"
 
 #if defined(_WIN32) || defined(_WIN64)
     #undef DrawText
@@ -1009,7 +1009,7 @@ const char *GetClipboardText(void)
     #define WINUSER_ALREADY_INCLUDED
     #define WINBASE_ALREADY_INCLUDED
     #define WINGDI_ALREADY_INCLUDED
-    #include "../external/win32_clipboard.h"
+    #include "win32_clipboard.h"
 #elif defined(__linux__) && defined(DRGFW_X11)
     #include <X11/Xlib.h>
     #include <X11/Xatom.h>

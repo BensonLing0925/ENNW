@@ -1,7 +1,7 @@
 #include "tk_ops.h"
 #include "tensor_ops.h"
 #include "tensor_quantize.h"
-#include "../error/rt_error.h"
+#include "rt_error.h"
 #include "tk_ops_exec.h"
 
 struct TransformerBlock;

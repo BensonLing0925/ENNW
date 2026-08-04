@@ -26,19 +26,20 @@ static void gpt2_block_config(struct tk_gpt2_block* block,
 
 		/* Hardcoded ops_config for now */
 		.ops_config = (struct tk_ops_config) {
-			.gelu_variant = TK_OPS_GELU_ERF,
-			.gelu_fn = &tk_ops_gelu_erf,
-			.gelu_fn_raw = &_tk_ops_gelu_erf,
+			.gelu_variant = TK_OPS_GELU_TANH,
+			.gelu_fn = &tk_ops_gelu_tanh,
+			.gelu_fn_raw = &_tk_ops_gelu_tanh,
 		},
     };
 }
 
-static void gpt2_emb_config(struct tk_gpt2_emb* emb,
+static void gpt2_emb_config(struct tk_emb_block* emb,
                                   struct tk_gpt2_config config) {
-    emb->config = (struct tk_gpt2_emb_config){
+    emb->config = (struct tk_emb_config) {
         .vocab_size  = config.vocab_size,
         .hidden_dim  = config.hidden_dim,
         .max_seq_len = config.max_seq_len,
+		.use_ln = 0,
     };
 }
 
@@ -78,7 +79,7 @@ int tk_gpt2_alloc(struct tk_rt_ctx* ctx,
 
 	/* gpt2 specific final ln */
 	int ln_shape[1] = { config.hidden_dim };
-	enum rt_type dtype = TK_F32;
+	enum tk_dtype dtype = TK_F32;
 	tk_tensor_alloc(ctx->data_arena, dtype, ln_shape, 1, &gpt2->final_ln_gamma);
 	tk_tensor_alloc(ctx->data_arena, dtype, ln_shape, 1, &gpt2->final_ln_beta);
 
@@ -104,18 +105,20 @@ int tk_gpt2_forward(struct tk_rt_ctx* ctx,
     /* Embedding: token IDs -> [seq, hidden] (workspace tensor at offset 0) */
     struct tk_tensor* hidden = NULL;
 	int pos_offset = (mode == TK_GPT2_DECODE) ? ctx->kv_cur_len : 0;
-    RT_CHECK(tk_gpt2_emb_forward(ctx, gpt2->emb, input_ids, pos_offset, &hidden));
+
+    // RT_CHECK(tk_gpt2_emb_forward(ctx, gpt2->emb, input_ids, pos_offset, &hidden));
+    RT_CHECK(tk_emb_forward(ctx, gpt2->emb, input_ids, pos_offset, &hidden));
 
     if (!gpt2->lm_head_ready) {
 		/* weight tying */ 
 		RT_CHECK(tk_tensor_transpose(ctx->meta_arena, gpt2->emb->word_emb->weights, 0, 1, &gpt2->lm_head_weight));
 		gpt2->lm_head_ready = 1;
-		// printf("[lm_head] transposed, ptr=%p, rt_type=%d\n", (void*)gpt2->lm_head_weight, ctx->rt_type);
     }
 
 	struct tk_tensor* logits = NULL;
 
 	tk_attn_fn attn_fn = NULL;
+
 
 	switch(mode) {
 		case TK_GPT2_PREFILL:
@@ -130,6 +133,7 @@ int tk_gpt2_forward(struct tk_rt_ctx* ctx,
 			break;
 	}
 
+
     /* After tk_rt_prepare (graph_ready=1) the static graph holds the optimised
      * transformer-block schedule.  Use graph exec to pick up any fusions. */
     if (mode == TK_GPT2_PREFILL && ctx->graph_ready && ctx->rt_type == RT_INFERENCE) {
@@ -137,11 +141,12 @@ int tk_gpt2_forward(struct tk_rt_ctx* ctx,
 		logits = ctx->static_graph->last_node->outputs[0];
     } else {
         /* Dry-run and no-graph-optimise paths: run blocks normally. */
-        for (int i = 0; i < gpt2->num_layers; ++i)
+        for (int i = 0; i < gpt2->num_layers; ++i) {
             RT_CHECK(tk_tf_block_forward(ctx, gpt2->blocks[i]->base, hidden, attn_fn));
+		}
 
 		/* gpt2's final layernorm */
-		enum rt_type dtype = TK_F32;
+		enum tk_dtype dtype = TK_F32;
 		struct tk_tensor* ln_out = NULL;
 		RT_CHECK(tk_ws_tensor_alloc(ctx->ws, ctx->meta_arena, dtype, hidden->shape, hidden->ndims, &ln_out));
 		ctx->ops->layernorm(ctx, hidden, gpt2->final_ln_gamma, gpt2->final_ln_beta, ln_out);
@@ -149,7 +154,6 @@ int tk_gpt2_forward(struct tk_rt_ctx* ctx,
 		/* LM head  */
 		int logits_shape[2] = { ln_out->shape[0], gpt2->emb->config.vocab_size };
 		RT_CHECK(tk_ws_tensor_alloc(ctx->ws, ctx->meta_arena, dtype, logits_shape, 2, &logits));
-		// printf("[lm_head gemm call] lm_head_weight ptr=%p\n", (void*)gpt2->lm_head_weight);
 		ctx->ops->gemm(ctx, ln_out, gpt2->lm_head_weight, logits);
     }
 

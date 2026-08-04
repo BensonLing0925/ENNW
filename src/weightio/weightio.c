@@ -1,8 +1,8 @@
 #include <string.h>
 #include "weightio.h"
-#include "../mem/arena.h"
-#include "../src/structDef.h"
-#include "../src/error/rt_error.h"
+#include "arena.h"
+#include "structDef.h"
+#include "rt_error.h"
 
 /* ---- Low-level I/O helpers (non-static, declared in weightio.h) ---- */
 

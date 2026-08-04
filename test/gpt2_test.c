@@ -1,5 +1,5 @@
-#include "../src/modules/transformer/gpt2/gpt2.h"
-#include "../mem/arena.h"
+#include "gpt2.h"
+#include "arena.h"
 
 void test_emb_build_gpt2();
 void test_generate_gpt2();

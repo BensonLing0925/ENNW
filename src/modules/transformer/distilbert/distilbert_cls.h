@@ -1,8 +1,8 @@
 #ifndef TK_DISTILBERT_CLS_H
 #define TK_DISTILBERT_CLS_H
 
-#include "../../../ops/tensor.h"
-#include "../../../runtime/rt_context.h"
+#include "tensor.h"
+#include "rt_context.h"
 
 /*
  * SST-2 classification head for DistilBertForSequenceClassification.

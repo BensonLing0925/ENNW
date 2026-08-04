@@ -1,5 +1,5 @@
-#include "../../../ops/tensor_ops.h"
-#include "../../../runtime/rt_context.h"
+#include "tensor_ops.h"
+#include "rt_context.h"
 #include "distilbert_emb.h"
 
 struct tk_distilbert_emb* tk_distilbert_emb_create(struct tk_rt_ctx* ctx) {

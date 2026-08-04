@@ -1,7 +1,7 @@
 #ifndef TK_DISTILBERT_BLK_H
 #define TK_DISTILBERT_BLK_H
 
-#include "../tf_block.h"
+#include "tf_block.h"
 
 struct tk_distilbert_block {
     struct TransformerBlock* base;

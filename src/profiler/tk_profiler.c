@@ -1,4 +1,4 @@
-#include "../error/rt_error.h"
+#include "rt_error.h"
 #include "tk_profiler.h"
 #include <time.h>
 #include <stdint.h>

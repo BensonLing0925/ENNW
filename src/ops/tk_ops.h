@@ -2,7 +2,7 @@
 #define TK_OPS_VT_H
 
 #include "tensor.h"
-#include "../runtime/graph/rt_graph.h"
+#include "rt_graph.h"
 
 struct tk_rt_ctx;
 struct TransformerBlock;
@@ -19,6 +19,8 @@ struct tk_ops_vtable {
                     float calib_scale);
     int (*attention)(struct tk_rt_ctx* ctx, struct TransformerBlock* tf,
                      struct tk_tensor* input, struct tk_tensor** out);
+	int (*embedding)(struct tk_rt_ctx* ctx, struct tk_embedding* table, int pos_offset,
+                 	 struct tk_tensor* input, struct tk_tensor** out);
     int (*ffn)(struct tk_rt_ctx* ctx, struct TransformerBlock* tf,
                struct tk_tensor* input, struct tk_tensor** out);
 };

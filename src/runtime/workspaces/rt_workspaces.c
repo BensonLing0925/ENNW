@@ -1,5 +1,5 @@
-#include "../../error/rt_error.h"
-#include "../../ops/tensor.h"
+#include "rt_error.h"
+#include "tensor.h"
 #include "rt_workspaces.h"
 
 struct tk_workspace* tk_ws_create(struct arena* root_arena, void* data_ptr) {
@@ -26,6 +26,7 @@ int tk_ws_alloc(struct tk_workspace* ws, size_t size, void** out) {
 
     // during dry run: just move offset, out = NULL (not an error)
     // during actual run: check capacity and return real address
+	/*
     if (!ws->is_dryrun) {
         // something very wrong here
         // meaning dry run's estimated size is incorrect
@@ -36,6 +37,13 @@ int tk_ws_alloc(struct tk_workspace* ws, size_t size, void** out) {
     } else {
         *out = NULL;
     }
+	*/
+    if (!ws->is_dryrun) {
+        if (ws->cur_offset + aligned_size > ws->capacity)
+            RT_FAIL(RT_EOOM, "Insufficient workspace memory during inference");
+    }
+    *out = (uint8_t*)ws->arena_base + ws->cur_offset;
+
 
     // move offset
     ws->cur_offset += aligned_size;

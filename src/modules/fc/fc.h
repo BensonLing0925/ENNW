@@ -5,9 +5,9 @@
 #include <stdlib.h>
 #include <float.h>
 #include <inttypes.h>
-#include "../../nn_utils/nn_utils.h" 
-#include "../../ops/tensor.h"
-#include "../../runtime/rt_context.h"
+#include "nn_utils.h" 
+#include "tensor.h"
+#include "rt_context.h"
 
 #define TK_LN_CFG_SET(_in, _out, _bias, _is_training, _dtype) (struct LinearConfig){                           \
     .in_dim = _in,               \

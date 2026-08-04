@@ -3,12 +3,12 @@
 #include <stdint.h>
 #include <string.h>
 
-#include "../mem/arena.h"
-#include "../src/runtime/rt_context.h"
-#include "../src/ops/tensor.h"
-#include "../src/modules/transformer/distilbert/distilbert.h"
-#include "../weightio/distilbert_io.h"
-#include "../src/error/rt_error.h"
+#include "arena.h"
+#include "rt_context.h"
+#include "tensor.h"
+#include "distilbert.h"
+#include "distilbert_io.h"
+#include "rt_error.h"
 
 static void print_usage(const char* prog) {
     fprintf(stderr,

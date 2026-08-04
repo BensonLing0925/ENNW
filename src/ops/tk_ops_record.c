@@ -1,8 +1,9 @@
 #include "tk_ops.h"
 #include "tensor_ops_config.h"
-#include "../runtime/graph/rt_graph.h"
-#include "../runtime/rt_context.h"
-#include "../modules/transformer/tf_block.h"
+#include "rt_graph.h"
+#include "rt_context.h"
+#include "tf_block.h"
+#include "embedding.h"
 
 int record_add(struct tk_rt_ctx* ctx, struct tk_tensor* src1, struct tk_tensor* src2, struct tk_tensor* dest) {
     struct tk_rt_graph* g = ctx->static_graph;
@@ -157,6 +158,28 @@ int record_attention_decode(struct tk_rt_ctx* ctx, struct TransformerBlock* tf,
 }
 */
 
+int record_embedding(struct tk_rt_ctx* ctx, struct tk_embedding* table, int pos_offset,
+                      struct tk_tensor* input, struct tk_tensor** out) {
+    struct tk_rt_graph* g = ctx->static_graph;
+    if (g->capacity <= g->node_count)
+        RT_FAIL(RT_EINVAL, "Number of graph node exceeded\n");
+
+    size_t cursor_before = ctx->ws->cur_offset;
+
+    struct tk_rt_node_config config = { .op_type = TK_OP_EMBEDDING,
+                                        .input_count = 1, .output_count = 1 };
+    struct tk_rt_node* node = NULL;
+    tk_rt_node_append(ctx, g, config, &node);
+    node->ws_cursor_before          = cursor_before;
+    node->inputs[0]                 = input;
+    node->outputs[0]                = out;
+    node->params.single.embedding.table = table;
+	node->params.single.embedding.pos_offset = pos_offset;
+
+    // *out = emb_out;
+    return 0;
+}
+
 int record_ffn(struct tk_rt_ctx* ctx, struct TransformerBlock* tf,
                struct tk_tensor* input, struct tk_tensor** out) {
     struct tk_rt_graph* g = ctx->static_graph;
@@ -186,5 +209,6 @@ const struct tk_ops_vtable tk_record_vtable = {
     .gelu      = record_gelu,
     .quantize  = record_quantize,
     .attention = record_attention,
-    .ffn       = record_ffn
+    .ffn       = record_ffn,
+	.embedding = record_embedding
 };

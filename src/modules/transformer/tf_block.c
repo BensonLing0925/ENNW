@@ -3,11 +3,11 @@
 #include <stdlib.h>
 #include <string.h>
 #include "tf_block.h"
-#include "../../ops/tk_ops.h"
-#include "../../ops/tensor.h"
-#include "../../ops/tensor_ops.h"
-#include "../../runtime/rt_context.h"
-#include "../../runtime/workspaces/rt_workspaces.h"
+#include "tk_ops.h"
+#include "tensor.h"
+#include "tensor_ops.h"
+#include "rt_context.h"
+#include "rt_workspaces.h"
 
 /* ------------------------------------------------------------------ */
 /* helpers                                                             */
@@ -251,8 +251,8 @@ int tk_tf_attention_forward(struct tk_rt_ctx* ctx,
 
 			memcpy(k_dest, k_src, seq * hidden * sizeof(scalar_t));
 			memcpy(v_dest, v_src, seq * hidden * sizeof(scalar_t));
+			ctx->kv_cur_len = seq;
 		});
-		ctx->kv_cur_len = seq;
 	}
 
     TK_DISPATCH_TYPES(dtype, "tk_tf_attention_forward", {
@@ -497,7 +497,8 @@ int tk_tf_ffn_forward(struct tk_rt_ctx* ctx,
                       struct tk_tensor* input,
                       struct tk_tensor** ffn_out_ptr) {
 
-    int seq    = tf->config.seq_length;
+    // int seq    = tf->config.seq_length;
+	int seq    = input->shape[0];
     int hidden = tf->config.hidden_dim;
     int inter  = tf->config.inter_dim;
 
@@ -561,7 +562,9 @@ int tk_tf_block_forward(struct tk_rt_ctx* ctx,
                      struct tk_tensor* input,
 					 tk_attn_fn attn_fn) {
 
-    int seq    = tf->config.seq_length;
+	// we need to distinguish between prefill and decode
+	// so need to use input to determine
+	int seq    = input->shape[0];
     int hidden = tf->config.hidden_dim;
     int ln_shape[2] = { seq, hidden };
     enum tk_dtype dtype = input->dtype;

@@ -1,8 +1,8 @@
 #ifndef TK_TF_CONFIG_H
 #define TK_TF_CONFIG_H
 
-#include "../../ops/tensor.h"   // enum tk_dtype
-#include "../../ops/tensor_ops_config.h"
+#include "tensor.h"   // enum tk_dtype
+#include "tensor_ops_config.h"
 
 struct tk_tf_block_config {
 

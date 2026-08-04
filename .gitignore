@@ -1,11 +1,18 @@
 # compile output
+bin/
 *.exe
 *.o
 nn
 
 # unnecessary weights
+weight_files/
 *.bin
 *.weights
+*.safetensors
+*.txt
+
+# AI data
+data/
 
 # raylib third-party (only need src/ to build, not examples/projects)
 src/raylib/examples/

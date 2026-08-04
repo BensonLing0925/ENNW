@@ -25,13 +25,13 @@
 #include <stdlib.h>
 #include <string.h>
 #include "weightio.h"
-#include "../src/error/rt_error.h"
-#include "../src/ops/tensor.h"
-#include "../src/modules/conv/conv.h"
-#include "../src/modules/fc/fc.h"
-#include "../src/modules/transformer/tf_block.h"
-#include "../src/runtime/rt_context.h"
-#include "../mem/arena.h"
+#include "rt_error.h"
+#include "tensor.h"
+#include "conv.h"
+#include "fc.h"
+#include "tf_block.h"
+#include "rt_context.h"
+#include "arena.h"
 
 /* ------------------------------------------------------------------ */
 /* Helpers                                                              */

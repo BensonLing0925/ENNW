@@ -1,8 +1,8 @@
 #include "rt_graph.h"
-#include "../../error/rt_error.h"
-#include "../../ops/tk_ops.h"
-#include "../../ops/tensor_ops.h"
-#include "../../modules/transformer/tf_block.h"
+#include "rt_error.h"
+#include "tk_ops.h"
+#include "tensor_ops.h"
+#include "tf_block.h"
 
 struct tk_rt_graph* tk_rt_graph_alloc(struct tk_rt_ctx* ctx) {
     return arena_alloc(ctx->meta_arena, sizeof(struct tk_rt_graph));
@@ -42,6 +42,7 @@ const char* tk_rt_op_type(enum rt_op_type op_type) {
         case TK_OP_QUANTIZE:       		return "TK_OP_QUANTIZE";
         case TK_OP_ATTENTION:      		return "TK_OP_ATTENTION";
         case TK_OP_FFN:            		return "TK_OP_FFN";
+		case TK_OP_EMBEDDING:			return "TK_OP_EMBEDDING";
         case TK_OP_FUSED_ADD_NORM: 		return "TK_OP_FUSED_ADD_NORM";
         case TK_OP_FUSED_GEMM_ADD_GELU:	return "TK_OP_FUSED_GEMM_ADD_GELU";
         default:                   		return "TK_OP_UNKNOWN";
@@ -103,9 +104,19 @@ int tk_rt_graph_exec(struct tk_rt_ctx* ctx) {
 
             case TK_OP_LAYERNORM:
             	TK_PROF_SCOPE(ctx, TK_EV_OP_BEGIN, "LAYERNORM", ctx->ws->cur_offset);
+				/*
                 RT_CHECK(ctx->ops->layernorm(ctx,
                     node->inputs[0], node->inputs[1], node->inputs[2],
                     node->outputs[0]));
+				*/
+                int rc_ln = ctx->ops->layernorm(ctx,
+                    node->inputs[0], node->inputs[1], node->inputs[2],
+                    node->outputs[0]);
+				if (rc_ln != 0) {
+					rt_err_print(stderr);
+					fprintf(stderr, "layernorm exec failed, rc=%d\n", rc_ln);
+					return rc_ln;
+				}
                 TK_PROF_SCOPE(ctx, TK_EV_OP_END, "LAYERNORM", ctx->ws->cur_offset);
                 break;
 
@@ -125,6 +136,13 @@ int tk_rt_graph_exec(struct tk_rt_ctx* ctx) {
 				}
 				*/
                 break;
+
+			case TK_OP_EMBEDDING:
+				RT_CHECK(ctx->ops->embedding(ctx,
+						node->params.single.embedding.table,
+						node->params.single.embedding.pos_offset,
+						node->inputs[0], node->outputs[0]));
+				break;
 
             /* Fused residual-add + LayerNorm (post-norm transformer blocks).
              * inputs: [0]=residual/hidden, [1]=sublayer_out, [2]=gamma, [3]=beta
@@ -174,6 +192,7 @@ int tk_rt_graph_exec(struct tk_rt_ctx* ctx) {
             default:
                 RT_FAIL(RT_EINVAL, "Unknown op type %d in graph exec", node->op_type);
         }
+		
     }
     return 0;
 }
@@ -206,6 +225,7 @@ static int tk_rt_fuse_add_norm(struct tk_rt_ctx* ctx, struct tk_rt_graph* g) {
         if (a->op_type != TK_OP_ADD)       continue;
         if (n->op_type != TK_OP_LAYERNORM) continue;
         if (a->outputs[0] != n->inputs[0]) continue;  /* must be the same tensor */
+		if (a->outputs[0] != n->outputs[0]) continue;
 
         /* Re-use ADD node as FUSED_ADD_NORM with 4 inputs */
         a->op_type     = TK_OP_FUSED_ADD_NORM;

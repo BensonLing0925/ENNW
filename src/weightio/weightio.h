@@ -5,10 +5,10 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include "../src/structDef.h"
-#include "../src/modules/conv/conv.h"
-#include "../src/modules/fc/fc.h"
-#include "../src/runtime/rt_context.h"
+#include "structDef.h"
+#include "conv.h"
+#include "fc.h"
+#include "rt_context.h"
 
 #define FIXED_HEADER_SIZE 68u
 

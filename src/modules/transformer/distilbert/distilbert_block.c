@@ -1,5 +1,5 @@
 #include "distilbert_block.h"
-#include "../../../runtime/rt_context.h"
+#include "rt_context.h"
 
 struct tk_distilbert_block* tk_distilbert_block_create(struct tk_rt_ctx* ctx) {
     struct tk_distilbert_block* block = arena_alloc(ctx->meta_arena, sizeof(struct tk_distilbert_block));

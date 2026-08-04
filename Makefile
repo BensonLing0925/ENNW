@@ -17,10 +17,12 @@ endif
 
 # ---- Project layout ----
 SRC_DIR     := src
+MEM_DIR     := $(SRC_DIR)/mem
 MODULES_DIR := $(SRC_DIR)/modules
 RT_DIR		:= $(SRC_DIR)/runtime
 RT_WS_DIR	:= $(RT_DIR)/workspaces
 RT_SG_DIR	:= $(RT_DIR)/graph
+WEIGHTIO_DIR 	:= $(SRC_DIR)/weightio
 FC_DIR          := $(MODULES_DIR)/fc
 CONV_DIR        := $(MODULES_DIR)/conv
 PL_DIR          := $(MODULES_DIR)/pooling
@@ -38,30 +40,35 @@ RAYLIB_LIB  := $(RAYLIB_DIR)/libraylib.a
 CFG_DIR      := config
 CJSON_DIR    := $(CFG_DIR)/cJSON
 
-MEM_DIR      	:= mem
-WEIGHTIO_DIR 	:= weightio
 EXAMPLES_DIR 	:= examples
 TEST_DIR		:= test
 
-TARGET                  := nn$(EXEEXT)
-DISTILBERT_INFER_TARGET := distilbert_infer$(EXEEXT)
-SST2_EVAL_TARGET        := sst2_eval$(EXEEXT)
-OPS_TEST_TARGET			:= $(TEST_DIR)/ops_test$(EXEEXT)
-GPT2_TEST_TARGET			:= $(TEST_DIR)/gpt2_test$(EXEEXT)
+# --- storing test binaries ---
+BIN_DIR		:= bin
+
+$(BIN_DIR):
+	mkdir -p $(BIN_DIR)
+
+TARGET                  := $(BIN_DIR)/nn$(EXEEXT)
+DISTILBERT_INFER_TARGET := $(BIN_DIR)/distilbert_infer$(EXEEXT)
+SST2_EVAL_TARGET        := $(BIN_DIR)/sst2_eval$(EXEEXT)
+OPS_TEST_TARGET			:= $(BIN_DIR)/ops_test$(EXEEXT)
+GPT2_TEST_TARGET			:= $(BIN_DIR)/gpt2_test$(EXEEXT)
+GPT2_IO_TEST_TARGET			:= $(BIN_DIR)/gpt2_io_test$(EXEEXT)
 
 # ---- Include paths ----
 INCLUDES := -I$(SRC_DIR) -I$(MODULES_DIR) -I$(FC_DIR) -I$(CONV_DIR) -I$(NNUTILS_DIR) \
             -I$(CFG_DIR) -I$(CJSON_DIR) -I$(MEM_DIR) -I$(ERROR_DIR) \
             -I$(OPS_DIR) -I$(RT_DIR) -I$(RT_WS_DIR) -I$(PL_DIR) -I$(TRANSFORMER_DIR) \
             -I$(WEIGHTIO_DIR) -I$(EMB_DIR) -I$(DISTILBERT_DIR) -I$(EXAMPLES_DIR)	 \
-			-I$(RT_SG_DIR) -I$(GPT2_DIR)
+			-I$(RT_SG_DIR) -I$(GPT2_DIR) -I$(PROF_DIR) 
 			
 # Math library (needed on Linux if using exp/sqrt/etc)
 LDLIBS ?= -lm -fopenmp 
 # Add PROF=1 to enable profiler
 ifeq ($(PROF),1)
     PROF_FLAGS := -DPROF
-    INCLUDES   += -I$(PROF_DIR) -I$(RAYLIB_DIR)
+    INCLUDES   += -I$(RAYLIB_DIR)
 	LDLIBS     += $(RAYLIB_LIB) -Wl,--wrap=GOMP_parallel 
 	ifeq ($(OS),Windows_NT)
         LDLIBS += -lgdi32 -lwinmm -lopengl32   # ← 加 -lopengl32
@@ -72,6 +79,10 @@ endif
 
 # ---- Common flags ----
 CFLAGS_COMMON := -Wall -Wextra $(INCLUDES) $(PROF_FLAGS)
+
+ifeq ($(VERBOSE),1)
+    CFLAGS_COMMON += -DTK_RT_VERBOSE=1
+endif
 
 # C standards by module
 CFLAGS_C23 := $(CFLAGS_COMMON) -std=gnu17
@@ -129,6 +140,8 @@ OPS_TEST_SRC := $(TEST_DIR)/ops_test.c
 # gpt2_test-specific source
 GPT2_TEST_SRC := $(TEST_DIR)/gpt2_test.c
 
+GPT2_IO_TEST_SRC := $(TEST_DIR)/gpt2_io_test.c
+
 # cJSON source (compile as C89)
 SRC_C89 := $(CJSON_DIR)/cJSON.c
 
@@ -140,34 +153,38 @@ SST2_INFER_OBJ       := $(SST2_INFER_SRC:.c=.o)
 SST2_EVAL_OBJ        := $(SST2_EVAL_SRC:.c=.o)
 OPS_TEST_OBJ         := $(OPS_TEST_SRC:.c=.o)
 GPT2_TEST_OBJ         := $(GPT2_TEST_SRC:.c=.o)
+GPT2_IO_TEST_OBJ         := $(GPT2_IO_TEST_SRC:.c=.o)
 OBJ_C89              := $(SRC_C89:.c=.o)
 
 # ---- Default target ----
 .PHONY: all
-all: $(TARGET) $(DISTILBERT_INFER_TARGET) $(SST2_INFER_TARGET) $(SST2_EVAL_TARGET) $(OPS_TEST_TARGET) $(GPT2_TEST_TARGET)
+all: $(TARGET) $(DISTILBERT_INFER_TARGET) $(SST2_INFER_TARGET) $(SST2_EVAL_TARGET) $(OPS_TEST_TARGET) $(GPT2_TEST_TARGET) $(GPT2_IO_TEST_TARGET)
 
 # ---- Link ----
-$(TARGET): $(NN_OBJ) $(LIB_OBJ) $(OBJ_C89)
+$(TARGET): $(NN_OBJ) $(LIB_OBJ) $(OBJ_C89) | $(BIN_DIR)
 	$(CC) $^ -o $@ $(LDLIBS)
 
-$(DISTILBERT_INFER_TARGET): $(DISTILBERT_INFER_OBJ) $(LIB_OBJ) $(OBJ_C89)
+$(DISTILBERT_INFER_TARGET): $(DISTILBERT_INFER_OBJ) $(LIB_OBJ) $(OBJ_C89) | $(BIN_DIR)
 	$(CC) $^ -o $@ $(LDLIBS)
 
-$(SST2_INFER_TARGET): $(SST2_INFER_OBJ) $(LIB_OBJ) $(OBJ_C89)
+$(SST2_INFER_TARGET): $(SST2_INFER_OBJ) $(LIB_OBJ) $(OBJ_C89) | $(BIN_DIR)
 	$(CC) $^ -o $@ $(LDLIBS)
 
-$(SST2_EVAL_TARGET): $(SST2_EVAL_OBJ) $(LIB_OBJ) $(OBJ_C89)
+$(SST2_EVAL_TARGET): $(SST2_EVAL_OBJ) $(LIB_OBJ) $(OBJ_C89) | $(BIN_DIR)
 	$(CC) $^ -o $@ $(LDLIBS)
 
-$(OPS_TEST_TARGET): $(OPS_TEST_OBJ) $(LIB_OBJ) $(OBJ_C89)
+$(OPS_TEST_TARGET): $(OPS_TEST_OBJ) $(LIB_OBJ) $(OBJ_C89) | $(BIN_DIR)
 	$(CC) $^ -o $@ $(LDLIBS)
 
-$(GPT2_TEST_TARGET): $(GPT2_TEST_OBJ) $(LIB_OBJ) $(OBJ_C89)
+$(GPT2_TEST_TARGET): $(GPT2_TEST_OBJ) $(LIB_OBJ) $(OBJ_C89) | $(BIN_DIR)
+	$(CC) $^ -o $@ $(LDLIBS)
+
+$(GPT2_IO_TEST_TARGET): $(GPT2_IO_TEST_OBJ) $(LIB_OBJ) $(OBJ_C89) | $(BIN_DIR)
 	$(CC) $^ -o $@ $(LDLIBS)
 
 # ---- Pattern rules by standard ----
 # All C23 objects (lib, nn, examples)
-$(LIB_OBJ) $(NN_OBJ) $(DISTILBERT_INFER_OBJ) $(SST2_INFER_OBJ) $(SST2_EVAL_OBJ): %.o: %.c
+$(LIB_OBJ) $(NN_OBJ) $(DISTILBERT_INFER_OBJ) $(SST2_INFER_OBJ) $(SST2_EVAL_OBJ) $(OPS_TEST_OBJ) $(GPT2_TEST_OBJ) $(GPT2_IO_TEST_OBJ): %.o: %.c
 	$(CC) $(CFLAGS_C23) -c $< -o $@
 
 # Compile cJSON with C89
@@ -175,11 +192,13 @@ $(OBJ_C89): %.o: %.c
 	$(CC) $(CFLAGS_C89) -c $< -o $@
 	
 
-# 編 raylib 靜態庫（只在 libraylib.a 不存在時觸發）
+# compile raylib only when raylib.a does not exist
 $(RAYLIB_LIB):
 	$(MAKE) -C $(RAYLIB_DIR) PLATFORM=PLATFORM_DESKTOP
 
 # ---- Helpers ----
+.DEFAULT_GOAL := all
+
 .PHONY: clean run run-distilbert run-sst2 run-sst2-eval print
 
 run: $(TARGET)
@@ -201,8 +220,9 @@ run-gpt2-test: $(GPT2_TEST_TARGET)
 	./$(GPT2_TEST_TARGET)
 
 clean:
-	-$(RM) $(LIB_OBJ) $(NN_OBJ) $(DISTILBERT_INFER_OBJ) $(SST2_INFER_OBJ) $(SST2_EVAL_OBJ) $(OBJ_C89) \
-	       $(TARGET) $(DISTILBERT_INFER_TARGET)	$(SST2_EVAL_TARGET) $(OPS_TEST_TARGET) $(GPT2_TEST_TARGET)
+	-$(RM) $(LIB_OBJ) $(NN_OBJ) $(DISTILBERT_INFER_OBJ) $(SST2_INFER_OBJ) $(SST2_EVAL_OBJ) \
+	       $(OPS_TEST_OBJ) $(GPT2_TEST_OBJ) $(GPT2_IO_TEST_OBJ) $(OBJ_C89)
+	-$(RM) -r $(BIN_DIR)
 
 print:
 	@echo TARGET=$(TARGET)

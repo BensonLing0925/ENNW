@@ -6,16 +6,16 @@
 #include <float.h>
 #include <inttypes.h>
 #include "loadPic.h"
-#include "modules/fc/fc.h"
-#include "modules/conv/conv.h"
-#include "modules/pooling/pooling.h"
-#include "modules/transformer/tf_block.h"
-#include "nn_utils/nn_utils.h"
+#include "fc.h"
+#include "conv.h"
+#include "pooling.h"
+#include "tf_block.h"
+#include "nn_utils.h"
 #include "structDef.h"
-#include "../config/config.h"
-#include "../weightio/weightio.h"
-#include "ops/tensor.h"
-#include "ops/tk_ops.h"
+#include "config.h"
+#include "weightio.h"
+#include "tensor.h"
+#include "tk_ops.h"
 
 static uint32_t tk_dtype_to_layer_dtype(enum tk_dtype dtype) {
     switch (dtype) {

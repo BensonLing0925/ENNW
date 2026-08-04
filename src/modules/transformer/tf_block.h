@@ -1,7 +1,7 @@
 #ifndef BLOCK_H
 #define BLOCK_H
 
-#include "../../ops/tensor.h"
+#include "tensor.h"
 #include "tf_config.h"
 
 /* Forward-declare runtime types to avoid heavy header chain in this header */

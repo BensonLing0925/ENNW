@@ -2,7 +2,7 @@
 #define TK_TENSOR_H
 
 #include <stdint.h>
-#include "../../mem/arena.h"
+#include "arena.h"
 
 #define TK_DEBUG_SIZE 15
 

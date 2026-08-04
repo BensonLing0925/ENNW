@@ -17,10 +17,10 @@
 #include <string.h>
 
 #include "distilbert_io.h"
-#include "../src/error/rt_error.h"
-#include "../src/ops/tensor.h"
-#include "../src/modules/transformer/distilbert/distilbert_cls.h"
-#include "../src/modules/transformer/tf_block.h"
+#include "rt_error.h"
+#include "tensor.h"
+#include "distilbert_cls.h"
+#include "tf_block.h"
 
 /* ------------------------------------------------------------------ */
 /* Low-level helpers                                                    */

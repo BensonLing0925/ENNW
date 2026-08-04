@@ -1,10 +1,10 @@
 #include <omp.h>
 #include <stdint.h>
-#include "../error/rt_error.h"
+#include "rt_error.h"
 #include "float.h"
 #include "math.h"
 #include "tensor.h"
-#include "../modules/pooling/pooling.h"
+#include "pooling.h"
 #include "tensor_quantize.h"
 
 /* input: a list of integer

@@ -1,9 +1,9 @@
-#include "../mem/arena.h"
-#include "../src/ops/tensor.h"
-#include "../src/ops/tensor_ops.h"
-#include "../src/modules/transformer/tf_block.h"
-#include "../src/runtime/rt_context.h"
-#include "../src/ops/tk_ops.h"
+#include "arena.h"
+#include "tensor.h"
+#include "tensor_ops.h"
+#include "tf_block.h"
+#include "rt_context.h"
+#include "tk_ops.h"
 #include "math.h"
 
 int main() {

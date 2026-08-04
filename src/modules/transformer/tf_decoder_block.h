@@ -2,7 +2,7 @@
 #define TK_DBLOCK_H
 
 #include "tf_block.h"
-#include "../../ops/tensor.h"
+#include "tensor.h"
 
 struct tk_tf_decoder_block {
 

@@ -2,8 +2,8 @@
 #define TK_DISTILBERT_IO_H
 
 #include <stdint.h>
-#include "../src/modules/transformer/distilbert/distilbert.h"
-#include "../src/modules/transformer/distilbert/distilbert_cls.h"
+#include "distilbert.h"
+#include "distilbert_cls.h"
 
 #define DBERT_MAGIC      "DBERT\x00\x00\x00"
 #define DBERT_MAGIC_LEN  8

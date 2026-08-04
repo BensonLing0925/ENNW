@@ -2,7 +2,7 @@
 #include <stdlib.h>
 #include <float.h>
 #include <inttypes.h>
-#include "../../ops/tensor_ops.h"
+#include "tensor_ops.h"
 #include "fc.h"
 
 struct Network* tk_fc_create(struct tk_rt_ctx* ctx) {

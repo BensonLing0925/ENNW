@@ -1,9 +1,10 @@
 #include "rt_context.h"
-#include "graph/rt_graph.h"
-#include "../ops/tk_ops.h"
-#include "../../mem/arena.h"
+#include "rt_graph.h"
+#include "tk_ops.h"
+#include "arena.h"
 
-#define DEFAULT_WS_CAPACITY (256ULL * 1024 * 1024)  /* 256 MB */
+// #define DEFAULT_WS_CAPACITY (256ULL * 1024 * 1024)  /* 256 MB */
+#define DEFAULT_WS_CAPACITY (2ULL * 1024 * 1024 * 1024) /* 2 GB hopefully is big enough for gpt2 */
 
 static const struct tk_rt_ctx_config DEFAULT_CONFIG = {
     .use_int8 = 0,
@@ -92,21 +93,14 @@ int tk_rt_prepare(struct tk_rt_ctx* ctx) {
             struct tk_rt_node* node = &ctx->static_graph->nodes[i];
             if (node->skip) continue;
             final_exec_node = node;
+			#ifdef TK_RT_VERBOSE
             printf("Node [%2d]: %-22s  ws_before=%6u  In=%p  Out=%p\n",
                    active,
                    tk_rt_op_type(node->op_type),
                    (unsigned)node->ws_cursor_before,
                    (void*)node->inputs[0],
                    (void*)node->outputs[0]);
-            /*
-            for (int j = 0; j < node->input_count; j++) {
-                printf("  In[%d]: %p (Data: %p)\n", 
-                       j, (void*)node->inputs[j], (void*)node->inputs[j]->data);
-            }
-            printf("  Out[0]: %p (Data: %p)\n", 
-                   (void*)node->outputs[0], (void*)node->outputs[0]->data);
-                    ++active;
-            */
+			#endif
             active++;
         }
         ctx->static_graph->last_node = final_exec_node;
@@ -124,8 +118,10 @@ int tk_rt_prepare(struct tk_rt_ctx* ctx) {
         ctx->ops = (struct tk_ops_vtable*)&tk_exec_vtable;
     }
 
-    if (ctx->ws)
+    if (ctx->ws) {
         ctx->ws->cur_offset = 0;
+		ctx->ws->is_dryrun  = 0;
+	}
 
     ctx->graph_ready = 1;
     printf("[Info] Runtime prepared. Switched to inference mode.\n");
@@ -137,9 +133,11 @@ void tk_rt_ctx_set_mode(struct tk_rt_ctx* ctx, enum rt_type type) {
     switch (type) {
         case RT_INFERENCE:
             ctx->ops = &tk_exec_vtable;
+            if (ctx->ws) ctx->ws->is_dryrun = 0;
             break;
         case RT_DRYRUN:
             ctx->ops = &tk_record_vtable;
+            if (ctx->ws) ctx->ws->is_dryrun = 1;
             break;
     }
 }

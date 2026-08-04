@@ -22,15 +22,15 @@
     #define GET_TIME() ((double)clock() / CLOCKS_PER_SEC)
 
 #endif
-#include "../mem/arena.h"
-#include "../src/runtime/rt_context.h"
-#include "../src/ops/tensor.h"
-#include "../src/modules/transformer/distilbert/distilbert.h"
-#include "../src/modules/transformer/distilbert/distilbert_cls.h"
-#include "../weightio/distilbert_io.h"
-#include "../src/error/rt_error.h"
-#include "../src/runtime/rt_context.h"
-#include "../src/runtime/graph/rt_graph.h"
+#include "arena.h"
+#include "rt_context.h"
+#include "tensor.h"
+#include "distilbert.h"
+#include "distilbert_cls.h"
+#include "distilbert_io.h"
+#include "rt_error.h"
+#include "rt_context.h"
+#include "rt_graph.h"
 
 /* ------------------------------------------------------------------ */
 /* Batch binary reader                                                  */

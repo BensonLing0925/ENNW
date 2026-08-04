@@ -1,10 +1,11 @@
 #include "tk_ops.h"
-#include "../ops/tensor_ops.h"
-#include "../error/rt_error.h"
-#include "../profiler/tk_profiler.h"
-#include "../runtime/rt_context.h"
-#include "../runtime/graph/rt_graph.h"
-#include "../modules/transformer/tf_block.h"
+#include "tensor_ops.h"
+#include "rt_error.h"
+#include "tk_profiler.h"
+#include "rt_context.h"
+#include "rt_graph.h"
+#include "tf_block.h"
+#include "embedding.h"
 
 int exec_add(struct tk_rt_ctx* ctx, struct tk_tensor* src1, struct tk_tensor* src2, struct tk_tensor* dest) {
     RT_CHECK(tk_ops_add(src1, src2, dest));
@@ -48,6 +49,18 @@ int exec_attention(struct tk_rt_ctx* ctx, struct TransformerBlock* tf,
     return 0;
 }
 
+int exec_embedding(struct tk_rt_ctx* ctx, struct tk_embedding* table,
+					int pos_offset,
+                    struct tk_tensor* input, struct tk_tensor** out) {
+
+	// RT_CHECK(tk_ops_embedding_lookup(input, table->weights, out));
+
+	RT_CHECK(tk_emb_forward(ctx, table->weights, input,
+                         pos_offset, out));
+
+    return 0;
+}
+
 /*
 int exec_attention_decode(struct tk_rt_ctx* ctx, struct TransformerBlock* tf,
                    		  struct tk_tensor* input, struct tk_tensor** out) {
@@ -69,5 +82,6 @@ const struct tk_ops_vtable tk_exec_vtable = {
     .gelu      = exec_gelu,
     .quantize  = exec_quantize,
     .attention = exec_attention,
-    .ffn       = exec_ffn
+    .ffn       = exec_ffn,
+	.embedding = exec_embedding
 };
