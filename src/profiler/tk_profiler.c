@@ -3,8 +3,8 @@
 #include <time.h>
 #include <stdint.h>
 
-static __thread struct tk_prof_thread_buf* my_buf = NULL;
 static __thread struct tk_prof_manager*    my_manager = NULL;
+static __thread struct tk_prof_thread_buf* my_buf = NULL;
 static __thread size_t                     my_pending_offset = 0;
 static __thread int                        my_last_omp_threads = 0;
 static __thread const char* 			   my_pending_label = NULL;
@@ -12,6 +12,8 @@ static __thread const char* 			   my_pending_label = NULL;
 #ifdef _WIN32
 #include <windows.h>
 #endif
+
+#define TK_PROF_MAX_STACK 128
 
 const char* tk_ev_type_get(enum tk_event_type type) {
     switch (type) {
@@ -32,20 +34,6 @@ const char* tk_ev_type_get(enum tk_event_type type) {
             return NULL;
     }	
 }
-
-/*
-void event_print(struct tk_event* ev, size_t mem_diff) {
-    if (ev->type == TK_EV_OP_END && mem_diff > 0) {
-        printf("[%10.4f] [%-3s] [T%02d] %-15s [offs:0x%08llX] [\x1b[32m+%6zu KB\x1b[0m] : %s\n", 
-            ev->timestamp / 1e9, "CPU", ev->thread_id, ev->label, 
-            (unsigned long long)ev->mem_offset, mem_diff / 1024, tk_ev_type_get(ev->type));
-    } else {
-        printf("[%10.4f] [%-3s] [T%02d] %-15s [offs:0x%08llX] [          ] : %s\n", 
-            ev->timestamp / 1e9, "CPU", ev->thread_id, ev->label, 
-            (unsigned long long)ev->mem_offset, tk_ev_type_get(ev->type));
-    }
-}
-*/
 
 void event_print(struct tk_event* ev, size_t mem_diff) {
     const char* type_str = tk_ev_type_get(ev->type);
@@ -128,6 +116,10 @@ struct tk_prof_manager* tk_prof_manager_create(struct arena* prof_arena) {
     return arena_alloc(prof_arena, sizeof(struct tk_prof_manager));
 }
 
+void tk_prof_bind_manager(struct tk_prof_manager* mgr) {
+    my_manager = mgr;
+}
+
 // caller should init arena
 // should be pre-allocated even before dryrun to avoid using mutex
 struct tk_prof_manager* tk_prof_create(int max_threads,
@@ -206,8 +198,118 @@ void tk_prof_emit(struct tk_rt_ctx* ctx, int type, const char* label, size_t off
     }
 }
 
-struct tk_prof_manager* tk_prof_get_my_manager(void) {
-    return my_manager;
+void tk_prof_print_summary(uint64_t tadd, uint64_t tgemm, uint64_t tgelu,
+                            uint64_t tln, uint64_t temb,
+                            uint64_t tfused_add_norm, uint64_t tfused_gemm_add_gelu,
+                            uint64_t tattn, uint64_t tffn) {
+
+printf(
+    "tadd=%llu tgemm=%llu tgelu=%llu tln=%llu "
+    "temb=%llu tattn=%llu tffn=%llu\n",
+    (unsigned long long)tadd,
+    (unsigned long long)tgemm,
+    (unsigned long long)tgelu,
+    (unsigned long long)tln,
+    (unsigned long long)temb,
+    (unsigned long long)tattn,
+    (unsigned long long)tffn
+);
+
+
+    uint64_t total = tadd + tgemm + tgelu + tln + temb
+                   + tfused_add_norm + tfused_gemm_add_gelu + tattn;
+    if (total == 0) {
+        printf("\n=== Profile Summary === (no events recorded)\n");
+        return;
+    }
+
+    struct { const char* label; uint64_t ns; } rows[] = {
+        { "ATTENTION",            tattn                },
+        { "FFN",                  tffn                 },
+        { "GEMM",                 tgemm                },
+        { "FUSED_GEMM_ADD_GELU",  tfused_gemm_add_gelu },
+        { "FUSED_ADD_NORM",       tfused_add_norm      },
+        { "LAYERNORM",            tln                  },
+        { "ADD",                  tadd                 },
+        { "GELU",                 tgelu                },
+        { "EMBEDDING",            temb                 },
+    };
+    int n = (int)(sizeof(rows) / sizeof(rows[0]));
+
+    for (int i = 0; i < n - 1; ++i)
+        for (int j = i + 1; j < n; ++j)
+            if (rows[j].ns > rows[i].ns) {
+                typeof(rows[0]) tmp = rows[i]; rows[i] = rows[j]; rows[j] = tmp;
+            }
+
+    printf("\n=== Profile Summary ===\n");
+    printf("%-22s %12s %8s\n", "Operator", "Time (ms)", "Share");
+    printf("%-22s %12s %8s\n", "----------------------", "------------", "--------");
+
+    for (int i = 0; i < n; ++i) {
+        if (rows[i].ns == 0) continue;
+        double ms  = rows[i].ns / 1e6;
+        double pct = 100.0 * (double)rows[i].ns / (double)total;
+        printf("%-22s %12.3f %7.2f%%\n", rows[i].label, ms, pct);
+    }
+
+    printf("%-22s %12s %8s\n", "----------------------", "------------", "--------");
+    printf("%-22s %12.3f %7.2f%%\n", "TOTAL", total / 1e6, 100.0);
+}
+
+void tk_prof_summarize(struct tk_prof_manager* mgr) {
+
+    struct tk_event_stack stack[TK_PROF_MAX_STACK] = {0};
+    int sp = 0;
+
+    uint64_t tadd = 0;
+    uint64_t tgemm = 0;
+    uint64_t tgelu = 0;
+    uint64_t tln = 0;
+    uint64_t temb = 0;
+    uint64_t tattn = 0;
+    uint64_t tffn = 0;
+    uint64_t tfused_add_norm = 0;
+    uint64_t tfused_gemm_add_gelu = 0;
+
+    int nthreads = mgr->thread_count;
+    for ( int i = 0 ; i < nthreads ; ++i ) {
+        struct tk_prof_thread_buf* buf = &mgr->thread_pool[i];
+        sp = 0;
+        for ( int ev_idx = 0 ; ev_idx < buf->head ; ++ev_idx ) {
+            struct tk_event* ev = &buf->events[ev_idx];
+            if (ev->type == TK_EV_OP_BEGIN) {
+                if (sp >= TK_PROF_MAX_STACK) {
+                    printf("[WARNING] max_sp reached\n");
+                    return;
+                }
+                stack[sp].label = ev->label;
+                stack[sp++].timestamp = ev->timestamp;
+            }
+            else if (ev->type == TK_EV_OP_END) {
+                if (sp == 0) {
+                    printf("[WARNING] unmatched OP_END: %s\n", ev->label);
+                    continue;
+                }
+                sp--;
+                uint64_t dur = ev->timestamp - stack[sp].timestamp;
+                const char* label = stack[sp].label;
+                if      (!strcmp(label, "ADD"))                 tadd += dur;
+                else if (!strcmp(label, "GEMM"))                tgemm += dur;
+                else if (!strcmp(label, "GELU"))                tgelu += dur;
+                else if (!strcmp(label, "LAYERNORM"))           tln += dur;
+                else if (!strcmp(label, "EMBEDDING"))           temb += dur;
+                else if (!strcmp(label, "ATTENTION"))           tattn += dur;
+                else if (!strcmp(label, "FFN"))                 tffn += dur;
+                else if (!strcmp(label, "FUSED_ADD_NORM"))      tfused_add_norm += dur;
+                else if (!strcmp(label, "FUSED_GEMM_ADD_GELU")) tfused_gemm_add_gelu += dur;
+                else printf("[WARNING] unknown operator label: %s\n", label);
+            }
+        }     
+    }
+    tk_prof_print_summary(tadd, tgemm, tgelu,
+                          tln, temb, tfused_add_norm, 
+                          tfused_gemm_add_gelu, tattn, tffn);
 }
 
 void tk_prof_set_offset(size_t offset) {
@@ -231,4 +333,8 @@ void tk_prof_set_label(const char* label) {
 }
 const char* tk_prof_get_label(void) {
     return my_pending_label;
+}
+
+struct tk_prof_manager* tk_prof_get_my_manager(void) {
+    return my_manager;
 }

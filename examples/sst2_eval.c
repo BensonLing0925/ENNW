@@ -289,9 +289,11 @@ int main(int argc, char* argv[]) {
     printf("  FP (neg->pos): %d\n", fp_count);
     printf("  FN (pos->neg): %d\n", fn_count);
 
+    /*
 #ifdef PROF
     tk_prof_view_run(ctx->manager);
 #endif
+    */
 
     sst2_batch_free(&batch);
     tk_rt_ctx_destroy(ctx);

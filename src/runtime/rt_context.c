@@ -3,8 +3,7 @@
 #include "tk_ops.h"
 #include "arena.h"
 
-// #define DEFAULT_WS_CAPACITY (256ULL * 1024 * 1024)  /* 256 MB */
-#define DEFAULT_WS_CAPACITY (2ULL * 1024 * 1024 * 1024) /* 2 GB hopefully is big enough for gpt2 */
+#define DEFAULT_WS_CAPACITY (64ULL * 1024 * 1024)
 
 static const struct tk_rt_ctx_config DEFAULT_CONFIG = {
     .use_int8 = 0,

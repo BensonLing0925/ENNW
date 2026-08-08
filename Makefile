@@ -68,13 +68,7 @@ LDLIBS ?= -lm -fopenmp
 # Add PROF=1 to enable profiler
 ifeq ($(PROF),1)
     PROF_FLAGS := -DPROF
-    INCLUDES   += -I$(RAYLIB_DIR)
-	LDLIBS     += $(RAYLIB_LIB) -Wl,--wrap=GOMP_parallel 
-	ifeq ($(OS),Windows_NT)
-        LDLIBS += -lgdi32 -lwinmm -lopengl32   # ← 加 -lopengl32
-    else
-        LDLIBS += -lGL -ldl -lpthread
-    endif
+	LDLIBS     += -Wl,--wrap=GOMP_parallel 
 endif 
 
 # ---- Common flags ----
@@ -117,7 +111,7 @@ LIB_SRC := $(wildcard $(FC_DIR)/*.c) \
            $(filter-out $(WEIGHTIO_DIR)/test_weightio.c, $(wildcard $(WEIGHTIO_DIR)/*.c))
 
 ifeq ($(PROF), 1)
-    PROF_CORE_SRC := $(filter-out $(PROF_DIR)/test_%.c, $(wildcard $(PROF_DIR)/*.c))
+    PROF_CORE_SRC := $(filter-out $(PROF_DIR)/test_%.c $(PROF_DIR)/tk_profiler_view.c, $(wildcard $(PROF_DIR)/*.c))
     LIB_SRC += $(PROF_CORE_SRC)
 endif
 

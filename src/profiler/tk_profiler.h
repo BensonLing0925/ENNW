@@ -27,6 +27,11 @@ enum tk_event_type {
 struct tk_rt_ctx;
 extern int tk_rt_is_prof_enabled(struct tk_rt_ctx* ctx);
 
+struct tk_event_stack {
+    const char* label;
+    uint64_t timestamp;
+};
+
 struct tk_event {
     uint64_t timestamp;
     enum tk_event_type type;
@@ -39,7 +44,7 @@ struct tk_event {
 struct tk_prof_thread_buf {
     struct tk_event* events;
     int capacity;
-    int head;
+    int head; // num_event
     int thread_id;
     const char* thread_name;
 };
@@ -52,6 +57,8 @@ struct tk_prof_manager {
     int max_threads;
 };
 
+uint64_t tk_get_now_ns(void);
+
 #ifdef PROF
     #define TK_ENABLE_PROFILER
 #endif
@@ -61,6 +68,7 @@ struct tk_prof_manager {
     
     void tk_prof_init(struct arena* prof_arena, size_t max_events);
     void tk_prof_shutdown();
+    void tk_prof_bind_manager(struct tk_prof_manager *manager);
     void tk_prof_record(struct tk_prof_manager* manager, enum tk_event_type type, const char* label, size_t offset);
     int tk_prof_thread_attach(struct tk_prof_manager* manager);
     struct tk_prof_manager* tk_prof_create(int max_threads, size_t max_events_per_thread);
@@ -84,6 +92,7 @@ struct tk_prof_manager {
     static inline void tk_prof_init(struct arena* prof_arena, size_t max_events) {}
     static inline void tk_prof_shutdown() {}
     static inline void tk_prof_record(struct tk_prof_manager* manager, enum tk_event_type type, const char* label, size_t offset) {}
+    static inline void tk_prof_bind_manager(struct tk_prof_manager *manager) {}
     static inline int tk_prof_thread_attach(struct tk_prof_manager* manager) {return 0;}
     static inline struct tk_prof_manager* tk_prof_create(int max_threads, size_t max_events_per_thread) {return NULL;}
     static inline void tk_prof_emit(struct tk_rt_ctx* ctx, int type, const char* label, size_t offset) {}

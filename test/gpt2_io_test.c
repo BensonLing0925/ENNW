@@ -3,6 +3,7 @@
 #include "gpt2.h"
 
 void test_prefill(struct tk_gpt2* model, struct tk_rt_ctx* ctx, struct tk_gpt2_config cfg) {
+    // The cat sat on the
 	int prompt_ids[] = {464, 3797, 3332, 319, 262};
 	int prompt_len = 5;
 	struct tk_tensor* input = NULL;
@@ -21,21 +22,32 @@ void test_prefill(struct tk_gpt2* model, struct tk_rt_ctx* ctx, struct tk_gpt2_c
 	}
 
 	tk_rt_prepare(ctx);
+    printf("Workspace peak: %.2f MB (%zu bytes)\n",
+       (double)ctx->ws->peak_offset / (1024.0 * 1024.0), ctx->ws->peak_offset);
 
-	ctx->ws->cur_offset = 0;
-	struct tk_tensor* logits = NULL;
-	int rc = tk_gpt2_forward(ctx, model, input, &logits, TK_GPT2_PREFILL);
-	printf("rc=%d\n", rc);
+    for ( int test = 0 ; test < 5 ; ++test) {
+        ctx->ws->cur_offset = 0;
+        struct tk_tensor* logits = NULL;
+        int rc = tk_gpt2_forward(ctx, model, input, &logits, TK_GPT2_PREFILL);
+        printf("rc=%d\n", rc);
 
-	float* last_row = (float*)logits->data + (size_t)(prompt_len - 1) * cfg.vocab_size;
-	printf("logits[0..7]: ");
-	for (int i = 0; i < 8; ++i) printf("%f ", last_row[i]);
-	printf("\n");
+        float* last_row = (float*)logits->data + (size_t)(prompt_len - 1) * cfg.vocab_size;
+        printf("logits[0..7]: ");
+        for (int i = 0; i < 8; ++i) printf("%f ", last_row[i]);
+        printf("\n");
+    }
 }
 
 void test_generate(struct tk_gpt2* model, struct tk_rt_ctx* ctx, struct tk_gpt2_config cfg) {
     int prompt_ids[] = {464, 3797, 3332, 319, 262};
     int prompt_len = 5;
+
+    ctx->manager = tk_prof_create(32, 1024);
+    if (!ctx->manager) {
+        fprintf(stderr, "Failed to create profiler manager\n");
+        return;
+    }
+    tk_prof_bind_manager(ctx->manager);
 
     struct tk_tensor* prompt = NULL;
     int shape[1] = { prompt_len };
@@ -44,11 +56,14 @@ void test_generate(struct tk_gpt2* model, struct tk_rt_ctx* ctx, struct tk_gpt2_
 
     int32_t* out_tokens = NULL;
     int out_count = 0;
-    int rc = tk_gpt2_generate(ctx, model, prompt, /* max_new_tokens */ 5,
+    int max_new_token = 50;
+    int rc = tk_gpt2_generate(ctx, model, prompt, /* max_new_tokens */ max_new_token,
                                /* eos_token_id */ 50256, &out_tokens, &out_count);
     printf("generate rc=%d, tokens: ", rc);
     for (int i = 0; i < out_count; ++i) printf("%d ", out_tokens[i]);
     printf("\n");
+
+    tk_prof_summarize(ctx->manager);
 }
 
 int main(int argc, char* argv[]) {
@@ -59,6 +74,8 @@ int main(int argc, char* argv[]) {
     arena_init(&root_arena);
     struct tk_rt_ctx* ctx = tk_runtime_ctx_create(&root_arena);
     ctx->compute_dtype = TK_F32;
+
+    ctx->use_prof = 1;
 
     struct tk_gpt2_config cfg;
     if (tk_gpt2_config_from_json(cfg_path, &cfg) != 0) {
@@ -77,6 +94,7 @@ int main(int argc, char* argv[]) {
     printf("load rc=%d\n", rc);
 
 	test_prefill(model, ctx, cfg);
+
 	test_generate(model, ctx, cfg);
 
 	tk_rt_ctx_destroy(ctx);

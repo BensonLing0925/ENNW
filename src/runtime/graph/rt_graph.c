@@ -4,6 +4,10 @@
 #include "tensor_ops.h"
 #include "tf_block.h"
 
+#ifdef PROF
+#include "tk_profiler.h"
+#endif
+
 struct tk_rt_graph* tk_rt_graph_alloc(struct tk_rt_ctx* ctx) {
     return arena_alloc(ctx->meta_arena, sizeof(struct tk_rt_graph));
 }
@@ -104,11 +108,10 @@ int tk_rt_graph_exec(struct tk_rt_ctx* ctx) {
 
             case TK_OP_LAYERNORM:
             	TK_PROF_SCOPE(ctx, TK_EV_OP_BEGIN, "LAYERNORM", ctx->ws->cur_offset);
-				/*
                 RT_CHECK(ctx->ops->layernorm(ctx,
                     node->inputs[0], node->inputs[1], node->inputs[2],
                     node->outputs[0]));
-				*/
+                /*
                 int rc_ln = ctx->ops->layernorm(ctx,
                     node->inputs[0], node->inputs[1], node->inputs[2],
                     node->outputs[0]);
@@ -117,15 +120,16 @@ int tk_rt_graph_exec(struct tk_rt_ctx* ctx) {
 					fprintf(stderr, "layernorm exec failed, rc=%d\n", rc_ln);
 					return rc_ln;
 				}
+                */
                 TK_PROF_SCOPE(ctx, TK_EV_OP_END, "LAYERNORM", ctx->ws->cur_offset);
                 break;
 
             case TK_OP_QUANTIZE:
-            	TK_PROF_SCOPE(ctx, TK_EV_OP_BEGIN, "QUANTIZE", ctx->ws->cur_offset);            		
+            	// TK_PROF_SCOPE(ctx, TK_EV_OP_BEGIN, "QUANTIZE", ctx->ws->cur_offset);            		
                	RT_CHECK(ctx->ops->quantize(ctx,
                    	node->inputs[0], node->outputs[0],
                    	node->params.single.quantize.calib_scale));   
-				TK_PROF_SCOPE(ctx, TK_EV_OP_END, "QUANTIZE", ctx->ws->cur_offset);         		
+				// TK_PROF_SCOPE(ctx, TK_EV_OP_END, "QUANTIZE", ctx->ws->cur_offset);         		
 				/*
             	if (ctx->use_int8) {
             		TK_PROF_SCOPE(ctx, TK_EV_OP_BEGIN, "QUANTIZE", ctx->ws->cur_offset);            		
@@ -138,10 +142,12 @@ int tk_rt_graph_exec(struct tk_rt_ctx* ctx) {
                 break;
 
 			case TK_OP_EMBEDDING:
+            	TK_PROF_SCOPE(ctx, TK_EV_OP_BEGIN, "EMBEDDING", ctx->ws->cur_offset);
 				RT_CHECK(ctx->ops->embedding(ctx,
 						node->params.single.embedding.table,
 						node->params.single.embedding.pos_offset,
 						node->inputs[0], node->outputs[0]));
+            	TK_PROF_SCOPE(ctx, TK_EV_OP_END, "EMBEDDING", ctx->ws->cur_offset);
 				break;
 
             /* Fused residual-add + LayerNorm (post-norm transformer blocks).

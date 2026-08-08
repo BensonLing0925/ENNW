@@ -1,5 +1,6 @@
 #include "gpt2.h"
 #include "rt_graph.h"
+#include "tk_profiler.h"
 
 /* ------------------------------------------------------------------ */
 /* internal helpers                                                    */
@@ -107,11 +108,19 @@ int tk_gpt2_forward(struct tk_rt_ctx* ctx,
 	int pos_offset = (mode == TK_GPT2_DECODE) ? ctx->kv_cur_len : 0;
 
     // RT_CHECK(tk_gpt2_emb_forward(ctx, gpt2->emb, input_ids, pos_offset, &hidden));
+    
+    uint64_t t_emb_forward_start = tk_get_now_ns();
     RT_CHECK(tk_emb_forward(ctx, gpt2->emb, input_ids, pos_offset, &hidden));
+    uint64_t t_emb_forward = tk_get_now_ns() - t_emb_forward_start;
+    if (mode == TK_GPT2_PREFILL)
+        printf("prefilling embedding forward: %.3f ms\n", t_emb_forward / 1e6);
 
     if (!gpt2->lm_head_ready) {
 		/* weight tying */ 
+        uint64_t t_lm_transpose_start = tk_get_now_ns();
 		RT_CHECK(tk_tensor_transpose(ctx->meta_arena, gpt2->emb->word_emb->weights, 0, 1, &gpt2->lm_head_weight));
+        uint64_t t_lm_transpose = tk_get_now_ns() - t_lm_transpose_start;
+        printf("lm head allocation: %.3f ms\n", t_lm_transpose / 1e6);
 		gpt2->lm_head_ready = 1;
     }
 
@@ -137,7 +146,10 @@ int tk_gpt2_forward(struct tk_rt_ctx* ctx,
     /* After tk_rt_prepare (graph_ready=1) the static graph holds the optimised
      * transformer-block schedule.  Use graph exec to pick up any fusions. */
     if (mode == TK_GPT2_PREFILL && ctx->graph_ready && ctx->rt_type == RT_INFERENCE) {
+        uint64_t t_graph_exec_start = tk_get_now_ns();
         RT_CHECK(tk_rt_graph_exec(ctx));
+        uint64_t t_graph_exec = tk_get_now_ns() - t_graph_exec_start;
+        printf("prefill graph execute: %.3f ms\n", t_graph_exec / 1e6);
 		logits = ctx->static_graph->last_node->outputs[0];
     } else {
         /* Dry-run and no-graph-optimise paths: run blocks normally. */
@@ -191,13 +203,20 @@ int tk_gpt2_generate(struct tk_rt_ctx* ctx, struct tk_gpt2* gpt2,
     /* ---- Prefill: process the whole prompt at once ---- */
     ctx->ws->cur_offset = 0;
     struct tk_tensor* logits = NULL;
+
+    uint64_t prefill_tstart = tk_get_now_ns();
     RT_CHECK(tk_gpt2_forward(ctx, gpt2, prompt_ids, &logits, TK_GPT2_PREFILL));
+    uint64_t prefill_tend = tk_get_now_ns();
+    uint64_t t_prefill = (prefill_tend - prefill_tstart);
 
     /* take the last row of logits [prompt_len, vocab] -> [vocab], argmax */
     int vocab_size = gpt2->emb->config.vocab_size;
     float* last_row = (float*)logits->data + (size_t)(prompt_len - 1) * vocab_size;
     int next_token = argmax_f32(last_row, vocab_size);
     tokens[total_count++] = next_token;
+
+    uint64_t t_decode_total = 0;
+    int decode_steps = 0;
 
     /* ---- Decode loop: one token at a time ---- */
     for (int step = 0; step < max_new_tokens - 1; ++step) {
@@ -209,7 +228,13 @@ int tk_gpt2_generate(struct tk_rt_ctx* ctx, struct tk_gpt2* gpt2,
         *(int32_t*)step_input->data = next_token;
 
         ctx->ws->cur_offset = 0;
+
+        uint64_t decode_tstart = tk_get_now_ns();
         RT_CHECK(tk_gpt2_forward(ctx, gpt2, step_input, &logits, TK_GPT2_DECODE));
+        uint64_t decode_tend = tk_get_now_ns();
+
+        t_decode_total += (decode_tend - decode_tstart);
+        decode_steps++;
 
         /* logits here is [1, vocab] — only one row */
         next_token = argmax_f32((float*)logits->data, vocab_size);
@@ -217,6 +242,12 @@ int tk_gpt2_generate(struct tk_rt_ctx* ctx, struct tk_gpt2* gpt2,
 
         ctx->kv_cur_len++;   /* advance cache position after all layers processed this token */
     }
+
+    printf("\n=== Timing ===\n");
+    printf("Prefill (%d tokens) : %.3f ms\n", prompt_len, t_prefill / 1e6);
+    printf("Decode total        : %.3f ms (%d steps)\n", t_decode_total / 1e6, decode_steps);
+    printf("Decode per token    : %.3f ms\n", (double)t_decode_total / decode_steps / 1e6);
+    printf("Total               : %.3f ms\n", (t_prefill + t_decode_total) / 1e6);
 
     *out_tokens = tokens;
     *out_count  = total_count;
