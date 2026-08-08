@@ -1,0 +1,3657 @@
+config size: 666
+num_layers=12 hidden_dim=768 n_heads=12 vocab_size=50257 max_seq_len=1024
+Header size: 14283
+config size: 666
+[OK] Number of layer matched
+[gpt2_io] 160 tensors loaded
+[gpt2_io] layer 12 loaded
+[gpt2_io] all weights loaded from 'data/gpt2/gpt2_model.safetensors'
+load rc=0
+prefilling embedding forward: 0.001 ms
+lm head allocation: 544.331 ms
+dry run rc=0
+[Optimize] Fused 12 GEMM+ADD+GELU triplet(s) into FUSED_GEMM_ADD_GELU
+[Info] Graph: 122 active nodes (146 total, 24 fused away)
+[Info] Runtime prepared. Switched to inference mode.
+Workspace peak: 4.39 MB (4600960 bytes)
+prefilling embedding forward: 0.009 ms
+prefill qh_kh_T gemm: 0.003 ms
+prefill scale: 0.000 ms
+prefill softmax: 0.009 ms
+prefill outh gemm: 0.002 ms
+prefill qh_kh_T gemm: 0.002 ms
+prefill scale: 0.000 ms
+prefill softmax: 0.000 ms
+prefill outh gemm: 0.001 ms
+prefill qh_kh_T gemm: 0.002 ms
+prefill scale: 0.000 ms
+prefill softmax: 0.000 ms
+prefill outh gemm: 0.002 ms
+prefill qh_kh_T gemm: 0.002 ms
+prefill scale: 0.000 ms
+prefill softmax: 0.000 ms
+prefill outh gemm: 0.001 ms
+prefill qh_kh_T gemm: 0.002 ms
+prefill scale: 0.000 ms
+prefill softmax: 0.000 ms
+prefill outh gemm: 0.001 ms
+prefill qh_kh_T gemm: 0.003 ms
+prefill scale: 0.000 ms
+prefill softmax: 0.000 ms
+prefill outh gemm: 0.001 ms
+prefill qh_kh_T gemm: 0.003 ms
+prefill scale: 0.000 ms
+prefill softmax: 0.000 ms
+prefill outh gemm: 0.001 ms
+prefill qh_kh_T gemm: 0.002 ms
+prefill scale: 0.000 ms
+prefill softmax: 0.000 ms
+prefill outh gemm: 0.001 ms
+prefill qh_kh_T gemm: 0.002 ms
+prefill scale: 0.000 ms
+prefill softmax: 0.000 ms
+prefill outh gemm: 0.001 ms
+prefill qh_kh_T gemm: 0.003 ms
+prefill scale: 0.000 ms
+prefill softmax: 0.000 ms
+prefill outh gemm: 0.001 ms
+prefill qh_kh_T gemm: 0.002 ms
+prefill scale: 0.000 ms
+prefill softmax: 0.000 ms
+prefill outh gemm: 0.002 ms
+prefill qh_kh_T gemm: 0.002 ms
+prefill scale: 0.000 ms
+prefill softmax: 0.000 ms
+prefill outh gemm: 0.001 ms
+prefill o_proj gemm: 0.189 ms
+prefill o_proj add: 0.001 ms
+prefill qh_kh_T gemm: 0.002 ms
+prefill scale: 0.000 ms
+prefill softmax: 0.001 ms
+prefill outh gemm: 0.002 ms
+prefill qh_kh_T gemm: 0.002 ms
+prefill scale: 0.000 ms
+prefill softmax: 0.000 ms
+prefill outh gemm: 0.002 ms
+prefill qh_kh_T gemm: 0.002 ms
+prefill scale: 0.000 ms
+prefill softmax: 0.000 ms
+prefill outh gemm: 0.001 ms
+prefill qh_kh_T gemm: 0.003 ms
+prefill scale: 0.000 ms
+prefill softmax: 0.000 ms
+prefill outh gemm: 0.002 ms
+prefill qh_kh_T gemm: 0.003 ms
+prefill scale: 0.000 ms
+prefill softmax: 0.000 ms
+prefill outh gemm: 0.002 ms
+prefill qh_kh_T gemm: 0.002 ms
+prefill scale: 0.000 ms
+prefill softmax: 0.000 ms
+prefill outh gemm: 0.001 ms
+prefill qh_kh_T gemm: 0.002 ms
+prefill scale: 0.000 ms
+prefill softmax: 0.000 ms
+prefill outh gemm: 0.002 ms
+prefill qh_kh_T gemm: 0.002 ms
+prefill scale: 0.000 ms
+prefill softmax: 0.000 ms
+prefill outh gemm: 0.002 ms
+prefill qh_kh_T gemm: 0.002 ms
+prefill scale: 0.000 ms
+prefill softmax: 0.000 ms
+prefill outh gemm: 0.001 ms
+prefill qh_kh_T gemm: 0.002 ms
+prefill scale: 0.000 ms
+prefill softmax: 0.000 ms
+prefill outh gemm: 0.001 ms
+prefill qh_kh_T gemm: 0.002 ms
+prefill scale: 0.000 ms
+prefill softmax: 0.000 ms
+prefill outh gemm: 0.002 ms
+prefill qh_kh_T gemm: 0.002 ms
+prefill scale: 0.000 ms
+prefill softmax: 0.000 ms
+prefill outh gemm: 0.001 ms
+prefill o_proj gemm: 0.195 ms
+prefill o_proj add: 0.001 ms
+prefill qh_kh_T gemm: 0.003 ms
+prefill scale: 0.000 ms
+prefill softmax: 0.001 ms
+prefill outh gemm: 0.003 ms
+prefill qh_kh_T gemm: 0.002 ms
+prefill scale: 0.000 ms
+prefill softmax: 0.000 ms
+prefill outh gemm: 0.002 ms
+prefill qh_kh_T gemm: 0.002 ms
+prefill scale: 0.000 ms
+prefill softmax: 0.000 ms
+prefill outh gemm: 0.002 ms
+prefill qh_kh_T gemm: 0.002 ms
+prefill scale: 0.000 ms
+prefill softmax: 0.000 ms
+prefill outh gemm: 0.002 ms
+prefill qh_kh_T gemm: 0.002 ms
+prefill scale: 0.000 ms
+prefill softmax: 0.000 ms
+prefill outh gemm: 0.001 ms
+prefill qh_kh_T gemm: 0.002 ms
+prefill scale: 0.000 ms
+prefill softmax: 0.000 ms
+prefill outh gemm: 0.001 ms
+prefill qh_kh_T gemm: 0.002 ms
+prefill scale: 0.000 ms
+prefill softmax: 0.000 ms
+prefill outh gemm: 0.001 ms
+prefill qh_kh_T gemm: 0.003 ms
+prefill scale: 0.000 ms
+prefill softmax: 0.000 ms
+prefill outh gemm: 0.001 ms
+prefill qh_kh_T gemm: 0.002 ms
+prefill scale: 0.000 ms
+prefill softmax: 0.000 ms
+prefill outh gemm: 0.001 ms
+prefill qh_kh_T gemm: 0.002 ms
+prefill scale: 0.000 ms
+prefill softmax: 0.000 ms
+prefill outh gemm: 0.001 ms
+prefill qh_kh_T gemm: 0.002 ms
+prefill scale: 0.000 ms
+prefill softmax: 0.000 ms
+prefill outh gemm: 0.001 ms
+prefill qh_kh_T gemm: 0.002 ms
+prefill scale: 0.000 ms
+prefill softmax: 0.000 ms
+prefill outh gemm: 0.002 ms
+prefill o_proj gemm: 0.197 ms
+prefill o_proj add: 0.001 ms
+prefill qh_kh_T gemm: 0.002 ms
+prefill scale: 0.000 ms
+prefill softmax: 0.001 ms
+prefill outh gemm: 0.004 ms
+prefill qh_kh_T gemm: 0.003 ms
+prefill scale: 0.000 ms
+prefill softmax: 0.000 ms
+prefill outh gemm: 0.001 ms
+prefill qh_kh_T gemm: 0.002 ms
+prefill scale: 0.000 ms
+prefill softmax: 0.000 ms
+prefill outh gemm: 0.001 ms
+prefill qh_kh_T gemm: 0.003 ms
+prefill scale: 0.000 ms
+prefill softmax: 0.000 ms
+prefill outh gemm: 0.001 ms
+prefill qh_kh_T gemm: 0.003 ms
+prefill scale: 0.000 ms
+prefill softmax: 0.000 ms
+prefill outh gemm: 0.001 ms
+prefill qh_kh_T gemm: 0.002 ms
+prefill scale: 0.000 ms
+prefill softmax: 0.000 ms
+prefill outh gemm: 0.002 ms
+prefill qh_kh_T gemm: 0.002 ms
+prefill scale: 0.000 ms
+prefill softmax: 0.000 ms
+prefill outh gemm: 0.001 ms
+prefill qh_kh_T gemm: 0.002 ms
+prefill scale: 0.000 ms
+prefill softmax: 0.000 ms
+prefill outh gemm: 0.002 ms
+prefill qh_kh_T gemm: 0.003 ms
+prefill scale: 0.000 ms
+prefill softmax: 0.000 ms
+prefill outh gemm: 0.002 ms
+prefill qh_kh_T gemm: 0.002 ms
+prefill scale: 0.000 ms
+prefill softmax: 0.000 ms
+prefill outh gemm: 0.001 ms
+prefill qh_kh_T gemm: 0.002 ms
+prefill scale: 0.000 ms
+prefill softmax: 0.000 ms
+prefill outh gemm: 0.002 ms
+prefill qh_kh_T gemm: 0.002 ms
+prefill scale: 0.000 ms
+prefill softmax: 0.000 ms
+prefill outh gemm: 0.001 ms
+prefill o_proj gemm: 0.194 ms
+prefill o_proj add: 0.001 ms
+prefill qh_kh_T gemm: 0.003 ms
+prefill scale: 0.000 ms
+prefill softmax: 0.001 ms
+prefill outh gemm: 0.002 ms
+prefill qh_kh_T gemm: 0.003 ms
+prefill scale: 0.000 ms
+prefill softmax: 0.000 ms
+prefill outh gemm: 0.002 ms
+prefill qh_kh_T gemm: 0.003 ms
+prefill scale: 0.000 ms
+prefill softmax: 0.000 ms
+prefill outh gemm: 0.001 ms
+prefill qh_kh_T gemm: 0.003 ms
+prefill scale: 0.000 ms
+prefill softmax: 0.000 ms
+prefill outh gemm: 0.001 ms
+prefill qh_kh_T gemm: 0.002 ms
+prefill scale: 0.000 ms
+prefill softmax: 0.000 ms
+prefill outh gemm: 0.001 ms
+prefill qh_kh_T gemm: 0.002 ms
+prefill scale: 0.000 ms
+prefill softmax: 0.000 ms
+prefill outh gemm: 0.001 ms
+prefill qh_kh_T gemm: 0.002 ms
+prefill scale: 0.000 ms
+prefill softmax: 0.000 ms
+prefill outh gemm: 0.001 ms
+prefill qh_kh_T gemm: 0.002 ms
+prefill scale: 0.000 ms
+prefill softmax: 0.000 ms
+prefill outh gemm: 0.001 ms
+prefill qh_kh_T gemm: 0.002 ms
+prefill scale: 0.000 ms
+prefill softmax: 0.000 ms
+prefill outh gemm: 0.001 ms
+prefill qh_kh_T gemm: 0.002 ms
+prefill scale: 0.000 ms
+prefill softmax: 0.000 ms
+prefill outh gemm: 0.001 ms
+prefill qh_kh_T gemm: 0.002 ms
+prefill scale: 0.000 ms
+prefill softmax: 0.000 ms
+prefill outh gemm: 0.001 ms
+prefill qh_kh_T gemm: 0.002 ms
+prefill scale: 0.000 ms
+prefill softmax: 0.000 ms
+prefill outh gemm: 0.001 ms
+prefill o_proj gemm: 0.187 ms
+prefill o_proj add: 0.001 ms
+prefill qh_kh_T gemm: 0.002 ms
+prefill scale: 0.000 ms
+prefill softmax: 0.001 ms
+prefill outh gemm: 0.002 ms
+prefill qh_kh_T gemm: 0.002 ms
+prefill scale: 0.000 ms
+prefill softmax: 0.000 ms
+prefill outh gemm: 0.001 ms
+prefill qh_kh_T gemm: 0.002 ms
+prefill scale: 0.000 ms
+prefill softmax: 0.000 ms
+prefill outh gemm: 0.001 ms
+prefill qh_kh_T gemm: 0.003 ms
+prefill scale: 0.000 ms
+prefill softmax: 0.000 ms
+prefill outh gemm: 0.001 ms
+prefill qh_kh_T gemm: 0.002 ms
+prefill scale: 0.000 ms
+prefill softmax: 0.000 ms
+prefill outh gemm: 0.001 ms
+prefill qh_kh_T gemm: 0.002 ms
+prefill scale: 0.000 ms
+prefill softmax: 0.000 ms
+prefill outh gemm: 0.001 ms
+prefill qh_kh_T gemm: 0.002 ms
+prefill scale: 0.000 ms
+prefill softmax: 0.000 ms
+prefill outh gemm: 0.001 ms
+prefill qh_kh_T gemm: 0.002 ms
+prefill scale: 0.000 ms
+prefill softmax: 0.000 ms
+prefill outh gemm: 0.001 ms
+prefill qh_kh_T gemm: 0.003 ms
+prefill scale: 0.000 ms
+prefill softmax: 0.000 ms
+prefill outh gemm: 0.001 ms
+prefill qh_kh_T gemm: 0.002 ms
+prefill scale: 0.000 ms
+prefill softmax: 0.000 ms
+prefill outh gemm: 0.001 ms
+prefill qh_kh_T gemm: 0.003 ms
+prefill scale: 0.000 ms
+prefill softmax: 0.000 ms
+prefill outh gemm: 0.001 ms
+prefill qh_kh_T gemm: 0.002 ms
+prefill scale: 0.000 ms
+prefill softmax: 0.000 ms
+prefill outh gemm: 0.001 ms
+prefill o_proj gemm: 0.182 ms
+prefill o_proj add: 0.001 ms
+prefill qh_kh_T gemm: 0.003 ms
+prefill scale: 0.000 ms
+prefill softmax: 0.001 ms
+prefill outh gemm: 0.001 ms
+prefill qh_kh_T gemm: 0.003 ms
+prefill scale: 0.000 ms
+prefill softmax: 0.000 ms
+prefill outh gemm: 0.002 ms
+prefill qh_kh_T gemm: 0.003 ms
+prefill scale: 0.000 ms
+prefill softmax: 0.000 ms
+prefill outh gemm: 0.001 ms
+prefill qh_kh_T gemm: 0.004 ms
+prefill scale: 0.000 ms
+prefill softmax: 0.000 ms
+prefill outh gemm: 0.001 ms
+prefill qh_kh_T gemm: 0.002 ms
+prefill scale: 0.000 ms
+prefill softmax: 0.000 ms
+prefill outh gemm: 0.001 ms
+prefill qh_kh_T gemm: 0.004 ms
+prefill scale: 0.000 ms
+prefill softmax: 0.000 ms
+prefill outh gemm: 0.001 ms
+prefill qh_kh_T gemm: 0.003 ms
+prefill scale: 0.000 ms
+prefill softmax: 0.000 ms
+prefill outh gemm: 0.001 ms
+prefill qh_kh_T gemm: 0.002 ms
+prefill scale: 0.000 ms
+prefill softmax: 0.000 ms
+prefill outh gemm: 0.001 ms
+prefill qh_kh_T gemm: 0.003 ms
+prefill scale: 0.000 ms
+prefill softmax: 0.000 ms
+prefill outh gemm: 0.001 ms
+prefill qh_kh_T gemm: 0.002 ms
+prefill scale: 0.000 ms
+prefill softmax: 0.000 ms
+prefill outh gemm: 0.001 ms
+prefill qh_kh_T gemm: 0.002 ms
+prefill scale: 0.000 ms
+prefill softmax: 0.000 ms
+prefill outh gemm: 0.001 ms
+prefill qh_kh_T gemm: 0.002 ms
+prefill scale: 0.000 ms
+prefill softmax: 0.000 ms
+prefill outh gemm: 0.001 ms
+prefill o_proj gemm: 0.183 ms
+prefill o_proj add: 0.001 ms
+prefill qh_kh_T gemm: 0.002 ms
+prefill scale: 0.000 ms
+prefill softmax: 0.001 ms
+prefill outh gemm: 0.002 ms
+prefill qh_kh_T gemm: 0.002 ms
+prefill scale: 0.000 ms
+prefill softmax: 0.000 ms
+prefill outh gemm: 0.002 ms
+prefill qh_kh_T gemm: 0.002 ms
+prefill scale: 0.000 ms
+prefill softmax: 0.000 ms
+prefill outh gemm: 0.002 ms
+prefill qh_kh_T gemm: 0.003 ms
+prefill scale: 0.000 ms
+prefill softmax: 0.000 ms
+prefill outh gemm: 0.001 ms
+prefill qh_kh_T gemm: 0.003 ms
+prefill scale: 0.000 ms
+prefill softmax: 0.000 ms
+prefill outh gemm: 0.001 ms
+prefill qh_kh_T gemm: 0.002 ms
+prefill scale: 0.000 ms
+prefill softmax: 0.000 ms
+prefill outh gemm: 0.001 ms
+prefill qh_kh_T gemm: 0.002 ms
+prefill scale: 0.000 ms
+prefill softmax: 0.000 ms
+prefill outh gemm: 0.001 ms
+prefill qh_kh_T gemm: 0.002 ms
+prefill scale: 0.000 ms
+prefill softmax: 0.000 ms
+prefill outh gemm: 0.001 ms
+prefill qh_kh_T gemm: 0.002 ms
+prefill scale: 0.000 ms
+prefill softmax: 0.000 ms
+prefill outh gemm: 0.001 ms
+prefill qh_kh_T gemm: 0.002 ms
+prefill scale: 0.000 ms
+prefill softmax: 0.000 ms
+prefill outh gemm: 0.001 ms
+prefill qh_kh_T gemm: 0.003 ms
+prefill scale: 0.000 ms
+prefill softmax: 0.000 ms
+prefill outh gemm: 0.001 ms
+prefill qh_kh_T gemm: 0.002 ms
+prefill scale: 0.000 ms
+prefill softmax: 0.000 ms
+prefill outh gemm: 0.001 ms
+prefill o_proj gemm: 0.188 ms
+prefill o_proj add: 0.001 ms
+prefill qh_kh_T gemm: 0.003 ms
+prefill scale: 0.000 ms
+prefill softmax: 0.001 ms
+prefill outh gemm: 0.002 ms
+prefill qh_kh_T gemm: 0.003 ms
+prefill scale: 0.000 ms
+prefill softmax: 0.000 ms
+prefill outh gemm: 0.002 ms
+prefill qh_kh_T gemm: 0.003 ms
+prefill scale: 0.000 ms
+prefill softmax: 0.000 ms
+prefill outh gemm: 0.001 ms
+prefill qh_kh_T gemm: 0.003 ms
+prefill scale: 0.000 ms
+prefill softmax: 0.000 ms
+prefill outh gemm: 0.001 ms
+prefill qh_kh_T gemm: 0.003 ms
+prefill scale: 0.000 ms
+prefill softmax: 0.000 ms
+prefill outh gemm: 0.001 ms
+prefill qh_kh_T gemm: 0.002 ms
+prefill scale: 0.000 ms
+prefill softmax: 0.000 ms
+prefill outh gemm: 0.001 ms
+prefill qh_kh_T gemm: 0.002 ms
+prefill scale: 0.000 ms
+prefill softmax: 0.000 ms
+prefill outh gemm: 0.001 ms
+prefill qh_kh_T gemm: 0.002 ms
+prefill scale: 0.000 ms
+prefill softmax: 0.000 ms
+prefill outh gemm: 0.001 ms
+prefill qh_kh_T gemm: 0.003 ms
+prefill scale: 0.000 ms
+prefill softmax: 0.000 ms
+prefill outh gemm: 0.001 ms
+prefill qh_kh_T gemm: 0.002 ms
+prefill scale: 0.000 ms
+prefill softmax: 0.000 ms
+prefill outh gemm: 0.001 ms
+prefill qh_kh_T gemm: 0.002 ms
+prefill scale: 0.000 ms
+prefill softmax: 0.000 ms
+prefill outh gemm: 0.001 ms
+prefill qh_kh_T gemm: 0.002 ms
+prefill scale: 0.000 ms
+prefill softmax: 0.000 ms
+prefill outh gemm: 0.001 ms
+prefill o_proj gemm: 0.181 ms
+prefill o_proj add: 0.001 ms
+prefill qh_kh_T gemm: 0.002 ms
+prefill scale: 0.000 ms
+prefill softmax: 0.001 ms
+prefill outh gemm: 0.005 ms
+prefill qh_kh_T gemm: 0.003 ms
+prefill scale: 0.000 ms
+prefill softmax: 0.000 ms
+prefill outh gemm: 0.001 ms
+prefill qh_kh_T gemm: 0.003 ms
+prefill scale: 0.000 ms
+prefill softmax: 0.000 ms
+prefill outh gemm: 0.001 ms
+prefill qh_kh_T gemm: 0.003 ms
+prefill scale: 0.000 ms
+prefill softmax: 0.000 ms
+prefill outh gemm: 0.001 ms
+prefill qh_kh_T gemm: 0.002 ms
+prefill scale: 0.000 ms
+prefill softmax: 0.000 ms
+prefill outh gemm: 0.001 ms
+prefill qh_kh_T gemm: 0.002 ms
+prefill scale: 0.000 ms
+prefill softmax: 0.000 ms
+prefill outh gemm: 0.001 ms
+prefill qh_kh_T gemm: 0.002 ms
+prefill scale: 0.000 ms
+prefill softmax: 0.000 ms
+prefill outh gemm: 0.001 ms
+prefill qh_kh_T gemm: 0.002 ms
+prefill scale: 0.000 ms
+prefill softmax: 0.000 ms
+prefill outh gemm: 0.001 ms
+prefill qh_kh_T gemm: 0.002 ms
+prefill scale: 0.000 ms
+prefill softmax: 0.000 ms
+prefill outh gemm: 0.001 ms
+prefill qh_kh_T gemm: 0.002 ms
+prefill scale: 0.000 ms
+prefill softmax: 0.000 ms
+prefill outh gemm: 0.001 ms
+prefill qh_kh_T gemm: 0.003 ms
+prefill scale: 0.000 ms
+prefill softmax: 0.000 ms
+prefill outh gemm: 0.001 ms
+prefill qh_kh_T gemm: 0.002 ms
+prefill scale: 0.000 ms
+prefill softmax: 0.000 ms
+prefill outh gemm: 0.001 ms
+prefill o_proj gemm: 0.183 ms
+prefill o_proj add: 0.001 ms
+prefill qh_kh_T gemm: 0.002 ms
+prefill scale: 0.000 ms
+prefill softmax: 0.001 ms
+prefill outh gemm: 0.003 ms
+prefill qh_kh_T gemm: 0.002 ms
+prefill scale: 0.000 ms
+prefill softmax: 0.000 ms
+prefill outh gemm: 0.001 ms
+prefill qh_kh_T gemm: 0.002 ms
+prefill scale: 0.000 ms
+prefill softmax: 0.000 ms
+prefill outh gemm: 0.001 ms
+prefill qh_kh_T gemm: 0.002 ms
+prefill scale: 0.000 ms
+prefill softmax: 0.000 ms
+prefill outh gemm: 0.001 ms
+prefill qh_kh_T gemm: 0.002 ms
+prefill scale: 0.000 ms
+prefill softmax: 0.000 ms
+prefill outh gemm: 0.002 ms
+prefill qh_kh_T gemm: 0.002 ms
+prefill scale: 0.000 ms
+prefill softmax: 0.000 ms
+prefill outh gemm: 0.001 ms
+prefill qh_kh_T gemm: 0.002 ms
+prefill scale: 0.000 ms
+prefill softmax: 0.000 ms
+prefill outh gemm: 0.001 ms
+prefill qh_kh_T gemm: 0.003 ms
+prefill scale: 0.000 ms
+prefill softmax: 0.000 ms
+prefill outh gemm: 0.001 ms
+prefill qh_kh_T gemm: 0.002 ms
+prefill scale: 0.000 ms
+prefill softmax: 0.000 ms
+prefill outh gemm: 0.001 ms
+prefill qh_kh_T gemm: 0.002 ms
+prefill scale: 0.000 ms
+prefill softmax: 0.000 ms
+prefill outh gemm: 0.001 ms
+prefill qh_kh_T gemm: 0.002 ms
+prefill scale: 0.000 ms
+prefill softmax: 0.000 ms
+prefill outh gemm: 0.001 ms
+prefill qh_kh_T gemm: 0.002 ms
+prefill scale: 0.000 ms
+prefill softmax: 0.000 ms
+prefill outh gemm: 0.001 ms
+prefill o_proj gemm: 0.185 ms
+prefill o_proj add: 0.001 ms
+prefill qh_kh_T gemm: 0.003 ms
+prefill scale: 0.000 ms
+prefill softmax: 0.001 ms
+prefill outh gemm: 0.002 ms
+prefill qh_kh_T gemm: 0.002 ms
+prefill scale: 0.000 ms
+prefill softmax: 0.000 ms
+prefill outh gemm: 0.002 ms
+prefill qh_kh_T gemm: 0.002 ms
+prefill scale: 0.000 ms
+prefill softmax: 0.000 ms
+prefill outh gemm: 0.001 ms
+prefill qh_kh_T gemm: 0.002 ms
+prefill scale: 0.000 ms
+prefill softmax: 0.000 ms
+prefill outh gemm: 0.001 ms
+prefill qh_kh_T gemm: 0.002 ms
+prefill scale: 0.000 ms
+prefill softmax: 0.000 ms
+prefill outh gemm: 0.002 ms
+prefill qh_kh_T gemm: 0.002 ms
+prefill scale: 0.000 ms
+prefill softmax: 0.000 ms
+prefill outh gemm: 0.001 ms
+prefill qh_kh_T gemm: 0.002 ms
+prefill scale: 0.000 ms
+prefill softmax: 0.000 ms
+prefill outh gemm: 0.001 ms
+prefill qh_kh_T gemm: 0.002 ms
+prefill scale: 0.000 ms
+prefill softmax: 0.000 ms
+prefill outh gemm: 0.001 ms
+prefill qh_kh_T gemm: 0.002 ms
+prefill scale: 0.000 ms
+prefill softmax: 0.000 ms
+prefill outh gemm: 0.001 ms
+prefill qh_kh_T gemm: 0.002 ms
+prefill scale: 0.000 ms
+prefill softmax: 0.000 ms
+prefill outh gemm: 0.001 ms
+prefill qh_kh_T gemm: 0.002 ms
+prefill scale: 0.000 ms
+prefill softmax: 0.000 ms
+prefill outh gemm: 0.002 ms
+prefill qh_kh_T gemm: 0.002 ms
+prefill scale: 0.000 ms
+prefill softmax: 0.000 ms
+prefill outh gemm: 0.001 ms
+prefill o_proj gemm: 0.182 ms
+prefill o_proj add: 0.001 ms
+prefill graph execute: 40.734 ms
+rc=0
+logits[0..7]: -94.150467 -91.764816 -96.022469 -96.601364 -95.943871 -96.883568 -93.256599 -93.036354 
+prefilling embedding forward: 0.005 ms
+prefill qh_kh_T gemm: 0.002 ms
+prefill scale: 0.000 ms
+prefill softmax: 0.001 ms
+prefill outh gemm: 0.001 ms
+prefill qh_kh_T gemm: 0.002 ms
+prefill scale: 0.000 ms
+prefill softmax: 0.000 ms
+prefill outh gemm: 0.002 ms
+prefill qh_kh_T gemm: 0.002 ms
+prefill scale: 0.000 ms
+prefill softmax: 0.000 ms
+prefill outh gemm: 0.001 ms
+prefill qh_kh_T gemm: 0.002 ms
+prefill scale: 0.000 ms
+prefill softmax: 0.000 ms
+prefill outh gemm: 0.001 ms
+prefill qh_kh_T gemm: 0.002 ms
+prefill scale: 0.000 ms
+prefill softmax: 0.000 ms
+prefill outh gemm: 0.002 ms
+prefill qh_kh_T gemm: 0.002 ms
+prefill scale: 0.000 ms
+prefill softmax: 0.000 ms
+prefill outh gemm: 0.001 ms
+prefill qh_kh_T gemm: 0.002 ms
+prefill scale: 0.000 ms
+prefill softmax: 0.000 ms
+prefill outh gemm: 0.001 ms
+prefill qh_kh_T gemm: 0.002 ms
+prefill scale: 0.000 ms
+prefill softmax: 0.000 ms
+prefill outh gemm: 0.001 ms
+prefill qh_kh_T gemm: 0.002 ms
+prefill scale: 0.000 ms
+prefill softmax: 0.000 ms
+prefill outh gemm: 0.001 ms
+prefill qh_kh_T gemm: 0.002 ms
+prefill scale: 0.000 ms
+prefill softmax: 0.000 ms
+prefill outh gemm: 0.002 ms
+prefill qh_kh_T gemm: 0.003 ms
+prefill scale: 0.000 ms
+prefill softmax: 0.000 ms
+prefill outh gemm: 0.001 ms
+prefill qh_kh_T gemm: 0.002 ms
+prefill scale: 0.000 ms
+prefill softmax: 0.000 ms
+prefill outh gemm: 0.001 ms
+prefill o_proj gemm: 0.173 ms
+prefill o_proj add: 0.001 ms
+prefill qh_kh_T gemm: 0.003 ms
+prefill scale: 0.000 ms
+prefill softmax: 0.001 ms
+prefill outh gemm: 0.001 ms
+prefill qh_kh_T gemm: 0.002 ms
+prefill scale: 0.000 ms
+prefill softmax: 0.000 ms
+prefill outh gemm: 0.002 ms
+prefill qh_kh_T gemm: 0.002 ms
+prefill scale: 0.000 ms
+prefill softmax: 0.000 ms
+prefill outh gemm: 0.002 ms
+prefill qh_kh_T gemm: 0.002 ms
+prefill scale: 0.000 ms
+prefill softmax: 0.000 ms
+prefill outh gemm: 0.001 ms
+prefill qh_kh_T gemm: 0.002 ms
+prefill scale: 0.000 ms
+prefill softmax: 0.000 ms
+prefill outh gemm: 0.001 ms
+prefill qh_kh_T gemm: 0.002 ms
+prefill scale: 0.000 ms
+prefill softmax: 0.000 ms
+prefill outh gemm: 0.001 ms
+prefill qh_kh_T gemm: 0.002 ms
+prefill scale: 0.000 ms
+prefill softmax: 0.000 ms
+prefill outh gemm: 0.001 ms
+prefill qh_kh_T gemm: 0.003 ms
+prefill scale: 0.000 ms
+prefill softmax: 0.000 ms
+prefill outh gemm: 0.001 ms
+prefill qh_kh_T gemm: 0.002 ms
+prefill scale: 0.000 ms
+prefill softmax: 0.000 ms
+prefill outh gemm: 0.001 ms
+prefill qh_kh_T gemm: 0.002 ms
+prefill scale: 0.000 ms
+prefill softmax: 0.000 ms
+prefill outh gemm: 0.001 ms
+prefill qh_kh_T gemm: 0.002 ms
+prefill scale: 0.000 ms
+prefill softmax: 0.000 ms
+prefill outh gemm: 0.001 ms
+prefill qh_kh_T gemm: 0.002 ms
+prefill scale: 0.000 ms
+prefill softmax: 0.000 ms
+prefill outh gemm: 0.001 ms
+prefill o_proj gemm: 0.179 ms
+prefill o_proj add: 0.001 ms
+prefill qh_kh_T gemm: 0.002 ms
+prefill scale: 0.000 ms
+prefill softmax: 0.000 ms
+prefill outh gemm: 0.002 ms
+prefill qh_kh_T gemm: 0.002 ms
+prefill scale: 0.000 ms
+prefill softmax: 0.000 ms
+prefill outh gemm: 0.002 ms
+prefill qh_kh_T gemm: 0.002 ms
+prefill scale: 0.000 ms
+prefill softmax: 0.000 ms
+prefill outh gemm: 0.001 ms
+prefill qh_kh_T gemm: 0.003 ms
+prefill scale: 0.000 ms
+prefill softmax: 0.000 ms
+prefill outh gemm: 0.002 ms
+prefill qh_kh_T gemm: 0.002 ms
+prefill scale: 0.000 ms
+prefill softmax: 0.000 ms
+prefill outh gemm: 0.002 ms
+prefill qh_kh_T gemm: 0.002 ms
+prefill scale: 0.000 ms
+prefill softmax: 0.000 ms
+prefill outh gemm: 0.001 ms
+prefill qh_kh_T gemm: 0.002 ms
+prefill scale: 0.000 ms
+prefill softmax: 0.000 ms
+prefill outh gemm: 0.001 ms
+prefill qh_kh_T gemm: 0.002 ms
+prefill scale: 0.000 ms
+prefill softmax: 0.000 ms
+prefill outh gemm: 0.002 ms
+prefill qh_kh_T gemm: 0.002 ms
+prefill scale: 0.000 ms
+prefill softmax: 0.000 ms
+prefill outh gemm: 0.002 ms
+prefill qh_kh_T gemm: 0.002 ms
+prefill scale: 0.000 ms
+prefill softmax: 0.000 ms
+prefill outh gemm: 0.002 ms
+prefill qh_kh_T gemm: 0.002 ms
+prefill scale: 0.000 ms
+prefill softmax: 0.000 ms
+prefill outh gemm: 0.002 ms
+prefill qh_kh_T gemm: 0.002 ms
+prefill scale: 0.000 ms
+prefill softmax: 0.000 ms
+prefill outh gemm: 0.002 ms
+prefill o_proj gemm: 0.183 ms
+prefill o_proj add: 0.001 ms
+prefill qh_kh_T gemm: 0.003 ms
+prefill scale: 0.000 ms
+prefill softmax: 0.001 ms
+prefill outh gemm: 0.002 ms
+prefill qh_kh_T gemm: 0.002 ms
+prefill scale: 0.000 ms
+prefill softmax: 0.000 ms
+prefill outh gemm: 0.002 ms
+prefill qh_kh_T gemm: 0.003 ms
+prefill scale: 0.000 ms
+prefill softmax: 0.000 ms
+prefill outh gemm: 0.001 ms
+prefill qh_kh_T gemm: 0.002 ms
+prefill scale: 0.000 ms
+prefill softmax: 0.000 ms
+prefill outh gemm: 0.002 ms
+prefill qh_kh_T gemm: 0.002 ms
+prefill scale: 0.000 ms
+prefill softmax: 0.000 ms
+prefill outh gemm: 0.002 ms
+prefill qh_kh_T gemm: 0.002 ms
+prefill scale: 0.000 ms
+prefill softmax: 0.000 ms
+prefill outh gemm: 0.001 ms
+prefill qh_kh_T gemm: 0.002 ms
+prefill scale: 0.000 ms
+prefill softmax: 0.000 ms
+prefill outh gemm: 0.002 ms
+prefill qh_kh_T gemm: 0.003 ms
+prefill scale: 0.000 ms
+prefill softmax: 0.000 ms
+prefill outh gemm: 0.001 ms
+prefill qh_kh_T gemm: 0.002 ms
+prefill scale: 0.000 ms
+prefill softmax: 0.000 ms
+prefill outh gemm: 0.001 ms
+prefill qh_kh_T gemm: 0.002 ms
+prefill scale: 0.000 ms
+prefill softmax: 0.000 ms
+prefill outh gemm: 0.001 ms
+prefill qh_kh_T gemm: 0.002 ms
+prefill scale: 0.000 ms
+prefill softmax: 0.000 ms
+prefill outh gemm: 0.001 ms
+prefill qh_kh_T gemm: 0.002 ms
+prefill scale: 0.000 ms
+prefill softmax: 0.000 ms
+prefill outh gemm: 0.001 ms
+prefill o_proj gemm: 0.191 ms
+prefill o_proj add: 0.001 ms
+prefill qh_kh_T gemm: 0.002 ms
+prefill scale: 0.000 ms
+prefill softmax: 0.001 ms
+prefill outh gemm: 0.002 ms
+prefill qh_kh_T gemm: 0.003 ms
+prefill scale: 0.000 ms
+prefill softmax: 0.000 ms
+prefill outh gemm: 0.002 ms
+prefill qh_kh_T gemm: 0.002 ms
+prefill scale: 0.000 ms
+prefill softmax: 0.000 ms
+prefill outh gemm: 0.001 ms
+prefill qh_kh_T gemm: 0.002 ms
+prefill scale: 0.000 ms
+prefill softmax: 0.000 ms
+prefill outh gemm: 0.001 ms
+prefill qh_kh_T gemm: 0.002 ms
+prefill scale: 0.000 ms
+prefill softmax: 0.000 ms
+prefill outh gemm: 0.001 ms
+prefill qh_kh_T gemm: 0.002 ms
+prefill scale: 0.000 ms
+prefill softmax: 0.000 ms
+prefill outh gemm: 0.001 ms
+prefill qh_kh_T gemm: 0.002 ms
+prefill scale: 0.000 ms
+prefill softmax: 0.000 ms
+prefill outh gemm: 0.001 ms
+prefill qh_kh_T gemm: 0.002 ms
+prefill scale: 0.000 ms
+prefill softmax: 0.000 ms
+prefill outh gemm: 0.001 ms
+prefill qh_kh_T gemm: 0.002 ms
+prefill scale: 0.000 ms
+prefill softmax: 0.000 ms
+prefill outh gemm: 0.001 ms
+prefill qh_kh_T gemm: 0.002 ms
+prefill scale: 0.000 ms
+prefill softmax: 0.000 ms
+prefill outh gemm: 0.001 ms
+prefill qh_kh_T gemm: 0.002 ms
+prefill scale: 0.000 ms
+prefill softmax: 0.000 ms
+prefill outh gemm: 0.001 ms
+prefill qh_kh_T gemm: 0.002 ms
+prefill scale: 0.000 ms
+prefill softmax: 0.000 ms
+prefill outh gemm: 0.001 ms
+prefill o_proj gemm: 0.192 ms
+prefill o_proj add: 0.001 ms
+prefill qh_kh_T gemm: 0.002 ms
+prefill scale: 0.000 ms
+prefill softmax: 0.001 ms
+prefill outh gemm: 0.001 ms
+prefill qh_kh_T gemm: 0.002 ms
+prefill scale: 0.000 ms
+prefill softmax: 0.000 ms
+prefill outh gemm: 0.002 ms
+prefill qh_kh_T gemm: 0.002 ms
+prefill scale: 0.000 ms
+prefill softmax: 0.000 ms
+prefill outh gemm: 0.001 ms
+prefill qh_kh_T gemm: 0.002 ms
+prefill scale: 0.000 ms
+prefill softmax: 0.000 ms
+prefill outh gemm: 0.002 ms
+prefill qh_kh_T gemm: 0.003 ms
+prefill scale: 0.000 ms
+prefill softmax: 0.000 ms
+prefill outh gemm: 0.002 ms
+prefill qh_kh_T gemm: 0.002 ms
+prefill scale: 0.000 ms
+prefill softmax: 0.000 ms
+prefill outh gemm: 0.002 ms
+prefill qh_kh_T gemm: 0.003 ms
+prefill scale: 0.000 ms
+prefill softmax: 0.000 ms
+prefill outh gemm: 0.002 ms
+prefill qh_kh_T gemm: 0.002 ms
+prefill scale: 0.000 ms
+prefill softmax: 0.000 ms
+prefill outh gemm: 0.001 ms
+prefill qh_kh_T gemm: 0.003 ms
+prefill scale: 0.000 ms
+prefill softmax: 0.000 ms
+prefill outh gemm: 0.001 ms
+prefill qh_kh_T gemm: 0.003 ms
+prefill scale: 0.000 ms
+prefill softmax: 0.000 ms
+prefill outh gemm: 0.001 ms
+prefill qh_kh_T gemm: 0.002 ms
+prefill scale: 0.000 ms
+prefill softmax: 0.000 ms
+prefill outh gemm: 0.001 ms
+prefill qh_kh_T gemm: 0.002 ms
+prefill scale: 0.000 ms
+prefill softmax: 0.000 ms
+prefill outh gemm: 0.001 ms
+prefill o_proj gemm: 0.187 ms
+prefill o_proj add: 0.001 ms
+prefill qh_kh_T gemm: 0.002 ms
+prefill scale: 0.000 ms
+prefill softmax: 0.001 ms
+prefill outh gemm: 0.002 ms
+prefill qh_kh_T gemm: 0.003 ms
+prefill scale: 0.000 ms
+prefill softmax: 0.000 ms
+prefill outh gemm: 0.001 ms
+prefill qh_kh_T gemm: 0.002 ms
+prefill scale: 0.000 ms
+prefill softmax: 0.000 ms
+prefill outh gemm: 0.002 ms
+prefill qh_kh_T gemm: 0.003 ms
+prefill scale: 0.000 ms
+prefill softmax: 0.000 ms
+prefill outh gemm: 0.001 ms
+prefill qh_kh_T gemm: 0.003 ms
+prefill scale: 0.000 ms
+prefill softmax: 0.000 ms
+prefill outh gemm: 0.001 ms
+prefill qh_kh_T gemm: 0.003 ms
+prefill scale: 0.000 ms
+prefill softmax: 0.000 ms
+prefill outh gemm: 0.001 ms
+prefill qh_kh_T gemm: 0.003 ms
+prefill scale: 0.000 ms
+prefill softmax: 0.000 ms
+prefill outh gemm: 0.001 ms
+prefill qh_kh_T gemm: 0.003 ms
+prefill scale: 0.000 ms
+prefill softmax: 0.000 ms
+prefill outh gemm: 0.001 ms
+prefill qh_kh_T gemm: 0.003 ms
+prefill scale: 0.000 ms
+prefill softmax: 0.000 ms
+prefill outh gemm: 0.001 ms
+prefill qh_kh_T gemm: 0.002 ms
+prefill scale: 0.000 ms
+prefill softmax: 0.000 ms
+prefill outh gemm: 0.001 ms
+prefill qh_kh_T gemm: 0.002 ms
+prefill scale: 0.000 ms
+prefill softmax: 0.000 ms
+prefill outh gemm: 0.001 ms
+prefill qh_kh_T gemm: 0.003 ms
+prefill scale: 0.000 ms
+prefill softmax: 0.000 ms
+prefill outh gemm: 0.001 ms
+prefill o_proj gemm: 0.190 ms
+prefill o_proj add: 0.001 ms
+prefill qh_kh_T gemm: 0.002 ms
+prefill scale: 0.000 ms
+prefill softmax: 0.001 ms
+prefill outh gemm: 0.002 ms
+prefill qh_kh_T gemm: 0.002 ms
+prefill scale: 0.000 ms
+prefill softmax: 0.000 ms
+prefill outh gemm: 0.002 ms
+prefill qh_kh_T gemm: 0.002 ms
+prefill scale: 0.000 ms
+prefill softmax: 0.000 ms
+prefill outh gemm: 0.001 ms
+prefill qh_kh_T gemm: 0.003 ms
+prefill scale: 0.000 ms
+prefill softmax: 0.000 ms
+prefill outh gemm: 0.002 ms
+prefill qh_kh_T gemm: 0.002 ms
+prefill scale: 0.000 ms
+prefill softmax: 0.000 ms
+prefill outh gemm: 0.001 ms
+prefill qh_kh_T gemm: 0.002 ms
+prefill scale: 0.000 ms
+prefill softmax: 0.000 ms
+prefill outh gemm: 0.001 ms
+prefill qh_kh_T gemm: 0.002 ms
+prefill scale: 0.000 ms
+prefill softmax: 0.000 ms
+prefill outh gemm: 0.002 ms
+prefill qh_kh_T gemm: 0.002 ms
+prefill scale: 0.000 ms
+prefill softmax: 0.000 ms
+prefill outh gemm: 0.001 ms
+prefill qh_kh_T gemm: 0.002 ms
+prefill scale: 0.000 ms
+prefill softmax: 0.000 ms
+prefill outh gemm: 0.002 ms
+prefill qh_kh_T gemm: 0.003 ms
+prefill scale: 0.000 ms
+prefill softmax: 0.000 ms
+prefill outh gemm: 0.001 ms
+prefill qh_kh_T gemm: 0.002 ms
+prefill scale: 0.000 ms
+prefill softmax: 0.000 ms
+prefill outh gemm: 0.002 ms
+prefill qh_kh_T gemm: 0.002 ms
+prefill scale: 0.000 ms
+prefill softmax: 0.000 ms
+prefill outh gemm: 0.001 ms
+prefill o_proj gemm: 0.197 ms
+prefill o_proj add: 0.001 ms
+prefill qh_kh_T gemm: 0.003 ms
+prefill scale: 0.000 ms
+prefill softmax: 0.001 ms
+prefill outh gemm: 0.002 ms
+prefill qh_kh_T gemm: 0.004 ms
+prefill scale: 0.000 ms
+prefill softmax: 0.000 ms
+prefill outh gemm: 0.001 ms
+prefill qh_kh_T gemm: 0.003 ms
+prefill scale: 0.000 ms
+prefill softmax: 0.000 ms
+prefill outh gemm: 0.001 ms
+prefill qh_kh_T gemm: 0.002 ms
+prefill scale: 0.000 ms
+prefill softmax: 0.000 ms
+prefill outh gemm: 0.001 ms
+prefill qh_kh_T gemm: 0.002 ms
+prefill scale: 0.000 ms
+prefill softmax: 0.000 ms
+prefill outh gemm: 0.001 ms
+prefill qh_kh_T gemm: 0.003 ms
+prefill scale: 0.000 ms
+prefill softmax: 0.000 ms
+prefill outh gemm: 0.001 ms
+prefill qh_kh_T gemm: 0.002 ms
+prefill scale: 0.000 ms
+prefill softmax: 0.000 ms
+prefill outh gemm: 0.001 ms
+prefill qh_kh_T gemm: 0.002 ms
+prefill scale: 0.000 ms
+prefill softmax: 0.000 ms
+prefill outh gemm: 0.001 ms
+prefill qh_kh_T gemm: 0.002 ms
+prefill scale: 0.000 ms
+prefill softmax: 0.000 ms
+prefill outh gemm: 0.001 ms
+prefill qh_kh_T gemm: 0.003 ms
+prefill scale: 0.000 ms
+prefill softmax: 0.000 ms
+prefill outh gemm: 0.001 ms
+prefill qh_kh_T gemm: 0.002 ms
+prefill scale: 0.000 ms
+prefill softmax: 0.000 ms
+prefill outh gemm: 0.001 ms
+prefill qh_kh_T gemm: 0.002 ms
+prefill scale: 0.000 ms
+prefill softmax: 0.000 ms
+prefill outh gemm: 0.001 ms
+prefill o_proj gemm: 0.176 ms
+prefill o_proj add: 0.001 ms
+prefill qh_kh_T gemm: 0.002 ms
+prefill scale: 0.000 ms
+prefill softmax: 0.001 ms
+prefill outh gemm: 0.002 ms
+prefill qh_kh_T gemm: 0.002 ms
+prefill scale: 0.000 ms
+prefill softmax: 0.000 ms
+prefill outh gemm: 0.002 ms
+prefill qh_kh_T gemm: 0.003 ms
+prefill scale: 0.000 ms
+prefill softmax: 0.000 ms
+prefill outh gemm: 0.001 ms
+prefill qh_kh_T gemm: 0.003 ms
+prefill scale: 0.000 ms
+prefill softmax: 0.000 ms
+prefill outh gemm: 0.001 ms
+prefill qh_kh_T gemm: 0.002 ms
+prefill scale: 0.000 ms
+prefill softmax: 0.000 ms
+prefill outh gemm: 0.002 ms
+prefill qh_kh_T gemm: 0.002 ms
+prefill scale: 0.000 ms
+prefill softmax: 0.000 ms
+prefill outh gemm: 0.001 ms
+prefill qh_kh_T gemm: 0.002 ms
+prefill scale: 0.000 ms
+prefill softmax: 0.000 ms
+prefill outh gemm: 0.001 ms
+prefill qh_kh_T gemm: 0.002 ms
+prefill scale: 0.000 ms
+prefill softmax: 0.000 ms
+prefill outh gemm: 0.001 ms
+prefill qh_kh_T gemm: 0.002 ms
+prefill scale: 0.000 ms
+prefill softmax: 0.000 ms
+prefill outh gemm: 0.001 ms
+prefill qh_kh_T gemm: 0.002 ms
+prefill scale: 0.000 ms
+prefill softmax: 0.000 ms
+prefill outh gemm: 0.001 ms
+prefill qh_kh_T gemm: 0.003 ms
+prefill scale: 0.000 ms
+prefill softmax: 0.000 ms
+prefill outh gemm: 0.001 ms
+prefill qh_kh_T gemm: 0.003 ms
+prefill scale: 0.000 ms
+prefill softmax: 0.000 ms
+prefill outh gemm: 0.001 ms
+prefill o_proj gemm: 0.180 ms
+prefill o_proj add: 0.001 ms
+prefill qh_kh_T gemm: 0.002 ms
+prefill scale: 0.000 ms
+prefill softmax: 0.001 ms
+prefill outh gemm: 0.002 ms
+prefill qh_kh_T gemm: 0.002 ms
+prefill scale: 0.000 ms
+prefill softmax: 0.000 ms
+prefill outh gemm: 0.002 ms
+prefill qh_kh_T gemm: 0.002 ms
+prefill scale: 0.000 ms
+prefill softmax: 0.000 ms
+prefill outh gemm: 0.002 ms
+prefill qh_kh_T gemm: 0.003 ms
+prefill scale: 0.000 ms
+prefill softmax: 0.000 ms
+prefill outh gemm: 0.002 ms
+prefill qh_kh_T gemm: 0.002 ms
+prefill scale: 0.000 ms
+prefill softmax: 0.000 ms
+prefill outh gemm: 0.001 ms
+prefill qh_kh_T gemm: 0.002 ms
+prefill scale: 0.000 ms
+prefill softmax: 0.000 ms
+prefill outh gemm: 0.002 ms
+prefill qh_kh_T gemm: 0.002 ms
+prefill scale: 0.000 ms
+prefill softmax: 0.000 ms
+prefill outh gemm: 0.001 ms
+prefill qh_kh_T gemm: 0.002 ms
+prefill scale: 0.000 ms
+prefill softmax: 0.000 ms
+prefill outh gemm: 0.001 ms
+prefill qh_kh_T gemm: 0.003 ms
+prefill scale: 0.000 ms
+prefill softmax: 0.000 ms
+prefill outh gemm: 0.001 ms
+prefill qh_kh_T gemm: 0.003 ms
+prefill scale: 0.000 ms
+prefill softmax: 0.000 ms
+prefill outh gemm: 0.002 ms
+prefill qh_kh_T gemm: 0.002 ms
+prefill scale: 0.000 ms
+prefill softmax: 0.000 ms
+prefill outh gemm: 0.002 ms
+prefill qh_kh_T gemm: 0.003 ms
+prefill scale: 0.000 ms
+prefill softmax: 0.000 ms
+prefill outh gemm: 0.001 ms
+prefill o_proj gemm: 0.191 ms
+prefill o_proj add: 0.001 ms
+prefill qh_kh_T gemm: 0.003 ms
+prefill scale: 0.000 ms
+prefill softmax: 0.001 ms
+prefill outh gemm: 0.002 ms
+prefill qh_kh_T gemm: 0.002 ms
+prefill scale: 0.000 ms
+prefill softmax: 0.000 ms
+prefill outh gemm: 0.002 ms
+prefill qh_kh_T gemm: 0.003 ms
+prefill scale: 0.000 ms
+prefill softmax: 0.000 ms
+prefill outh gemm: 0.001 ms
+prefill qh_kh_T gemm: 0.002 ms
+prefill scale: 0.000 ms
+prefill softmax: 0.000 ms
+prefill outh gemm: 0.001 ms
+prefill qh_kh_T gemm: 0.003 ms
+prefill scale: 0.000 ms
+prefill softmax: 0.000 ms
+prefill outh gemm: 0.001 ms
+prefill qh_kh_T gemm: 0.003 ms
+prefill scale: 0.000 ms
+prefill softmax: 0.000 ms
+prefill outh gemm: 0.001 ms
+prefill qh_kh_T gemm: 0.003 ms
+prefill scale: 0.000 ms
+prefill softmax: 0.000 ms
+prefill outh gemm: 0.001 ms
+prefill qh_kh_T gemm: 0.002 ms
+prefill scale: 0.000 ms
+prefill softmax: 0.000 ms
+prefill outh gemm: 0.001 ms
+prefill qh_kh_T gemm: 0.002 ms
+prefill scale: 0.000 ms
+prefill softmax: 0.000 ms
+prefill outh gemm: 0.001 ms
+prefill qh_kh_T gemm: 0.002 ms
+prefill scale: 0.000 ms
+prefill softmax: 0.000 ms
+prefill outh gemm: 0.001 ms
+prefill qh_kh_T gemm: 0.003 ms
+prefill scale: 0.000 ms
+prefill softmax: 0.000 ms
+prefill outh gemm: 0.001 ms
+prefill qh_kh_T gemm: 0.003 ms
+prefill scale: 0.000 ms
+prefill softmax: 0.000 ms
+prefill outh gemm: 0.001 ms
+prefill o_proj gemm: 0.176 ms
+prefill o_proj add: 0.001 ms
+prefill graph execute: 40.027 ms
+rc=0
+logits[0..7]: -94.150467 -91.764816 -96.022469 -96.601364 -95.943871 -96.883568 -93.256599 -93.036354 
+prefilling embedding forward: 0.004 ms
+prefill qh_kh_T gemm: 0.003 ms
+prefill scale: 0.000 ms
+prefill softmax: 0.001 ms
+prefill outh gemm: 0.001 ms
+prefill qh_kh_T gemm: 0.002 ms
+prefill scale: 0.000 ms
+prefill softmax: 0.000 ms
+prefill outh gemm: 0.001 ms
+prefill qh_kh_T gemm: 0.002 ms
+prefill scale: 0.000 ms
+prefill softmax: 0.000 ms
+prefill outh gemm: 0.001 ms
+prefill qh_kh_T gemm: 0.002 ms
+prefill scale: 0.000 ms
+prefill softmax: 0.000 ms
+prefill outh gemm: 0.001 ms
+prefill qh_kh_T gemm: 0.002 ms
+prefill scale: 0.000 ms
+prefill softmax: 0.000 ms
+prefill outh gemm: 0.001 ms
+prefill qh_kh_T gemm: 0.002 ms
+prefill scale: 0.000 ms
+prefill softmax: 0.000 ms
+prefill outh gemm: 0.001 ms
+prefill qh_kh_T gemm: 0.002 ms
+prefill scale: 0.000 ms
+prefill softmax: 0.000 ms
+prefill outh gemm: 0.001 ms
+prefill qh_kh_T gemm: 0.002 ms
+prefill scale: 0.000 ms
+prefill softmax: 0.000 ms
+prefill outh gemm: 0.001 ms
+prefill qh_kh_T gemm: 0.002 ms
+prefill scale: 0.000 ms
+prefill softmax: 0.000 ms
+prefill outh gemm: 0.001 ms
+prefill qh_kh_T gemm: 0.002 ms
+prefill scale: 0.000 ms
+prefill softmax: 0.000 ms
+prefill outh gemm: 0.001 ms
+prefill qh_kh_T gemm: 0.002 ms
+prefill scale: 0.000 ms
+prefill softmax: 0.000 ms
+prefill outh gemm: 0.001 ms
+prefill qh_kh_T gemm: 0.002 ms
+prefill scale: 0.000 ms
+prefill softmax: 0.000 ms
+prefill outh gemm: 0.001 ms
+prefill o_proj gemm: 0.168 ms
+prefill o_proj add: 0.001 ms
+prefill qh_kh_T gemm: 0.003 ms
+prefill scale: 0.000 ms
+prefill softmax: 0.001 ms
+prefill outh gemm: 0.002 ms
+prefill qh_kh_T gemm: 0.002 ms
+prefill scale: 0.000 ms
+prefill softmax: 0.000 ms
+prefill outh gemm: 0.001 ms
+prefill qh_kh_T gemm: 0.002 ms
+prefill scale: 0.000 ms
+prefill softmax: 0.000 ms
+prefill outh gemm: 0.001 ms
+prefill qh_kh_T gemm: 0.002 ms
+prefill scale: 0.000 ms
+prefill softmax: 0.000 ms
+prefill outh gemm: 0.001 ms
+prefill qh_kh_T gemm: 0.002 ms
+prefill scale: 0.000 ms
+prefill softmax: 0.000 ms
+prefill outh gemm: 0.001 ms
+prefill qh_kh_T gemm: 0.002 ms
+prefill scale: 0.000 ms
+prefill softmax: 0.000 ms
+prefill outh gemm: 0.001 ms
+prefill qh_kh_T gemm: 0.002 ms
+prefill scale: 0.000 ms
+prefill softmax: 0.000 ms
+prefill outh gemm: 0.001 ms
+prefill qh_kh_T gemm: 0.002 ms
+prefill scale: 0.000 ms
+prefill softmax: 0.000 ms
+prefill outh gemm: 0.001 ms
+prefill qh_kh_T gemm: 0.002 ms
+prefill scale: 0.000 ms
+prefill softmax: 0.000 ms
+prefill outh gemm: 0.001 ms
+prefill qh_kh_T gemm: 0.002 ms
+prefill scale: 0.000 ms
+prefill softmax: 0.000 ms
+prefill outh gemm: 0.001 ms
+prefill qh_kh_T gemm: 0.002 ms
+prefill scale: 0.000 ms
+prefill softmax: 0.000 ms
+prefill outh gemm: 0.001 ms
+prefill qh_kh_T gemm: 0.002 ms
+prefill scale: 0.000 ms
+prefill softmax: 0.000 ms
+prefill outh gemm: 0.001 ms
+prefill o_proj gemm: 0.177 ms
+prefill o_proj add: 0.001 ms
+prefill qh_kh_T gemm: 0.002 ms
+prefill scale: 0.000 ms
+prefill softmax: 0.001 ms
+prefill outh gemm: 0.002 ms
+prefill qh_kh_T gemm: 0.002 ms
+prefill scale: 0.000 ms
+prefill softmax: 0.000 ms
+prefill outh gemm: 0.001 ms
+prefill qh_kh_T gemm: 0.002 ms
+prefill scale: 0.000 ms
+prefill softmax: 0.000 ms
+prefill outh gemm: 0.001 ms
+prefill qh_kh_T gemm: 0.002 ms
+prefill scale: 0.000 ms
+prefill softmax: 0.000 ms
+prefill outh gemm: 0.001 ms
+prefill qh_kh_T gemm: 0.002 ms
+prefill scale: 0.000 ms
+prefill softmax: 0.000 ms
+prefill outh gemm: 0.001 ms
+prefill qh_kh_T gemm: 0.002 ms
+prefill scale: 0.000 ms
+prefill softmax: 0.000 ms
+prefill outh gemm: 0.002 ms
+prefill qh_kh_T gemm: 0.002 ms
+prefill scale: 0.000 ms
+prefill softmax: 0.000 ms
+prefill outh gemm: 0.001 ms
+prefill qh_kh_T gemm: 0.002 ms
+prefill scale: 0.000 ms
+prefill softmax: 0.000 ms
+prefill outh gemm: 0.001 ms
+prefill qh_kh_T gemm: 0.002 ms
+prefill scale: 0.000 ms
+prefill softmax: 0.000 ms
+prefill outh gemm: 0.001 ms
+prefill qh_kh_T gemm: 0.002 ms
+prefill scale: 0.000 ms
+prefill softmax: 0.000 ms
+prefill outh gemm: 0.001 ms
+prefill qh_kh_T gemm: 0.002 ms
+prefill scale: 0.000 ms
+prefill softmax: 0.000 ms
+prefill outh gemm: 0.002 ms
+prefill qh_kh_T gemm: 0.002 ms
+prefill scale: 0.000 ms
+prefill softmax: 0.000 ms
+prefill outh gemm: 0.001 ms
+prefill o_proj gemm: 0.193 ms
+prefill o_proj add: 0.001 ms
+prefill qh_kh_T gemm: 0.002 ms
+prefill scale: 0.000 ms
+prefill softmax: 0.001 ms
+prefill outh gemm: 0.001 ms
+prefill qh_kh_T gemm: 0.002 ms
+prefill scale: 0.000 ms
+prefill softmax: 0.000 ms
+prefill outh gemm: 0.002 ms
+prefill qh_kh_T gemm: 0.002 ms
+prefill scale: 0.000 ms
+prefill softmax: 0.000 ms
+prefill outh gemm: 0.002 ms
+prefill qh_kh_T gemm: 0.002 ms
+prefill scale: 0.000 ms
+prefill softmax: 0.000 ms
+prefill outh gemm: 0.001 ms
+prefill qh_kh_T gemm: 0.002 ms
+prefill scale: 0.000 ms
+prefill softmax: 0.000 ms
+prefill outh gemm: 0.001 ms
+prefill qh_kh_T gemm: 0.002 ms
+prefill scale: 0.000 ms
+prefill softmax: 0.000 ms
+prefill outh gemm: 0.001 ms
+prefill qh_kh_T gemm: 0.002 ms
+prefill scale: 0.000 ms
+prefill softmax: 0.000 ms
+prefill outh gemm: 0.002 ms
+prefill qh_kh_T gemm: 0.002 ms
+prefill scale: 0.000 ms
+prefill softmax: 0.000 ms
+prefill outh gemm: 0.001 ms
+prefill qh_kh_T gemm: 0.002 ms
+prefill scale: 0.000 ms
+prefill softmax: 0.000 ms
+prefill outh gemm: 0.001 ms
+prefill qh_kh_T gemm: 0.002 ms
+prefill scale: 0.000 ms
+prefill softmax: 0.000 ms
+prefill outh gemm: 0.002 ms
+prefill qh_kh_T gemm: 0.002 ms
+prefill scale: 0.000 ms
+prefill softmax: 0.000 ms
+prefill outh gemm: 0.001 ms
+prefill qh_kh_T gemm: 0.002 ms
+prefill scale: 0.000 ms
+prefill softmax: 0.000 ms
+prefill outh gemm: 0.002 ms
+prefill o_proj gemm: 0.190 ms
+prefill o_proj add: 0.001 ms
+prefill qh_kh_T gemm: 0.003 ms
+prefill scale: 0.000 ms
+prefill softmax: 0.001 ms
+prefill outh gemm: 0.001 ms
+prefill qh_kh_T gemm: 0.002 ms
+prefill scale: 0.000 ms
+prefill softmax: 0.000 ms
+prefill outh gemm: 0.002 ms
+prefill qh_kh_T gemm: 0.002 ms
+prefill scale: 0.000 ms
+prefill softmax: 0.000 ms
+prefill outh gemm: 0.002 ms
+prefill qh_kh_T gemm: 0.002 ms
+prefill scale: 0.000 ms
+prefill softmax: 0.000 ms
+prefill outh gemm: 0.001 ms
+prefill qh_kh_T gemm: 0.002 ms
+prefill scale: 0.000 ms
+prefill softmax: 0.000 ms
+prefill outh gemm: 0.001 ms
+prefill qh_kh_T gemm: 0.002 ms
+prefill scale: 0.000 ms
+prefill softmax: 0.000 ms
+prefill outh gemm: 0.001 ms
+prefill qh_kh_T gemm: 0.002 ms
+prefill scale: 0.000 ms
+prefill softmax: 0.000 ms
+prefill outh gemm: 0.001 ms
+prefill qh_kh_T gemm: 0.002 ms
+prefill scale: 0.000 ms
+prefill softmax: 0.000 ms
+prefill outh gemm: 0.001 ms
+prefill qh_kh_T gemm: 0.002 ms
+prefill scale: 0.000 ms
+prefill softmax: 0.000 ms
+prefill outh gemm: 0.001 ms
+prefill qh_kh_T gemm: 0.002 ms
+prefill scale: 0.000 ms
+prefill softmax: 0.000 ms
+prefill outh gemm: 0.001 ms
+prefill qh_kh_T gemm: 0.002 ms
+prefill scale: 0.000 ms
+prefill softmax: 0.000 ms
+prefill outh gemm: 0.001 ms
+prefill qh_kh_T gemm: 0.002 ms
+prefill scale: 0.000 ms
+prefill softmax: 0.000 ms
+prefill outh gemm: 0.001 ms
+prefill o_proj gemm: 0.180 ms
+prefill o_proj add: 0.001 ms
+prefill qh_kh_T gemm: 0.002 ms
+prefill scale: 0.000 ms
+prefill softmax: 0.001 ms
+prefill outh gemm: 0.002 ms
+prefill qh_kh_T gemm: 0.003 ms
+prefill scale: 0.000 ms
+prefill softmax: 0.000 ms
+prefill outh gemm: 0.001 ms
+prefill qh_kh_T gemm: 0.002 ms
+prefill scale: 0.000 ms
+prefill softmax: 0.000 ms
+prefill outh gemm: 0.001 ms
+prefill qh_kh_T gemm: 0.002 ms
+prefill scale: 0.000 ms
+prefill softmax: 0.000 ms
+prefill outh gemm: 0.001 ms
+prefill qh_kh_T gemm: 0.002 ms
+prefill scale: 0.000 ms
+prefill softmax: 0.000 ms
+prefill outh gemm: 0.001 ms
+prefill qh_kh_T gemm: 0.002 ms
+prefill scale: 0.000 ms
+prefill softmax: 0.000 ms
+prefill outh gemm: 0.001 ms
+prefill qh_kh_T gemm: 0.002 ms
+prefill scale: 0.000 ms
+prefill softmax: 0.000 ms
+prefill outh gemm: 0.001 ms
+prefill qh_kh_T gemm: 0.002 ms
+prefill scale: 0.000 ms
+prefill softmax: 0.000 ms
+prefill outh gemm: 0.001 ms
+prefill qh_kh_T gemm: 0.002 ms
+prefill scale: 0.000 ms
+prefill softmax: 0.000 ms
+prefill outh gemm: 0.001 ms
+prefill qh_kh_T gemm: 0.002 ms
+prefill scale: 0.000 ms
+prefill softmax: 0.000 ms
+prefill outh gemm: 0.001 ms
+prefill qh_kh_T gemm: 0.002 ms
+prefill scale: 0.000 ms
+prefill softmax: 0.000 ms
+prefill outh gemm: 0.001 ms
+prefill qh_kh_T gemm: 0.002 ms
+prefill scale: 0.000 ms
+prefill softmax: 0.000 ms
+prefill outh gemm: 0.001 ms
+prefill o_proj gemm: 0.199 ms
+prefill o_proj add: 0.001 ms
+prefill qh_kh_T gemm: 0.003 ms
+prefill scale: 0.000 ms
+prefill softmax: 0.001 ms
+prefill outh gemm: 0.001 ms
+prefill qh_kh_T gemm: 0.003 ms
+prefill scale: 0.000 ms
+prefill softmax: 0.000 ms
+prefill outh gemm: 0.001 ms
+prefill qh_kh_T gemm: 0.002 ms
+prefill scale: 0.000 ms
+prefill softmax: 0.000 ms
+prefill outh gemm: 0.001 ms
+prefill qh_kh_T gemm: 0.002 ms
+prefill scale: 0.000 ms
+prefill softmax: 0.000 ms
+prefill outh gemm: 0.001 ms
+prefill qh_kh_T gemm: 0.002 ms
+prefill scale: 0.000 ms
+prefill softmax: 0.000 ms
+prefill outh gemm: 0.001 ms
+prefill qh_kh_T gemm: 0.002 ms
+prefill scale: 0.000 ms
+prefill softmax: 0.000 ms
+prefill outh gemm: 0.001 ms
+prefill qh_kh_T gemm: 0.003 ms
+prefill scale: 0.000 ms
+prefill softmax: 0.000 ms
+prefill outh gemm: 0.001 ms
+prefill qh_kh_T gemm: 0.003 ms
+prefill scale: 0.000 ms
+prefill softmax: 0.000 ms
+prefill outh gemm: 0.001 ms
+prefill qh_kh_T gemm: 0.003 ms
+prefill scale: 0.000 ms
+prefill softmax: 0.000 ms
+prefill outh gemm: 0.001 ms
+prefill qh_kh_T gemm: 0.003 ms
+prefill scale: 0.000 ms
+prefill softmax: 0.000 ms
+prefill outh gemm: 0.001 ms
+prefill qh_kh_T gemm: 0.002 ms
+prefill scale: 0.000 ms
+prefill softmax: 0.000 ms
+prefill outh gemm: 0.001 ms
+prefill qh_kh_T gemm: 0.002 ms
+prefill scale: 0.000 ms
+prefill softmax: 0.000 ms
+prefill outh gemm: 0.001 ms
+prefill o_proj gemm: 0.174 ms
+prefill o_proj add: 0.001 ms
+prefill qh_kh_T gemm: 0.002 ms
+prefill scale: 0.000 ms
+prefill softmax: 0.000 ms
+prefill outh gemm: 0.001 ms
+prefill qh_kh_T gemm: 0.002 ms
+prefill scale: 0.000 ms
+prefill softmax: 0.000 ms
+prefill outh gemm: 0.001 ms
+prefill qh_kh_T gemm: 0.002 ms
+prefill scale: 0.000 ms
+prefill softmax: 0.000 ms
+prefill outh gemm: 0.001 ms
+prefill qh_kh_T gemm: 0.002 ms
+prefill scale: 0.000 ms
+prefill softmax: 0.000 ms
+prefill outh gemm: 0.001 ms
+prefill qh_kh_T gemm: 0.002 ms
+prefill scale: 0.000 ms
+prefill softmax: 0.000 ms
+prefill outh gemm: 0.001 ms
+prefill qh_kh_T gemm: 0.002 ms
+prefill scale: 0.000 ms
+prefill softmax: 0.000 ms
+prefill outh gemm: 0.001 ms
+prefill qh_kh_T gemm: 0.002 ms
+prefill scale: 0.000 ms
+prefill softmax: 0.000 ms
+prefill outh gemm: 0.001 ms
+prefill qh_kh_T gemm: 0.002 ms
+prefill scale: 0.000 ms
+prefill softmax: 0.000 ms
+prefill outh gemm: 0.001 ms
+prefill qh_kh_T gemm: 0.002 ms
+prefill scale: 0.000 ms
+prefill softmax: 0.000 ms
+prefill outh gemm: 0.001 ms
+prefill qh_kh_T gemm: 0.002 ms
+prefill scale: 0.000 ms
+prefill softmax: 0.000 ms
+prefill outh gemm: 0.001 ms
+prefill qh_kh_T gemm: 0.002 ms
+prefill scale: 0.000 ms
+prefill softmax: 0.000 ms
+prefill outh gemm: 0.001 ms
+prefill qh_kh_T gemm: 0.002 ms
+prefill scale: 0.000 ms
+prefill softmax: 0.000 ms
+prefill outh gemm: 0.001 ms
+prefill o_proj gemm: 0.182 ms
+prefill o_proj add: 0.001 ms
+prefill qh_kh_T gemm: 0.003 ms
+prefill scale: 0.000 ms
+prefill softmax: 0.001 ms
+prefill outh gemm: 0.002 ms
+prefill qh_kh_T gemm: 0.003 ms
+prefill scale: 0.000 ms
+prefill softmax: 0.000 ms
+prefill outh gemm: 0.001 ms
+prefill qh_kh_T gemm: 0.002 ms
+prefill scale: 0.000 ms
+prefill softmax: 0.000 ms
+prefill outh gemm: 0.001 ms
+prefill qh_kh_T gemm: 0.003 ms
+prefill scale: 0.000 ms
+prefill softmax: 0.000 ms
+prefill outh gemm: 0.001 ms
+prefill qh_kh_T gemm: 0.002 ms
+prefill scale: 0.000 ms
+prefill softmax: 0.000 ms
+prefill outh gemm: 0.001 ms
+prefill qh_kh_T gemm: 0.002 ms
+prefill scale: 0.000 ms
+prefill softmax: 0.000 ms
+prefill outh gemm: 0.001 ms
+prefill qh_kh_T gemm: 0.002 ms
+prefill scale: 0.000 ms
+prefill softmax: 0.000 ms
+prefill outh gemm: 0.001 ms
+prefill qh_kh_T gemm: 0.002 ms
+prefill scale: 0.000 ms
+prefill softmax: 0.000 ms
+prefill outh gemm: 0.001 ms
+prefill qh_kh_T gemm: 0.002 ms
+prefill scale: 0.000 ms
+prefill softmax: 0.000 ms
+prefill outh gemm: 0.001 ms
+prefill qh_kh_T gemm: 0.002 ms
+prefill scale: 0.000 ms
+prefill softmax: 0.000 ms
+prefill outh gemm: 0.001 ms
+prefill qh_kh_T gemm: 0.002 ms
+prefill scale: 0.000 ms
+prefill softmax: 0.000 ms
+prefill outh gemm: 0.001 ms
+prefill qh_kh_T gemm: 0.002 ms
+prefill scale: 0.000 ms
+prefill softmax: 0.000 ms
+prefill outh gemm: 0.001 ms
+prefill o_proj gemm: 0.183 ms
+prefill o_proj add: 0.001 ms
+prefill qh_kh_T gemm: 0.002 ms
+prefill scale: 0.000 ms
+prefill softmax: 0.001 ms
+prefill outh gemm: 0.002 ms
+prefill qh_kh_T gemm: 0.002 ms
+prefill scale: 0.000 ms
+prefill softmax: 0.000 ms
+prefill outh gemm: 0.001 ms
+prefill qh_kh_T gemm: 0.002 ms
+prefill scale: 0.000 ms
+prefill softmax: 0.000 ms
+prefill outh gemm: 0.001 ms
+prefill qh_kh_T gemm: 0.002 ms
+prefill scale: 0.000 ms
+prefill softmax: 0.000 ms
+prefill outh gemm: 0.001 ms
+prefill qh_kh_T gemm: 0.002 ms
+prefill scale: 0.000 ms
+prefill softmax: 0.000 ms
+prefill outh gemm: 0.001 ms
+prefill qh_kh_T gemm: 0.002 ms
+prefill scale: 0.000 ms
+prefill softmax: 0.000 ms
+prefill outh gemm: 0.001 ms
+prefill qh_kh_T gemm: 0.002 ms
+prefill scale: 0.000 ms
+prefill softmax: 0.000 ms
+prefill outh gemm: 0.001 ms
+prefill qh_kh_T gemm: 0.002 ms
+prefill scale: 0.000 ms
+prefill softmax: 0.000 ms
+prefill outh gemm: 0.001 ms
+prefill qh_kh_T gemm: 0.002 ms
+prefill scale: 0.000 ms
+prefill softmax: 0.000 ms
+prefill outh gemm: 0.001 ms
+prefill qh_kh_T gemm: 0.002 ms
+prefill scale: 0.000 ms
+prefill softmax: 0.000 ms
+prefill outh gemm: 0.001 ms
+prefill qh_kh_T gemm: 0.002 ms
+prefill scale: 0.000 ms
+prefill softmax: 0.000 ms
+prefill outh gemm: 0.001 ms
+prefill qh_kh_T gemm: 0.002 ms
+prefill scale: 0.000 ms
+prefill softmax: 0.000 ms
+prefill outh gemm: 0.001 ms
+prefill o_proj gemm: 0.181 ms
+prefill o_proj add: 0.001 ms
+prefill qh_kh_T gemm: 0.002 ms
+prefill scale: 0.000 ms
+prefill softmax: 0.001 ms
+prefill outh gemm: 0.001 ms
+prefill qh_kh_T gemm: 0.002 ms
+prefill scale: 0.000 ms
+prefill softmax: 0.000 ms
+prefill outh gemm: 0.001 ms
+prefill qh_kh_T gemm: 0.002 ms
+prefill scale: 0.000 ms
+prefill softmax: 0.000 ms
+prefill outh gemm: 0.001 ms
+prefill qh_kh_T gemm: 0.002 ms
+prefill scale: 0.000 ms
+prefill softmax: 0.000 ms
+prefill outh gemm: 0.001 ms
+prefill qh_kh_T gemm: 0.002 ms
+prefill scale: 0.000 ms
+prefill softmax: 0.000 ms
+prefill outh gemm: 0.001 ms
+prefill qh_kh_T gemm: 0.002 ms
+prefill scale: 0.000 ms
+prefill softmax: 0.000 ms
+prefill outh gemm: 0.001 ms
+prefill qh_kh_T gemm: 0.002 ms
+prefill scale: 0.000 ms
+prefill softmax: 0.000 ms
+prefill outh gemm: 0.001 ms
+prefill qh_kh_T gemm: 0.002 ms
+prefill scale: 0.000 ms
+prefill softmax: 0.000 ms
+prefill outh gemm: 0.001 ms
+prefill qh_kh_T gemm: 0.002 ms
+prefill scale: 0.000 ms
+prefill softmax: 0.000 ms
+prefill outh gemm: 0.001 ms
+prefill qh_kh_T gemm: 0.002 ms
+prefill scale: 0.000 ms
+prefill softmax: 0.000 ms
+prefill outh gemm: 0.001 ms
+prefill qh_kh_T gemm: 0.002 ms
+prefill scale: 0.000 ms
+prefill softmax: 0.000 ms
+prefill outh gemm: 0.001 ms
+prefill qh_kh_T gemm: 0.002 ms
+prefill scale: 0.000 ms
+prefill softmax: 0.000 ms
+prefill outh gemm: 0.001 ms
+prefill o_proj gemm: 0.181 ms
+prefill o_proj add: 0.001 ms
+prefill qh_kh_T gemm: 0.003 ms
+prefill scale: 0.000 ms
+prefill softmax: 0.001 ms
+prefill outh gemm: 0.002 ms
+prefill qh_kh_T gemm: 0.002 ms
+prefill scale: 0.000 ms
+prefill softmax: 0.000 ms
+prefill outh gemm: 0.001 ms
+prefill qh_kh_T gemm: 0.002 ms
+prefill scale: 0.000 ms
+prefill softmax: 0.000 ms
+prefill outh gemm: 0.001 ms
+prefill qh_kh_T gemm: 0.002 ms
+prefill scale: 0.000 ms
+prefill softmax: 0.000 ms
+prefill outh gemm: 0.001 ms
+prefill qh_kh_T gemm: 0.002 ms
+prefill scale: 0.000 ms
+prefill softmax: 0.000 ms
+prefill outh gemm: 0.001 ms
+prefill qh_kh_T gemm: 0.002 ms
+prefill scale: 0.000 ms
+prefill softmax: 0.000 ms
+prefill outh gemm: 0.001 ms
+prefill qh_kh_T gemm: 0.003 ms
+prefill scale: 0.000 ms
+prefill softmax: 0.000 ms
+prefill outh gemm: 0.001 ms
+prefill qh_kh_T gemm: 0.002 ms
+prefill scale: 0.000 ms
+prefill softmax: 0.000 ms
+prefill outh gemm: 0.001 ms
+prefill qh_kh_T gemm: 0.002 ms
+prefill scale: 0.000 ms
+prefill softmax: 0.000 ms
+prefill outh gemm: 0.001 ms
+prefill qh_kh_T gemm: 0.002 ms
+prefill scale: 0.000 ms
+prefill softmax: 0.000 ms
+prefill outh gemm: 0.001 ms
+prefill qh_kh_T gemm: 0.002 ms
+prefill scale: 0.000 ms
+prefill softmax: 0.000 ms
+prefill outh gemm: 0.001 ms
+prefill qh_kh_T gemm: 0.002 ms
+prefill scale: 0.000 ms
+prefill softmax: 0.000 ms
+prefill outh gemm: 0.001 ms
+prefill o_proj gemm: 0.181 ms
+prefill o_proj add: 0.001 ms
+prefill graph execute: 39.550 ms
+rc=0
+logits[0..7]: -94.150467 -91.764816 -96.022469 -96.601364 -95.943871 -96.883568 -93.256599 -93.036354 
+prefilling embedding forward: 0.004 ms
+prefill qh_kh_T gemm: 0.002 ms
+prefill scale: 0.000 ms
+prefill softmax: 0.001 ms
+prefill outh gemm: 0.001 ms
+prefill qh_kh_T gemm: 0.002 ms
+prefill scale: 0.000 ms
+prefill softmax: 0.000 ms
+prefill outh gemm: 0.001 ms
+prefill qh_kh_T gemm: 0.002 ms
+prefill scale: 0.000 ms
+prefill softmax: 0.000 ms
+prefill outh gemm: 0.001 ms
+prefill qh_kh_T gemm: 0.002 ms
+prefill scale: 0.000 ms
+prefill softmax: 0.000 ms
+prefill outh gemm: 0.001 ms
+prefill qh_kh_T gemm: 0.002 ms
+prefill scale: 0.000 ms
+prefill softmax: 0.000 ms
+prefill outh gemm: 0.001 ms
+prefill qh_kh_T gemm: 0.002 ms
+prefill scale: 0.000 ms
+prefill softmax: 0.000 ms
+prefill outh gemm: 0.001 ms
+prefill qh_kh_T gemm: 0.002 ms
+prefill scale: 0.000 ms
+prefill softmax: 0.000 ms
+prefill outh gemm: 0.001 ms
+prefill qh_kh_T gemm: 0.002 ms
+prefill scale: 0.000 ms
+prefill softmax: 0.000 ms
+prefill outh gemm: 0.001 ms
+prefill qh_kh_T gemm: 0.002 ms
+prefill scale: 0.000 ms
+prefill softmax: 0.000 ms
+prefill outh gemm: 0.001 ms
+prefill qh_kh_T gemm: 0.002 ms
+prefill scale: 0.000 ms
+prefill softmax: 0.000 ms
+prefill outh gemm: 0.002 ms
+prefill qh_kh_T gemm: 0.002 ms
+prefill scale: 0.000 ms
+prefill softmax: 0.000 ms
+prefill outh gemm: 0.001 ms
+prefill qh_kh_T gemm: 0.002 ms
+prefill scale: 0.000 ms
+prefill softmax: 0.000 ms
+prefill outh gemm: 0.001 ms
+prefill o_proj gemm: 0.182 ms
+prefill o_proj add: 0.001 ms
+prefill qh_kh_T gemm: 0.002 ms
+prefill scale: 0.000 ms
+prefill softmax: 0.001 ms
+prefill outh gemm: 0.001 ms
+prefill qh_kh_T gemm: 0.002 ms
+prefill scale: 0.000 ms
+prefill softmax: 0.000 ms
+prefill outh gemm: 0.001 ms
+prefill qh_kh_T gemm: 0.002 ms
+prefill scale: 0.000 ms
+prefill softmax: 0.000 ms
+prefill outh gemm: 0.001 ms
+prefill qh_kh_T gemm: 0.002 ms
+prefill scale: 0.000 ms
+prefill softmax: 0.000 ms
+prefill outh gemm: 0.001 ms
+prefill qh_kh_T gemm: 0.002 ms
+prefill scale: 0.000 ms
+prefill softmax: 0.000 ms
+prefill outh gemm: 0.001 ms
+prefill qh_kh_T gemm: 0.002 ms
+prefill scale: 0.000 ms
+prefill softmax: 0.000 ms
+prefill outh gemm: 0.001 ms
+prefill qh_kh_T gemm: 0.002 ms
+prefill scale: 0.000 ms
+prefill softmax: 0.000 ms
+prefill outh gemm: 0.001 ms
+prefill qh_kh_T gemm: 0.002 ms
+prefill scale: 0.000 ms
+prefill softmax: 0.000 ms
+prefill outh gemm: 0.001 ms
+prefill qh_kh_T gemm: 0.002 ms
+prefill scale: 0.000 ms
+prefill softmax: 0.000 ms
+prefill outh gemm: 0.001 ms
+prefill qh_kh_T gemm: 0.002 ms
+prefill scale: 0.000 ms
+prefill softmax: 0.000 ms
+prefill outh gemm: 0.001 ms
+prefill qh_kh_T gemm: 0.002 ms
+prefill scale: 0.000 ms
+prefill softmax: 0.000 ms
+prefill outh gemm: 0.001 ms
+prefill qh_kh_T gemm: 0.002 ms
+prefill scale: 0.000 ms
+prefill softmax: 0.000 ms
+prefill outh gemm: 0.001 ms
+prefill o_proj gemm: 0.177 ms
+prefill o_proj add: 0.001 ms
+prefill qh_kh_T gemm: 0.003 ms
+prefill scale: 0.000 ms
+prefill softmax: 0.001 ms
+prefill outh gemm: 0.002 ms
+prefill qh_kh_T gemm: 0.002 ms
+prefill scale: 0.000 ms
+prefill softmax: 0.000 ms
+prefill outh gemm: 0.001 ms
+prefill qh_kh_T gemm: 0.002 ms
+prefill scale: 0.000 ms
+prefill softmax: 0.000 ms
+prefill outh gemm: 0.001 ms
+prefill qh_kh_T gemm: 0.002 ms
+prefill scale: 0.000 ms
+prefill softmax: 0.000 ms
+prefill outh gemm: 0.002 ms
+prefill qh_kh_T gemm: 0.002 ms
+prefill scale: 0.000 ms
+prefill softmax: 0.000 ms
+prefill outh gemm: 0.001 ms
+prefill qh_kh_T gemm: 0.002 ms
+prefill scale: 0.000 ms
+prefill softmax: 0.000 ms
+prefill outh gemm: 0.001 ms
+prefill qh_kh_T gemm: 0.002 ms
+prefill scale: 0.000 ms
+prefill softmax: 0.000 ms
+prefill outh gemm: 0.001 ms
+prefill qh_kh_T gemm: 0.002 ms
+prefill scale: 0.000 ms
+prefill softmax: 0.000 ms
+prefill outh gemm: 0.001 ms
+prefill qh_kh_T gemm: 0.002 ms
+prefill scale: 0.000 ms
+prefill softmax: 0.000 ms
+prefill outh gemm: 0.001 ms
+prefill qh_kh_T gemm: 0.002 ms
+prefill scale: 0.000 ms
+prefill softmax: 0.000 ms
+prefill outh gemm: 0.001 ms
+prefill qh_kh_T gemm: 0.002 ms
+prefill scale: 0.000 ms
+prefill softmax: 0.000 ms
+prefill outh gemm: 0.001 ms
+prefill qh_kh_T gemm: 0.002 ms
+prefill scale: 0.000 ms
+prefill softmax: 0.000 ms
+prefill outh gemm: 0.001 ms
+prefill o_proj gemm: 0.181 ms
+prefill o_proj add: 0.001 ms
+prefill qh_kh_T gemm: 0.002 ms
+prefill scale: 0.000 ms
+prefill softmax: 0.000 ms
+prefill outh gemm: 0.001 ms
+prefill qh_kh_T gemm: 0.002 ms
+prefill scale: 0.000 ms
+prefill softmax: 0.000 ms
+prefill outh gemm: 0.001 ms
+prefill qh_kh_T gemm: 0.002 ms
+prefill scale: 0.000 ms
+prefill softmax: 0.000 ms
+prefill outh gemm: 0.002 ms
+prefill qh_kh_T gemm: 0.002 ms
+prefill scale: 0.000 ms
+prefill softmax: 0.000 ms
+prefill outh gemm: 0.001 ms
+prefill qh_kh_T gemm: 0.002 ms
+prefill scale: 0.000 ms
+prefill softmax: 0.000 ms
+prefill outh gemm: 0.001 ms
+prefill qh_kh_T gemm: 0.003 ms
+prefill scale: 0.000 ms
+prefill softmax: 0.000 ms
+prefill outh gemm: 0.001 ms
+prefill qh_kh_T gemm: 0.002 ms
+prefill scale: 0.000 ms
+prefill softmax: 0.000 ms
+prefill outh gemm: 0.001 ms
+prefill qh_kh_T gemm: 0.002 ms
+prefill scale: 0.000 ms
+prefill softmax: 0.000 ms
+prefill outh gemm: 0.002 ms
+prefill qh_kh_T gemm: 0.002 ms
+prefill scale: 0.000 ms
+prefill softmax: 0.000 ms
+prefill outh gemm: 0.001 ms
+prefill qh_kh_T gemm: 0.002 ms
+prefill scale: 0.000 ms
+prefill softmax: 0.000 ms
+prefill outh gemm: 0.001 ms
+prefill qh_kh_T gemm: 0.002 ms
+prefill scale: 0.000 ms
+prefill softmax: 0.000 ms
+prefill outh gemm: 0.002 ms
+prefill qh_kh_T gemm: 0.002 ms
+prefill scale: 0.000 ms
+prefill softmax: 0.000 ms
+prefill outh gemm: 0.002 ms
+prefill o_proj gemm: 0.186 ms
+prefill o_proj add: 0.001 ms
+prefill qh_kh_T gemm: 0.002 ms
+prefill scale: 0.000 ms
+prefill softmax: 0.001 ms
+prefill outh gemm: 0.002 ms
+prefill qh_kh_T gemm: 0.002 ms
+prefill scale: 0.000 ms
+prefill softmax: 0.000 ms
+prefill outh gemm: 0.001 ms
+prefill qh_kh_T gemm: 0.005 ms
+prefill scale: 0.000 ms
+prefill softmax: 0.000 ms
+prefill outh gemm: 0.002 ms
+prefill qh_kh_T gemm: 0.002 ms
+prefill scale: 0.000 ms
+prefill softmax: 0.000 ms
+prefill outh gemm: 0.002 ms
+prefill qh_kh_T gemm: 0.002 ms
+prefill scale: 0.000 ms
+prefill softmax: 0.000 ms
+prefill outh gemm: 0.002 ms
+prefill qh_kh_T gemm: 0.002 ms
+prefill scale: 0.000 ms
+prefill softmax: 0.000 ms
+prefill outh gemm: 0.001 ms
+prefill qh_kh_T gemm: 0.002 ms
+prefill scale: 0.000 ms
+prefill softmax: 0.000 ms
+prefill outh gemm: 0.001 ms
+prefill qh_kh_T gemm: 0.002 ms
+prefill scale: 0.000 ms
+prefill softmax: 0.000 ms
+prefill outh gemm: 0.001 ms
+prefill qh_kh_T gemm: 0.002 ms
+prefill scale: 0.000 ms
+prefill softmax: 0.000 ms
+prefill outh gemm: 0.001 ms
+prefill qh_kh_T gemm: 0.002 ms
+prefill scale: 0.000 ms
+prefill softmax: 0.000 ms
+prefill outh gemm: 0.001 ms
+prefill qh_kh_T gemm: 0.002 ms
+prefill scale: 0.000 ms
+prefill softmax: 0.000 ms
+prefill outh gemm: 0.001 ms
+prefill qh_kh_T gemm: 0.002 ms
+prefill scale: 0.000 ms
+prefill softmax: 0.000 ms
+prefill outh gemm: 0.001 ms
+prefill o_proj gemm: 0.181 ms
+prefill o_proj add: 0.002 ms
+prefill qh_kh_T gemm: 0.002 ms
+prefill scale: 0.000 ms
+prefill softmax: 0.001 ms
+prefill outh gemm: 0.001 ms
+prefill qh_kh_T gemm: 0.002 ms
+prefill scale: 0.000 ms
+prefill softmax: 0.000 ms
+prefill outh gemm: 0.001 ms
+prefill qh_kh_T gemm: 0.003 ms
+prefill scale: 0.000 ms
+prefill softmax: 0.000 ms
+prefill outh gemm: 0.001 ms
+prefill qh_kh_T gemm: 0.002 ms
+prefill scale: 0.000 ms
+prefill softmax: 0.000 ms
+prefill outh gemm: 0.001 ms
+prefill qh_kh_T gemm: 0.002 ms
+prefill scale: 0.000 ms
+prefill softmax: 0.000 ms
+prefill outh gemm: 0.001 ms
+prefill qh_kh_T gemm: 0.002 ms
+prefill scale: 0.000 ms
+prefill softmax: 0.000 ms
+prefill outh gemm: 0.001 ms
+prefill qh_kh_T gemm: 0.002 ms
+prefill scale: 0.000 ms
+prefill softmax: 0.000 ms
+prefill outh gemm: 0.001 ms
+prefill qh_kh_T gemm: 0.002 ms
+prefill scale: 0.000 ms
+prefill softmax: 0.000 ms
+prefill outh gemm: 0.001 ms
+prefill qh_kh_T gemm: 0.002 ms
+prefill scale: 0.000 ms
+prefill softmax: 0.000 ms
+prefill outh gemm: 0.001 ms
+prefill qh_kh_T gemm: 0.002 ms
+prefill scale: 0.000 ms
+prefill softmax: 0.000 ms
+prefill outh gemm: 0.001 ms
+prefill qh_kh_T gemm: 0.002 ms
+prefill scale: 0.000 ms
+prefill softmax: 0.000 ms
+prefill outh gemm: 0.001 ms
+prefill qh_kh_T gemm: 0.002 ms
+prefill scale: 0.000 ms
+prefill softmax: 0.000 ms
+prefill outh gemm: 0.001 ms
+prefill o_proj gemm: 0.177 ms
+prefill o_proj add: 0.001 ms
+prefill qh_kh_T gemm: 0.003 ms
+prefill scale: 0.000 ms
+prefill softmax: 0.001 ms
+prefill outh gemm: 0.002 ms
+prefill qh_kh_T gemm: 0.002 ms
+prefill scale: 0.000 ms
+prefill softmax: 0.000 ms
+prefill outh gemm: 0.001 ms
+prefill qh_kh_T gemm: 0.002 ms
+prefill scale: 0.000 ms
+prefill softmax: 0.000 ms
+prefill outh gemm: 0.001 ms
+prefill qh_kh_T gemm: 0.002 ms
+prefill scale: 0.000 ms
+prefill softmax: 0.000 ms
+prefill outh gemm: 0.001 ms
+prefill qh_kh_T gemm: 0.002 ms
+prefill scale: 0.000 ms
+prefill softmax: 0.000 ms
+prefill outh gemm: 0.001 ms
+prefill qh_kh_T gemm: 0.003 ms
+prefill scale: 0.000 ms
+prefill softmax: 0.000 ms
+prefill outh gemm: 0.001 ms
+prefill qh_kh_T gemm: 0.002 ms
+prefill scale: 0.000 ms
+prefill softmax: 0.000 ms
+prefill outh gemm: 0.002 ms
+prefill qh_kh_T gemm: 0.003 ms
+prefill scale: 0.000 ms
+prefill softmax: 0.000 ms
+prefill outh gemm: 0.001 ms
+prefill qh_kh_T gemm: 0.003 ms
+prefill scale: 0.000 ms
+prefill softmax: 0.000 ms
+prefill outh gemm: 0.001 ms
+prefill qh_kh_T gemm: 0.002 ms
+prefill scale: 0.000 ms
+prefill softmax: 0.000 ms
+prefill outh gemm: 0.001 ms
+prefill qh_kh_T gemm: 0.002 ms
+prefill scale: 0.000 ms
+prefill softmax: 0.000 ms
+prefill outh gemm: 0.002 ms
+prefill qh_kh_T gemm: 0.003 ms
+prefill scale: 0.000 ms
+prefill softmax: 0.000 ms
+prefill outh gemm: 0.001 ms
+prefill o_proj gemm: 0.186 ms
+prefill o_proj add: 0.001 ms
+prefill qh_kh_T gemm: 0.002 ms
+prefill scale: 0.000 ms
+prefill softmax: 0.001 ms
+prefill outh gemm: 0.002 ms
+prefill qh_kh_T gemm: 0.002 ms
+prefill scale: 0.000 ms
+prefill softmax: 0.000 ms
+prefill outh gemm: 0.001 ms
+prefill qh_kh_T gemm: 0.002 ms
+prefill scale: 0.000 ms
+prefill softmax: 0.000 ms
+prefill outh gemm: 0.001 ms
+prefill qh_kh_T gemm: 0.002 ms
+prefill scale: 0.000 ms
+prefill softmax: 0.000 ms
+prefill outh gemm: 0.001 ms
+prefill qh_kh_T gemm: 0.002 ms
+prefill scale: 0.000 ms
+prefill softmax: 0.000 ms
+prefill outh gemm: 0.001 ms
+prefill qh_kh_T gemm: 0.002 ms
+prefill scale: 0.000 ms
+prefill softmax: 0.000 ms
+prefill outh gemm: 0.001 ms
+prefill qh_kh_T gemm: 0.002 ms
+prefill scale: 0.000 ms
+prefill softmax: 0.000 ms
+prefill outh gemm: 0.001 ms
+prefill qh_kh_T gemm: 0.002 ms
+prefill scale: 0.000 ms
+prefill softmax: 0.000 ms
+prefill outh gemm: 0.001 ms
+prefill qh_kh_T gemm: 0.002 ms
+prefill scale: 0.000 ms
+prefill softmax: 0.000 ms
+prefill outh gemm: 0.001 ms
+prefill qh_kh_T gemm: 0.002 ms
+prefill scale: 0.000 ms
+prefill softmax: 0.000 ms
+prefill outh gemm: 0.001 ms
+prefill qh_kh_T gemm: 0.001 ms
+prefill scale: 0.000 ms
+prefill softmax: 0.000 ms
+prefill outh gemm: 0.001 ms
+prefill qh_kh_T gemm: 0.002 ms
+prefill scale: 0.000 ms
+prefill softmax: 0.000 ms
+prefill outh gemm: 0.001 ms
+prefill o_proj gemm: 0.160 ms
+prefill o_proj add: 0.001 ms
+prefill qh_kh_T gemm: 0.002 ms
+prefill scale: 0.000 ms
+prefill softmax: 0.001 ms
+prefill outh gemm: 0.002 ms
+prefill qh_kh_T gemm: 0.002 ms
+prefill scale: 0.000 ms
+prefill softmax: 0.000 ms
+prefill outh gemm: 0.001 ms
+prefill qh_kh_T gemm: 0.002 ms
+prefill scale: 0.000 ms
+prefill softmax: 0.000 ms
+prefill outh gemm: 0.001 ms
+prefill qh_kh_T gemm: 0.002 ms
+prefill scale: 0.000 ms
+prefill softmax: 0.000 ms
+prefill outh gemm: 0.001 ms
+prefill qh_kh_T gemm: 0.002 ms
+prefill scale: 0.000 ms
+prefill softmax: 0.000 ms
+prefill outh gemm: 0.001 ms
+prefill qh_kh_T gemm: 0.002 ms
+prefill scale: 0.000 ms
+prefill softmax: 0.000 ms
+prefill outh gemm: 0.001 ms
+prefill qh_kh_T gemm: 0.002 ms
+prefill scale: 0.000 ms
+prefill softmax: 0.000 ms
+prefill outh gemm: 0.001 ms
+prefill qh_kh_T gemm: 0.002 ms
+prefill scale: 0.000 ms
+prefill softmax: 0.000 ms
+prefill outh gemm: 0.001 ms
+prefill qh_kh_T gemm: 0.001 ms
+prefill scale: 0.000 ms
+prefill softmax: 0.000 ms
+prefill outh gemm: 0.001 ms
+prefill qh_kh_T gemm: 0.001 ms
+prefill scale: 0.000 ms
+prefill softmax: 0.000 ms
+prefill outh gemm: 0.001 ms
+prefill qh_kh_T gemm: 0.002 ms
+prefill scale: 0.000 ms
+prefill softmax: 0.000 ms
+prefill outh gemm: 0.001 ms
+prefill qh_kh_T gemm: 0.002 ms
+prefill scale: 0.000 ms
+prefill softmax: 0.000 ms
+prefill outh gemm: 0.001 ms
+prefill o_proj gemm: 0.162 ms
+prefill o_proj add: 0.001 ms
+prefill qh_kh_T gemm: 0.002 ms
+prefill scale: 0.000 ms
+prefill softmax: 0.001 ms
+prefill outh gemm: 0.002 ms
+prefill qh_kh_T gemm: 0.002 ms
+prefill scale: 0.000 ms
+prefill softmax: 0.000 ms
+prefill outh gemm: 0.002 ms
+prefill qh_kh_T gemm: 0.002 ms
+prefill scale: 0.000 ms
+prefill softmax: 0.000 ms
+prefill outh gemm: 0.001 ms
+prefill qh_kh_T gemm: 0.002 ms
+prefill scale: 0.000 ms
+prefill softmax: 0.000 ms
+prefill outh gemm: 0.001 ms
+prefill qh_kh_T gemm: 0.002 ms
+prefill scale: 0.000 ms
+prefill softmax: 0.000 ms
+prefill outh gemm: 0.002 ms
+prefill qh_kh_T gemm: 0.002 ms
+prefill scale: 0.000 ms
+prefill softmax: 0.000 ms
+prefill outh gemm: 0.001 ms
+prefill qh_kh_T gemm: 0.002 ms
+prefill scale: 0.000 ms
+prefill softmax: 0.000 ms
+prefill outh gemm: 0.001 ms
+prefill qh_kh_T gemm: 0.002 ms
+prefill scale: 0.000 ms
+prefill softmax: 0.000 ms
+prefill outh gemm: 0.001 ms
+prefill qh_kh_T gemm: 0.002 ms
+prefill scale: 0.000 ms
+prefill softmax: 0.000 ms
+prefill outh gemm: 0.002 ms
+prefill qh_kh_T gemm: 0.002 ms
+prefill scale: 0.000 ms
+prefill softmax: 0.000 ms
+prefill outh gemm: 0.001 ms
+prefill qh_kh_T gemm: 0.002 ms
+prefill scale: 0.000 ms
+prefill softmax: 0.000 ms
+prefill outh gemm: 0.001 ms
+prefill qh_kh_T gemm: 0.002 ms
+prefill scale: 0.000 ms
+prefill softmax: 0.000 ms
+prefill outh gemm: 0.001 ms
+prefill o_proj gemm: 0.180 ms
+prefill o_proj add: 0.001 ms
+prefill qh_kh_T gemm: 0.002 ms
+prefill scale: 0.000 ms
+prefill softmax: 0.003 ms
+prefill outh gemm: 0.002 ms
+prefill qh_kh_T gemm: 0.002 ms
+prefill scale: 0.000 ms
+prefill softmax: 0.000 ms
+prefill outh gemm: 0.001 ms
+prefill qh_kh_T gemm: 0.002 ms
+prefill scale: 0.000 ms
+prefill softmax: 0.000 ms
+prefill outh gemm: 0.001 ms
+prefill qh_kh_T gemm: 0.001 ms
+prefill scale: 0.000 ms
+prefill softmax: 0.000 ms
+prefill outh gemm: 0.001 ms
+prefill qh_kh_T gemm: 0.002 ms
+prefill scale: 0.000 ms
+prefill softmax: 0.000 ms
+prefill outh gemm: 0.001 ms
+prefill qh_kh_T gemm: 0.002 ms
+prefill scale: 0.000 ms
+prefill softmax: 0.000 ms
+prefill outh gemm: 0.001 ms
+prefill qh_kh_T gemm: 0.002 ms
+prefill scale: 0.000 ms
+prefill softmax: 0.000 ms
+prefill outh gemm: 0.001 ms
+prefill qh_kh_T gemm: 0.002 ms
+prefill scale: 0.000 ms
+prefill softmax: 0.000 ms
+prefill outh gemm: 0.001 ms
+prefill qh_kh_T gemm: 0.002 ms
+prefill scale: 0.000 ms
+prefill softmax: 0.000 ms
+prefill outh gemm: 0.001 ms
+prefill qh_kh_T gemm: 0.002 ms
+prefill scale: 0.000 ms
+prefill softmax: 0.000 ms
+prefill outh gemm: 0.001 ms
+prefill qh_kh_T gemm: 0.002 ms
+prefill scale: 0.000 ms
+prefill softmax: 0.000 ms
+prefill outh gemm: 0.001 ms
+prefill qh_kh_T gemm: 0.002 ms
+prefill scale: 0.000 ms
+prefill softmax: 0.000 ms
+prefill outh gemm: 0.001 ms
+prefill o_proj gemm: 0.158 ms
+prefill o_proj add: 0.001 ms
+prefill qh_kh_T gemm: 0.002 ms
+prefill scale: 0.000 ms
+prefill softmax: 0.001 ms
+prefill outh gemm: 0.001 ms
+prefill qh_kh_T gemm: 0.002 ms
+prefill scale: 0.000 ms
+prefill softmax: 0.000 ms
+prefill outh gemm: 0.001 ms
+prefill qh_kh_T gemm: 0.002 ms
+prefill scale: 0.000 ms
+prefill softmax: 0.000 ms
+prefill outh gemm: 0.001 ms
+prefill qh_kh_T gemm: 0.002 ms
+prefill scale: 0.000 ms
+prefill softmax: 0.000 ms
+prefill outh gemm: 0.001 ms
+prefill qh_kh_T gemm: 0.002 ms
+prefill scale: 0.000 ms
+prefill softmax: 0.000 ms
+prefill outh gemm: 0.001 ms
+prefill qh_kh_T gemm: 0.002 ms
+prefill scale: 0.000 ms
+prefill softmax: 0.000 ms
+prefill outh gemm: 0.001 ms
+prefill qh_kh_T gemm: 0.002 ms
+prefill scale: 0.000 ms
+prefill softmax: 0.000 ms
+prefill outh gemm: 0.001 ms
+prefill qh_kh_T gemm: 0.002 ms
+prefill scale: 0.000 ms
+prefill softmax: 0.000 ms
+prefill outh gemm: 0.001 ms
+prefill qh_kh_T gemm: 0.002 ms
+prefill scale: 0.000 ms
+prefill softmax: 0.000 ms
+prefill outh gemm: 0.001 ms
+prefill qh_kh_T gemm: 0.002 ms
+prefill scale: 0.000 ms
+prefill softmax: 0.000 ms
+prefill outh gemm: 0.001 ms
+prefill qh_kh_T gemm: 0.002 ms
+prefill scale: 0.000 ms
+prefill softmax: 0.000 ms
+prefill outh gemm: 0.001 ms
+prefill qh_kh_T gemm: 0.002 ms
+prefill scale: 0.000 ms
+prefill softmax: 0.000 ms
+prefill outh gemm: 0.001 ms
+prefill o_proj gemm: 0.159 ms
+prefill o_proj add: 0.001 ms
+prefill graph execute: 36.973 ms
+rc=0
+logits[0..7]: -94.150467 -91.764816 -96.022469 -96.601364 -95.943871 -96.883568 -93.256599 -93.036354 
+prefilling embedding forward: 0.004 ms
+prefill qh_kh_T gemm: 0.002 ms
+prefill scale: 0.000 ms
+prefill softmax: 0.001 ms
+prefill outh gemm: 0.001 ms
+prefill qh_kh_T gemm: 0.002 ms
+prefill scale: 0.000 ms
+prefill softmax: 0.000 ms
+prefill outh gemm: 0.001 ms
+prefill qh_kh_T gemm: 0.002 ms
+prefill scale: 0.000 ms
+prefill softmax: 0.000 ms
+prefill outh gemm: 0.001 ms
+prefill qh_kh_T gemm: 0.002 ms
+prefill scale: 0.000 ms
+prefill softmax: 0.000 ms
+prefill outh gemm: 0.001 ms
+prefill qh_kh_T gemm: 0.001 ms
+prefill scale: 0.000 ms
+prefill softmax: 0.000 ms
+prefill outh gemm: 0.001 ms
+prefill qh_kh_T gemm: 0.002 ms
+prefill scale: 0.000 ms
+prefill softmax: 0.000 ms
+prefill outh gemm: 0.001 ms
+prefill qh_kh_T gemm: 0.001 ms
+prefill scale: 0.000 ms
+prefill softmax: 0.000 ms
+prefill outh gemm: 0.001 ms
+prefill qh_kh_T gemm: 0.001 ms
+prefill scale: 0.000 ms
+prefill softmax: 0.000 ms
+prefill outh gemm: 0.001 ms
+prefill qh_kh_T gemm: 0.002 ms
+prefill scale: 0.000 ms
+prefill softmax: 0.000 ms
+prefill outh gemm: 0.001 ms
+prefill qh_kh_T gemm: 0.002 ms
+prefill scale: 0.000 ms
+prefill softmax: 0.000 ms
+prefill outh gemm: 0.001 ms
+prefill qh_kh_T gemm: 0.002 ms
+prefill scale: 0.000 ms
+prefill softmax: 0.000 ms
+prefill outh gemm: 0.001 ms
+prefill qh_kh_T gemm: 0.002 ms
+prefill scale: 0.000 ms
+prefill softmax: 0.000 ms
+prefill outh gemm: 0.001 ms
+prefill o_proj gemm: 0.160 ms
+prefill o_proj add: 0.001 ms
+prefill qh_kh_T gemm: 0.002 ms
+prefill scale: 0.000 ms
+prefill softmax: 0.000 ms
+prefill outh gemm: 0.001 ms
+prefill qh_kh_T gemm: 0.002 ms
+prefill scale: 0.000 ms
+prefill softmax: 0.000 ms
+prefill outh gemm: 0.001 ms
+prefill qh_kh_T gemm: 0.002 ms
+prefill scale: 0.000 ms
+prefill softmax: 0.000 ms
+prefill outh gemm: 0.001 ms
+prefill qh_kh_T gemm: 0.002 ms
+prefill scale: 0.000 ms
+prefill softmax: 0.000 ms
+prefill outh gemm: 0.001 ms
+prefill qh_kh_T gemm: 0.002 ms
+prefill scale: 0.000 ms
+prefill softmax: 0.000 ms
+prefill outh gemm: 0.001 ms
+prefill qh_kh_T gemm: 0.002 ms
+prefill scale: 0.000 ms
+prefill softmax: 0.000 ms
+prefill outh gemm: 0.001 ms
+prefill qh_kh_T gemm: 0.001 ms
+prefill scale: 0.000 ms
+prefill softmax: 0.000 ms
+prefill outh gemm: 0.001 ms
+prefill qh_kh_T gemm: 0.002 ms
+prefill scale: 0.000 ms
+prefill softmax: 0.000 ms
+prefill outh gemm: 0.001 ms
+prefill qh_kh_T gemm: 0.002 ms
+prefill scale: 0.000 ms
+prefill softmax: 0.000 ms
+prefill outh gemm: 0.001 ms
+prefill qh_kh_T gemm: 0.002 ms
+prefill scale: 0.000 ms
+prefill softmax: 0.000 ms
+prefill outh gemm: 0.001 ms
+prefill qh_kh_T gemm: 0.002 ms
+prefill scale: 0.000 ms
+prefill softmax: 0.000 ms
+prefill outh gemm: 0.001 ms
+prefill qh_kh_T gemm: 0.002 ms
+prefill scale: 0.000 ms
+prefill softmax: 0.000 ms
+prefill outh gemm: 0.001 ms
+prefill o_proj gemm: 0.164 ms
+prefill o_proj add: 0.001 ms
+prefill qh_kh_T gemm: 0.002 ms
+prefill scale: 0.000 ms
+prefill softmax: 0.001 ms
+prefill outh gemm: 0.002 ms
+prefill qh_kh_T gemm: 0.002 ms
+prefill scale: 0.000 ms
+prefill softmax: 0.000 ms
+prefill outh gemm: 0.002 ms
+prefill qh_kh_T gemm: 0.002 ms
+prefill scale: 0.000 ms
+prefill softmax: 0.000 ms
+prefill outh gemm: 0.002 ms
+prefill qh_kh_T gemm: 0.002 ms
+prefill scale: 0.000 ms
+prefill softmax: 0.000 ms
+prefill outh gemm: 0.002 ms
+prefill qh_kh_T gemm: 0.005 ms
+prefill scale: 0.000 ms
+prefill softmax: 0.000 ms
+prefill outh gemm: 0.001 ms
+prefill qh_kh_T gemm: 0.002 ms
+prefill scale: 0.000 ms
+prefill softmax: 0.000 ms
+prefill outh gemm: 0.002 ms
+prefill qh_kh_T gemm: 0.002 ms
+prefill scale: 0.000 ms
+prefill softmax: 0.000 ms
+prefill outh gemm: 0.002 ms
+prefill qh_kh_T gemm: 0.002 ms
+prefill scale: 0.000 ms
+prefill softmax: 0.000 ms
+prefill outh gemm: 0.002 ms
+prefill qh_kh_T gemm: 0.002 ms
+prefill scale: 0.000 ms
+prefill softmax: 0.000 ms
+prefill outh gemm: 0.002 ms
+prefill qh_kh_T gemm: 0.002 ms
+prefill scale: 0.000 ms
+prefill softmax: 0.000 ms
+prefill outh gemm: 0.001 ms
+prefill qh_kh_T gemm: 0.002 ms
+prefill scale: 0.000 ms
+prefill softmax: 0.000 ms
+prefill outh gemm: 0.002 ms
+prefill qh_kh_T gemm: 0.002 ms
+prefill scale: 0.000 ms
+prefill softmax: 0.000 ms
+prefill outh gemm: 0.001 ms
+prefill o_proj gemm: 0.177 ms
+prefill o_proj add: 0.001 ms
+prefill qh_kh_T gemm: 0.002 ms
+prefill scale: 0.000 ms
+prefill softmax: 0.001 ms
+prefill outh gemm: 0.002 ms
+prefill qh_kh_T gemm: 0.002 ms
+prefill scale: 0.000 ms
+prefill softmax: 0.000 ms
+prefill outh gemm: 0.001 ms
+prefill qh_kh_T gemm: 0.002 ms
+prefill scale: 0.000 ms
+prefill softmax: 0.000 ms
+prefill outh gemm: 0.001 ms
+prefill qh_kh_T gemm: 0.002 ms
+prefill scale: 0.000 ms
+prefill softmax: 0.000 ms
+prefill outh gemm: 0.001 ms
+prefill qh_kh_T gemm: 0.002 ms
+prefill scale: 0.000 ms
+prefill softmax: 0.000 ms
+prefill outh gemm: 0.001 ms
+prefill qh_kh_T gemm: 0.002 ms
+prefill scale: 0.000 ms
+prefill softmax: 0.000 ms
+prefill outh gemm: 0.001 ms
+prefill qh_kh_T gemm: 0.002 ms
+prefill scale: 0.000 ms
+prefill softmax: 0.000 ms
+prefill outh gemm: 0.001 ms
+prefill qh_kh_T gemm: 0.002 ms
+prefill scale: 0.000 ms
+prefill softmax: 0.000 ms
+prefill outh gemm: 0.001 ms
+prefill qh_kh_T gemm: 0.002 ms
+prefill scale: 0.000 ms
+prefill softmax: 0.000 ms
+prefill outh gemm: 0.001 ms
+prefill qh_kh_T gemm: 0.002 ms
+prefill scale: 0.000 ms
+prefill softmax: 0.000 ms
+prefill outh gemm: 0.001 ms
+prefill qh_kh_T gemm: 0.002 ms
+prefill scale: 0.000 ms
+prefill softmax: 0.000 ms
+prefill outh gemm: 0.001 ms
+prefill qh_kh_T gemm: 0.002 ms
+prefill scale: 0.000 ms
+prefill softmax: 0.000 ms
+prefill outh gemm: 0.001 ms
+prefill o_proj gemm: 0.159 ms
+prefill o_proj add: 0.001 ms
+prefill qh_kh_T gemm: 0.002 ms
+prefill scale: 0.000 ms
+prefill softmax: 0.001 ms
+prefill outh gemm: 0.001 ms
+prefill qh_kh_T gemm: 0.002 ms
+prefill scale: 0.000 ms
+prefill softmax: 0.000 ms
+prefill outh gemm: 0.001 ms
+prefill qh_kh_T gemm: 0.002 ms
+prefill scale: 0.000 ms
+prefill softmax: 0.000 ms
+prefill outh gemm: 0.001 ms
+prefill qh_kh_T gemm: 0.002 ms
+prefill scale: 0.000 ms
+prefill softmax: 0.000 ms
+prefill outh gemm: 0.001 ms
+prefill qh_kh_T gemm: 0.002 ms
+prefill scale: 0.000 ms
+prefill softmax: 0.000 ms
+prefill outh gemm: 0.001 ms
+prefill qh_kh_T gemm: 0.002 ms
+prefill scale: 0.000 ms
+prefill softmax: 0.000 ms
+prefill outh gemm: 0.001 ms
+prefill qh_kh_T gemm: 0.002 ms
+prefill scale: 0.000 ms
+prefill softmax: 0.000 ms
+prefill outh gemm: 0.001 ms
+prefill qh_kh_T gemm: 0.001 ms
+prefill scale: 0.000 ms
+prefill softmax: 0.000 ms
+prefill outh gemm: 0.001 ms
+prefill qh_kh_T gemm: 0.002 ms
+prefill scale: 0.000 ms
+prefill softmax: 0.000 ms
+prefill outh gemm: 0.001 ms
+prefill qh_kh_T gemm: 0.002 ms
+prefill scale: 0.000 ms
+prefill softmax: 0.000 ms
+prefill outh gemm: 0.001 ms
+prefill qh_kh_T gemm: 0.002 ms
+prefill scale: 0.000 ms
+prefill softmax: 0.000 ms
+prefill outh gemm: 0.001 ms
+prefill qh_kh_T gemm: 0.002 ms
+prefill scale: 0.000 ms
+prefill softmax: 0.000 ms
+prefill outh gemm: 0.001 ms
+prefill o_proj gemm: 0.162 ms
+prefill o_proj add: 0.001 ms
+prefill qh_kh_T gemm: 0.002 ms
+prefill scale: 0.000 ms
+prefill softmax: 0.001 ms
+prefill outh gemm: 0.001 ms
+prefill qh_kh_T gemm: 0.002 ms
+prefill scale: 0.000 ms
+prefill softmax: 0.000 ms
+prefill outh gemm: 0.001 ms
+prefill qh_kh_T gemm: 0.002 ms
+prefill scale: 0.000 ms
+prefill softmax: 0.000 ms
+prefill outh gemm: 0.001 ms
+prefill qh_kh_T gemm: 0.002 ms
+prefill scale: 0.000 ms
+prefill softmax: 0.000 ms
+prefill outh gemm: 0.001 ms
+prefill qh_kh_T gemm: 0.002 ms
+prefill scale: 0.000 ms
+prefill softmax: 0.000 ms
+prefill outh gemm: 0.001 ms
+prefill qh_kh_T gemm: 0.002 ms
+prefill scale: 0.000 ms
+prefill softmax: 0.000 ms
+prefill outh gemm: 0.001 ms
+prefill qh_kh_T gemm: 0.002 ms
+prefill scale: 0.000 ms
+prefill softmax: 0.000 ms
+prefill outh gemm: 0.001 ms
+prefill qh_kh_T gemm: 0.002 ms
+prefill scale: 0.000 ms
+prefill softmax: 0.000 ms
+prefill outh gemm: 0.001 ms
+prefill qh_kh_T gemm: 0.002 ms
+prefill scale: 0.000 ms
+prefill softmax: 0.000 ms
+prefill outh gemm: 0.001 ms
+prefill qh_kh_T gemm: 0.002 ms
+prefill scale: 0.000 ms
+prefill softmax: 0.000 ms
+prefill outh gemm: 0.001 ms
+prefill qh_kh_T gemm: 0.002 ms
+prefill scale: 0.000 ms
+prefill softmax: 0.000 ms
+prefill outh gemm: 0.001 ms
+prefill qh_kh_T gemm: 0.002 ms
+prefill scale: 0.000 ms
+prefill softmax: 0.000 ms
+prefill outh gemm: 0.001 ms
+prefill o_proj gemm: 0.177 ms
+prefill o_proj add: 0.001 ms
+prefill qh_kh_T gemm: 0.002 ms
+prefill scale: 0.000 ms
+prefill softmax: 0.001 ms
+prefill outh gemm: 0.002 ms
+prefill qh_kh_T gemm: 0.002 ms
+prefill scale: 0.000 ms
+prefill softmax: 0.000 ms
+prefill outh gemm: 0.001 ms
+prefill qh_kh_T gemm: 0.002 ms
+prefill scale: 0.000 ms
+prefill softmax: 0.000 ms
+prefill outh gemm: 0.001 ms
+prefill qh_kh_T gemm: 0.002 ms
+prefill scale: 0.000 ms
+prefill softmax: 0.000 ms
+prefill outh gemm: 0.001 ms
+prefill qh_kh_T gemm: 0.002 ms
+prefill scale: 0.000 ms
+prefill softmax: 0.000 ms
+prefill outh gemm: 0.001 ms
+prefill qh_kh_T gemm: 0.002 ms
+prefill scale: 0.000 ms
+prefill softmax: 0.000 ms
+prefill outh gemm: 0.001 ms
+prefill qh_kh_T gemm: 0.002 ms
+prefill scale: 0.000 ms
+prefill softmax: 0.000 ms
+prefill outh gemm: 0.001 ms
+prefill qh_kh_T gemm: 0.002 ms
+prefill scale: 0.000 ms
+prefill softmax: 0.000 ms
+prefill outh gemm: 0.001 ms
+prefill qh_kh_T gemm: 0.002 ms
+prefill scale: 0.000 ms
+prefill softmax: 0.000 ms
+prefill outh gemm: 0.001 ms
+prefill qh_kh_T gemm: 0.002 ms
+prefill scale: 0.000 ms
+prefill softmax: 0.000 ms
+prefill outh gemm: 0.001 ms
+prefill qh_kh_T gemm: 0.002 ms
+prefill scale: 0.000 ms
+prefill softmax: 0.000 ms
+prefill outh gemm: 0.001 ms
+prefill qh_kh_T gemm: 0.002 ms
+prefill scale: 0.000 ms
+prefill softmax: 0.000 ms
+prefill outh gemm: 0.001 ms
+prefill o_proj gemm: 0.159 ms
+prefill o_proj add: 0.001 ms
+prefill qh_kh_T gemm: 0.002 ms
+prefill scale: 0.000 ms
+prefill softmax: 0.001 ms
+prefill outh gemm: 0.001 ms
+prefill qh_kh_T gemm: 0.002 ms
+prefill scale: 0.000 ms
+prefill softmax: 0.000 ms
+prefill outh gemm: 0.001 ms
+prefill qh_kh_T gemm: 0.002 ms
+prefill scale: 0.000 ms
+prefill softmax: 0.000 ms
+prefill outh gemm: 0.001 ms
+prefill qh_kh_T gemm: 0.002 ms
+prefill scale: 0.000 ms
+prefill softmax: 0.000 ms
+prefill outh gemm: 0.001 ms
+prefill qh_kh_T gemm: 0.001 ms
+prefill scale: 0.000 ms
+prefill softmax: 0.000 ms
+prefill outh gemm: 0.001 ms
+prefill qh_kh_T gemm: 0.002 ms
+prefill scale: 0.000 ms
+prefill softmax: 0.000 ms
+prefill outh gemm: 0.001 ms
+prefill qh_kh_T gemm: 0.002 ms
+prefill scale: 0.000 ms
+prefill softmax: 0.000 ms
+prefill outh gemm: 0.001 ms
+prefill qh_kh_T gemm: 0.002 ms
+prefill scale: 0.000 ms
+prefill softmax: 0.000 ms
+prefill outh gemm: 0.001 ms
+prefill qh_kh_T gemm: 0.002 ms
+prefill scale: 0.000 ms
+prefill softmax: 0.000 ms
+prefill outh gemm: 0.001 ms
+prefill qh_kh_T gemm: 0.002 ms
+prefill scale: 0.000 ms
+prefill softmax: 0.000 ms
+prefill outh gemm: 0.001 ms
+prefill qh_kh_T gemm: 0.002 ms
+prefill scale: 0.000 ms
+prefill softmax: 0.000 ms
+prefill outh gemm: 0.001 ms
+prefill qh_kh_T gemm: 0.002 ms
+prefill scale: 0.000 ms
+prefill softmax: 0.000 ms
+prefill outh gemm: 0.001 ms
+prefill o_proj gemm: 0.161 ms
+prefill o_proj add: 0.001 ms
+prefill qh_kh_T gemm: 0.002 ms
+prefill scale: 0.000 ms
+prefill softmax: 0.001 ms
+prefill outh gemm: 0.001 ms
+prefill qh_kh_T gemm: 0.002 ms
+prefill scale: 0.000 ms
+prefill softmax: 0.000 ms
+prefill outh gemm: 0.001 ms
+prefill qh_kh_T gemm: 0.002 ms
+prefill scale: 0.000 ms
+prefill softmax: 0.000 ms
+prefill outh gemm: 0.001 ms
+prefill qh_kh_T gemm: 0.002 ms
+prefill scale: 0.000 ms
+prefill softmax: 0.000 ms
+prefill outh gemm: 0.001 ms
+prefill qh_kh_T gemm: 0.002 ms
+prefill scale: 0.000 ms
+prefill softmax: 0.000 ms
+prefill outh gemm: 0.001 ms
+prefill qh_kh_T gemm: 0.002 ms
+prefill scale: 0.000 ms
+prefill softmax: 0.000 ms
+prefill outh gemm: 0.001 ms
+prefill qh_kh_T gemm: 0.001 ms
+prefill scale: 0.000 ms
+prefill softmax: 0.000 ms
+prefill outh gemm: 0.001 ms
+prefill qh_kh_T gemm: 0.002 ms
+prefill scale: 0.000 ms
+prefill softmax: 0.000 ms
+prefill outh gemm: 0.001 ms
+prefill qh_kh_T gemm: 0.002 ms
+prefill scale: 0.000 ms
+prefill softmax: 0.000 ms
+prefill outh gemm: 0.001 ms
+prefill qh_kh_T gemm: 0.002 ms
+prefill scale: 0.000 ms
+prefill softmax: 0.000 ms
+prefill outh gemm: 0.001 ms
+prefill qh_kh_T gemm: 0.002 ms
+prefill scale: 0.000 ms
+prefill softmax: 0.000 ms
+prefill outh gemm: 0.001 ms
+prefill qh_kh_T gemm: 0.002 ms
+prefill scale: 0.000 ms
+prefill softmax: 0.000 ms
+prefill outh gemm: 0.001 ms
+prefill o_proj gemm: 0.159 ms
+prefill o_proj add: 0.001 ms
+prefill qh_kh_T gemm: 0.002 ms
+prefill scale: 0.000 ms
+prefill softmax: 0.001 ms
+prefill outh gemm: 0.002 ms
+prefill qh_kh_T gemm: 0.002 ms
+prefill scale: 0.000 ms
+prefill softmax: 0.000 ms
+prefill outh gemm: 0.001 ms
+prefill qh_kh_T gemm: 0.002 ms
+prefill scale: 0.000 ms
+prefill softmax: 0.000 ms
+prefill outh gemm: 0.002 ms
+prefill qh_kh_T gemm: 0.002 ms
+prefill scale: 0.000 ms
+prefill softmax: 0.000 ms
+prefill outh gemm: 0.001 ms
+prefill qh_kh_T gemm: 0.002 ms
+prefill scale: 0.000 ms
+prefill softmax: 0.000 ms
+prefill outh gemm: 0.001 ms
+prefill qh_kh_T gemm: 0.002 ms
+prefill scale: 0.000 ms
+prefill softmax: 0.000 ms
+prefill outh gemm: 0.001 ms
+prefill qh_kh_T gemm: 0.002 ms
+prefill scale: 0.000 ms
+prefill softmax: 0.000 ms
+prefill outh gemm: 0.002 ms
+prefill qh_kh_T gemm: 0.002 ms
+prefill scale: 0.000 ms
+prefill softmax: 0.000 ms
+prefill outh gemm: 0.001 ms
+prefill qh_kh_T gemm: 0.002 ms
+prefill scale: 0.000 ms
+prefill softmax: 0.000 ms
+prefill outh gemm: 0.001 ms
+prefill qh_kh_T gemm: 0.002 ms
+prefill scale: 0.000 ms
+prefill softmax: 0.000 ms
+prefill outh gemm: 0.002 ms
+prefill qh_kh_T gemm: 0.002 ms
+prefill scale: 0.000 ms
+prefill softmax: 0.000 ms
+prefill outh gemm: 0.001 ms
+prefill qh_kh_T gemm: 0.002 ms
+prefill scale: 0.000 ms
+prefill softmax: 0.000 ms
+prefill outh gemm: 0.001 ms
+prefill o_proj gemm: 0.180 ms
+prefill o_proj add: 0.001 ms
+prefill qh_kh_T gemm: 0.002 ms
+prefill scale: 0.000 ms
+prefill softmax: 0.001 ms
+prefill outh gemm: 0.001 ms
+prefill qh_kh_T gemm: 0.002 ms
+prefill scale: 0.000 ms
+prefill softmax: 0.000 ms
+prefill outh gemm: 0.001 ms
+prefill qh_kh_T gemm: 0.002 ms
+prefill scale: 0.000 ms
+prefill softmax: 0.000 ms
+prefill outh gemm: 0.001 ms
+prefill qh_kh_T gemm: 0.002 ms
+prefill scale: 0.000 ms
+prefill softmax: 0.000 ms
+prefill outh gemm: 0.001 ms
+prefill qh_kh_T gemm: 0.002 ms
+prefill scale: 0.000 ms
+prefill softmax: 0.000 ms
+prefill outh gemm: 0.001 ms
+prefill qh_kh_T gemm: 0.002 ms
+prefill scale: 0.000 ms
+prefill softmax: 0.000 ms
+prefill outh gemm: 0.001 ms
+prefill qh_kh_T gemm: 0.002 ms
+prefill scale: 0.000 ms
+prefill softmax: 0.000 ms
+prefill outh gemm: 0.001 ms
+prefill qh_kh_T gemm: 0.002 ms
+prefill scale: 0.000 ms
+prefill softmax: 0.000 ms
+prefill outh gemm: 0.001 ms
+prefill qh_kh_T gemm: 0.002 ms
+prefill scale: 0.000 ms
+prefill softmax: 0.000 ms
+prefill outh gemm: 0.001 ms
+prefill qh_kh_T gemm: 0.002 ms
+prefill scale: 0.000 ms
+prefill softmax: 0.000 ms
+prefill outh gemm: 0.001 ms
+prefill qh_kh_T gemm: 0.002 ms
+prefill scale: 0.000 ms
+prefill softmax: 0.000 ms
+prefill outh gemm: 0.001 ms
+prefill qh_kh_T gemm: 0.002 ms
+prefill scale: 0.000 ms
+prefill softmax: 0.000 ms
+prefill outh gemm: 0.002 ms
+prefill o_proj gemm: 0.160 ms
+prefill o_proj add: 0.001 ms
+prefill qh_kh_T gemm: 0.002 ms
+prefill scale: 0.000 ms
+prefill softmax: 0.001 ms
+prefill outh gemm: 0.002 ms
+prefill qh_kh_T gemm: 0.002 ms
+prefill scale: 0.000 ms
+prefill softmax: 0.000 ms
+prefill outh gemm: 0.001 ms
+prefill qh_kh_T gemm: 0.002 ms
+prefill scale: 0.000 ms
+prefill softmax: 0.000 ms
+prefill outh gemm: 0.001 ms
+prefill qh_kh_T gemm: 0.002 ms
+prefill scale: 0.000 ms
+prefill softmax: 0.000 ms
+prefill outh gemm: 0.001 ms
+prefill qh_kh_T gemm: 0.002 ms
+prefill scale: 0.000 ms
+prefill softmax: 0.000 ms
+prefill outh gemm: 0.001 ms
+prefill qh_kh_T gemm: 0.002 ms
+prefill scale: 0.000 ms
+prefill softmax: 0.000 ms
+prefill outh gemm: 0.001 ms
+prefill qh_kh_T gemm: 0.002 ms
+prefill scale: 0.000 ms
+prefill softmax: 0.000 ms
+prefill outh gemm: 0.001 ms
+prefill qh_kh_T gemm: 0.002 ms
+prefill scale: 0.000 ms
+prefill softmax: 0.000 ms
+prefill outh gemm: 0.001 ms
+prefill qh_kh_T gemm: 0.002 ms
+prefill scale: 0.000 ms
+prefill softmax: 0.000 ms
+prefill outh gemm: 0.001 ms
+prefill qh_kh_T gemm: 0.002 ms
+prefill scale: 0.000 ms
+prefill softmax: 0.000 ms
+prefill outh gemm: 0.001 ms
+prefill qh_kh_T gemm: 0.002 ms
+prefill scale: 0.000 ms
+prefill softmax: 0.000 ms
+prefill outh gemm: 0.001 ms
+prefill qh_kh_T gemm: 0.002 ms
+prefill scale: 0.000 ms
+prefill softmax: 0.000 ms
+prefill outh gemm: 0.001 ms
+prefill o_proj gemm: 0.162 ms
+prefill o_proj add: 0.001 ms
+prefill graph execute: 36.419 ms
+rc=0
+logits[0..7]: -94.150467 -91.764816 -96.022469 -96.601364 -95.943871 -96.883568 -93.256599 -93.036354 
+prefilling embedding forward: 0.003 ms
+prefill qh_kh_T gemm: 0.002 ms
+prefill scale: 0.000 ms
+prefill softmax: 0.001 ms
+prefill outh gemm: 0.002 ms
+prefill qh_kh_T gemm: 0.002 ms
+prefill scale: 0.000 ms
+prefill softmax: 0.000 ms
+prefill outh gemm: 0.001 ms
+prefill qh_kh_T gemm: 0.002 ms
+prefill scale: 0.000 ms
+prefill softmax: 0.000 ms
+prefill outh gemm: 0.002 ms
+prefill qh_kh_T gemm: 0.002 ms
+prefill scale: 0.000 ms
+prefill softmax: 0.000 ms
+prefill outh gemm: 0.001 ms
+prefill qh_kh_T gemm: 0.002 ms
+prefill scale: 0.000 ms
+prefill softmax: 0.000 ms
+prefill outh gemm: 0.001 ms
+prefill qh_kh_T gemm: 0.002 ms
+prefill scale: 0.000 ms
+prefill softmax: 0.000 ms
+prefill outh gemm: 0.002 ms
+prefill qh_kh_T gemm: 0.002 ms
+prefill scale: 0.000 ms
+prefill softmax: 0.000 ms
+prefill outh gemm: 0.001 ms
+prefill qh_kh_T gemm: 0.002 ms
+prefill scale: 0.000 ms
+prefill softmax: 0.000 ms
+prefill outh gemm: 0.001 ms
+prefill qh_kh_T gemm: 0.002 ms
+prefill scale: 0.000 ms
+prefill softmax: 0.000 ms
+prefill outh gemm: 0.002 ms
+prefill qh_kh_T gemm: 0.002 ms
+prefill scale: 0.000 ms
+prefill softmax: 0.000 ms
+prefill outh gemm: 0.001 ms
+prefill qh_kh_T gemm: 0.002 ms
+prefill scale: 0.000 ms
+prefill softmax: 0.000 ms
+prefill outh gemm: 0.001 ms
+prefill qh_kh_T gemm: 0.002 ms
+prefill scale: 0.000 ms
+prefill softmax: 0.000 ms
+prefill outh gemm: 0.002 ms
+prefill o_proj gemm: 0.158 ms
+prefill o_proj add: 0.001 ms
+prefill qh_kh_T gemm: 0.003 ms
+prefill scale: 0.000 ms
+prefill softmax: 0.000 ms
+prefill outh gemm: 0.002 ms
+prefill qh_kh_T gemm: 0.002 ms
+prefill scale: 0.000 ms
+prefill softmax: 0.000 ms
+prefill outh gemm: 0.002 ms
+prefill qh_kh_T gemm: 0.002 ms
+prefill scale: 0.000 ms
+prefill softmax: 0.000 ms
+prefill outh gemm: 0.002 ms
+prefill qh_kh_T gemm: 0.002 ms
+prefill scale: 0.000 ms
+prefill softmax: 0.000 ms
+prefill outh gemm: 0.002 ms
+prefill qh_kh_T gemm: 0.002 ms
+prefill scale: 0.000 ms
+prefill softmax: 0.000 ms
+prefill outh gemm: 0.002 ms
+prefill qh_kh_T gemm: 0.005 ms
+prefill scale: 0.000 ms
+prefill softmax: 0.000 ms
+prefill outh gemm: 0.011 ms
+prefill qh_kh_T gemm: 0.009 ms
+prefill scale: 0.000 ms
+prefill softmax: 0.000 ms
+prefill outh gemm: 0.004 ms
+prefill qh_kh_T gemm: 0.004 ms
+prefill scale: 0.000 ms
+prefill softmax: 0.000 ms
+prefill outh gemm: 0.002 ms
+prefill qh_kh_T gemm: 0.002 ms
+prefill scale: 0.000 ms
+prefill softmax: 0.000 ms
+prefill outh gemm: 0.002 ms
+prefill qh_kh_T gemm: 0.002 ms
+prefill scale: 0.000 ms
+prefill softmax: 0.000 ms
+prefill outh gemm: 0.002 ms
+prefill qh_kh_T gemm: 0.002 ms
+prefill scale: 0.000 ms
+prefill softmax: 0.000 ms
+prefill outh gemm: 0.002 ms
+prefill qh_kh_T gemm: 0.002 ms
+prefill scale: 0.000 ms
+prefill softmax: 0.000 ms
+prefill outh gemm: 0.001 ms
+prefill o_proj gemm: 0.167 ms
+prefill o_proj add: 0.001 ms
+prefill qh_kh_T gemm: 0.002 ms
+prefill scale: 0.000 ms
+prefill softmax: 0.001 ms
+prefill outh gemm: 0.002 ms
+prefill qh_kh_T gemm: 0.002 ms
+prefill scale: 0.000 ms
+prefill softmax: 0.000 ms
+prefill outh gemm: 0.002 ms
+prefill qh_kh_T gemm: 0.003 ms
+prefill scale: 0.000 ms
+prefill softmax: 0.000 ms
+prefill outh gemm: 0.002 ms
+prefill qh_kh_T gemm: 0.002 ms
+prefill scale: 0.000 ms
+prefill softmax: 0.000 ms
+prefill outh gemm: 0.002 ms
+prefill qh_kh_T gemm: 0.002 ms
+prefill scale: 0.000 ms
+prefill softmax: 0.000 ms
+prefill outh gemm: 0.002 ms
+prefill qh_kh_T gemm: 0.002 ms
+prefill scale: 0.000 ms
+prefill softmax: 0.000 ms
+prefill outh gemm: 0.002 ms
+prefill qh_kh_T gemm: 0.002 ms
+prefill scale: 0.000 ms
+prefill softmax: 0.000 ms
+prefill outh gemm: 0.001 ms
+prefill qh_kh_T gemm: 0.002 ms
+prefill scale: 0.000 ms
+prefill softmax: 0.000 ms
+prefill outh gemm: 0.002 ms
+prefill qh_kh_T gemm: 0.002 ms
+prefill scale: 0.000 ms
+prefill softmax: 0.000 ms
+prefill outh gemm: 0.001 ms
+prefill qh_kh_T gemm: 0.002 ms
+prefill scale: 0.000 ms
+prefill softmax: 0.000 ms
+prefill outh gemm: 0.001 ms
+prefill qh_kh_T gemm: 0.002 ms
+prefill scale: 0.000 ms
+prefill softmax: 0.000 ms
+prefill outh gemm: 0.001 ms
+prefill qh_kh_T gemm: 0.002 ms
+prefill scale: 0.000 ms
+prefill softmax: 0.000 ms
+prefill outh gemm: 0.002 ms
+prefill o_proj gemm: 0.179 ms
+prefill o_proj add: 0.001 ms
+prefill qh_kh_T gemm: 0.002 ms
+prefill scale: 0.000 ms
+prefill softmax: 0.001 ms
+prefill outh gemm: 0.004 ms
+prefill qh_kh_T gemm: 0.008 ms
+prefill scale: 0.000 ms
+prefill softmax: 0.000 ms
+prefill outh gemm: 0.005 ms
+prefill qh_kh_T gemm: 0.006 ms
+prefill scale: 0.000 ms
+prefill softmax: 0.000 ms
+prefill outh gemm: 0.003 ms
+prefill qh_kh_T gemm: 0.002 ms
+prefill scale: 0.000 ms
+prefill softmax: 0.000 ms
+prefill outh gemm: 0.001 ms
+prefill qh_kh_T gemm: 0.002 ms
+prefill scale: 0.000 ms
+prefill softmax: 0.000 ms
+prefill outh gemm: 0.002 ms
+prefill qh_kh_T gemm: 0.002 ms
+prefill scale: 0.000 ms
+prefill softmax: 0.000 ms
+prefill outh gemm: 0.002 ms
+prefill qh_kh_T gemm: 0.002 ms
+prefill scale: 0.000 ms
+prefill softmax: 0.000 ms
+prefill outh gemm: 0.001 ms
+prefill qh_kh_T gemm: 0.002 ms
+prefill scale: 0.000 ms
+prefill softmax: 0.000 ms
+prefill outh gemm: 0.002 ms
+prefill qh_kh_T gemm: 0.002 ms
+prefill scale: 0.000 ms
+prefill softmax: 0.000 ms
+prefill outh gemm: 0.002 ms
+prefill qh_kh_T gemm: 0.002 ms
+prefill scale: 0.000 ms
+prefill softmax: 0.000 ms
+prefill outh gemm: 0.002 ms
+prefill qh_kh_T gemm: 0.002 ms
+prefill scale: 0.000 ms
+prefill softmax: 0.000 ms
+prefill outh gemm: 0.002 ms
+prefill qh_kh_T gemm: 0.002 ms
+prefill scale: 0.000 ms
+prefill softmax: 0.000 ms
+prefill outh gemm: 0.002 ms
+prefill o_proj gemm: 0.163 ms
+prefill o_proj add: 0.001 ms
+prefill qh_kh_T gemm: 0.002 ms
+prefill scale: 0.000 ms
+prefill softmax: 0.001 ms
+prefill outh gemm: 0.002 ms
+prefill qh_kh_T gemm: 0.002 ms
+prefill scale: 0.000 ms
+prefill softmax: 0.000 ms
+prefill outh gemm: 0.002 ms
+prefill qh_kh_T gemm: 0.002 ms
+prefill scale: 0.000 ms
+prefill softmax: 0.000 ms
+prefill outh gemm: 0.002 ms
+prefill qh_kh_T gemm: 0.002 ms
+prefill scale: 0.000 ms
+prefill softmax: 0.000 ms
+prefill outh gemm: 0.002 ms
+prefill qh_kh_T gemm: 0.002 ms
+prefill scale: 0.000 ms
+prefill softmax: 0.000 ms
+prefill outh gemm: 0.002 ms
+prefill qh_kh_T gemm: 0.002 ms
+prefill scale: 0.000 ms
+prefill softmax: 0.000 ms
+prefill outh gemm: 0.002 ms
+prefill qh_kh_T gemm: 0.002 ms
+prefill scale: 0.000 ms
+prefill softmax: 0.000 ms
+prefill outh gemm: 0.002 ms
+prefill qh_kh_T gemm: 0.002 ms
+prefill scale: 0.000 ms
+prefill softmax: 0.000 ms
+prefill outh gemm: 0.002 ms
+prefill qh_kh_T gemm: 0.002 ms
+prefill scale: 0.000 ms
+prefill softmax: 0.000 ms
+prefill outh gemm: 0.002 ms
+prefill qh_kh_T gemm: 0.002 ms
+prefill scale: 0.000 ms
+prefill softmax: 0.000 ms
+prefill outh gemm: 0.002 ms
+prefill qh_kh_T gemm: 0.002 ms
+prefill scale: 0.000 ms
+prefill softmax: 0.000 ms
+prefill outh gemm: 0.002 ms
+prefill qh_kh_T gemm: 0.003 ms
+prefill scale: 0.000 ms
+prefill softmax: 0.000 ms
+prefill outh gemm: 0.007 ms
+prefill o_proj gemm: 0.174 ms
+prefill o_proj add: 0.001 ms
+prefill qh_kh_T gemm: 0.003 ms
+prefill scale: 0.000 ms
+prefill softmax: 0.001 ms
+prefill outh gemm: 0.002 ms
+prefill qh_kh_T gemm: 0.002 ms
+prefill scale: 0.000 ms
+prefill softmax: 0.000 ms
+prefill outh gemm: 0.002 ms
+prefill qh_kh_T gemm: 0.002 ms
+prefill scale: 0.000 ms
+prefill softmax: 0.000 ms
+prefill outh gemm: 0.002 ms
+prefill qh_kh_T gemm: 0.002 ms
+prefill scale: 0.000 ms
+prefill softmax: 0.000 ms
+prefill outh gemm: 0.002 ms
+prefill qh_kh_T gemm: 0.002 ms
+prefill scale: 0.000 ms
+prefill softmax: 0.000 ms
+prefill outh gemm: 0.002 ms
+prefill qh_kh_T gemm: 0.002 ms
+prefill scale: 0.000 ms
+prefill softmax: 0.000 ms
+prefill outh gemm: 0.001 ms
+prefill qh_kh_T gemm: 0.002 ms
+prefill scale: 0.000 ms
+prefill softmax: 0.000 ms
+prefill outh gemm: 0.002 ms
+prefill qh_kh_T gemm: 0.002 ms
+prefill scale: 0.000 ms
+prefill softmax: 0.000 ms
+prefill outh gemm: 0.002 ms
+prefill qh_kh_T gemm: 0.003 ms
+prefill scale: 0.000 ms
+prefill softmax: 0.000 ms
+prefill outh gemm: 0.002 ms
+prefill qh_kh_T gemm: 0.002 ms
+prefill scale: 0.000 ms
+prefill softmax: 0.000 ms
+prefill outh gemm: 0.001 ms
+prefill qh_kh_T gemm: 0.002 ms
+prefill scale: 0.000 ms
+prefill softmax: 0.000 ms
+prefill outh gemm: 0.001 ms
+prefill qh_kh_T gemm: 0.002 ms
+prefill scale: 0.000 ms
+prefill softmax: 0.000 ms
+prefill outh gemm: 0.001 ms
+prefill o_proj gemm: 0.161 ms
+prefill o_proj add: 0.001 ms
+prefill qh_kh_T gemm: 0.002 ms
+prefill scale: 0.000 ms
+prefill softmax: 0.001 ms
+prefill outh gemm: 0.002 ms
+prefill qh_kh_T gemm: 0.002 ms
+prefill scale: 0.000 ms
+prefill softmax: 0.000 ms
+prefill outh gemm: 0.001 ms
+prefill qh_kh_T gemm: 0.002 ms
+prefill scale: 0.000 ms
+prefill softmax: 0.000 ms
+prefill outh gemm: 0.001 ms
+prefill qh_kh_T gemm: 0.002 ms
+prefill scale: 0.000 ms
+prefill softmax: 0.000 ms
+prefill outh gemm: 0.002 ms
+prefill qh_kh_T gemm: 0.002 ms
+prefill scale: 0.000 ms
+prefill softmax: 0.000 ms
+prefill outh gemm: 0.001 ms
+prefill qh_kh_T gemm: 0.002 ms
+prefill scale: 0.000 ms
+prefill softmax: 0.000 ms
+prefill outh gemm: 0.001 ms
+prefill qh_kh_T gemm: 0.002 ms
+prefill scale: 0.000 ms
+prefill softmax: 0.000 ms
+prefill outh gemm: 0.002 ms
+prefill qh_kh_T gemm: 0.007 ms
+prefill scale: 0.000 ms
+prefill softmax: 0.000 ms
+prefill outh gemm: 0.006 ms
+prefill qh_kh_T gemm: 0.004 ms
+prefill scale: 0.000 ms
+prefill softmax: 0.000 ms
+prefill outh gemm: 0.003 ms
+prefill qh_kh_T gemm: 0.002 ms
+prefill scale: 0.000 ms
+prefill softmax: 0.000 ms
+prefill outh gemm: 0.002 ms
+prefill qh_kh_T gemm: 0.002 ms
+prefill scale: 0.000 ms
+prefill softmax: 0.000 ms
+prefill outh gemm: 0.001 ms
+prefill qh_kh_T gemm: 0.002 ms
+prefill scale: 0.000 ms
+prefill softmax: 0.000 ms
+prefill outh gemm: 0.001 ms
+prefill o_proj gemm: 0.155 ms
+prefill o_proj add: 0.001 ms
+prefill qh_kh_T gemm: 0.002 ms
+prefill scale: 0.000 ms
+prefill softmax: 0.001 ms
+prefill outh gemm: 0.002 ms
+prefill qh_kh_T gemm: 0.002 ms
+prefill scale: 0.000 ms
+prefill softmax: 0.000 ms
+prefill outh gemm: 0.002 ms
+prefill qh_kh_T gemm: 0.002 ms
+prefill scale: 0.000 ms
+prefill softmax: 0.000 ms
+prefill outh gemm: 0.002 ms
+prefill qh_kh_T gemm: 0.002 ms
+prefill scale: 0.000 ms
+prefill softmax: 0.000 ms
+prefill outh gemm: 0.002 ms
+prefill qh_kh_T gemm: 0.002 ms
+prefill scale: 0.000 ms
+prefill softmax: 0.000 ms
+prefill outh gemm: 0.002 ms
+prefill qh_kh_T gemm: 0.002 ms
+prefill scale: 0.000 ms
+prefill softmax: 0.000 ms
+prefill outh gemm: 0.002 ms
+prefill qh_kh_T gemm: 0.002 ms
+prefill scale: 0.000 ms
+prefill softmax: 0.000 ms
+prefill outh gemm: 0.001 ms
+prefill qh_kh_T gemm: 0.002 ms
+prefill scale: 0.000 ms
+prefill softmax: 0.000 ms
+prefill outh gemm: 0.002 ms
+prefill qh_kh_T gemm: 0.002 ms
+prefill scale: 0.000 ms
+prefill softmax: 0.000 ms
+prefill outh gemm: 0.001 ms
+prefill qh_kh_T gemm: 0.002 ms
+prefill scale: 0.000 ms
+prefill softmax: 0.000 ms
+prefill outh gemm: 0.002 ms
+prefill qh_kh_T gemm: 0.002 ms
+prefill scale: 0.000 ms
+prefill softmax: 0.000 ms
+prefill outh gemm: 0.002 ms
+prefill qh_kh_T gemm: 0.002 ms
+prefill scale: 0.000 ms
+prefill softmax: 0.000 ms
+prefill outh gemm: 0.001 ms
+prefill o_proj gemm: 0.165 ms
+prefill o_proj add: 0.001 ms
+prefill qh_kh_T gemm: 0.002 ms
+prefill scale: 0.000 ms
+prefill softmax: 0.001 ms
+prefill outh gemm: 0.002 ms
+prefill qh_kh_T gemm: 0.002 ms
+prefill scale: 0.000 ms
+prefill softmax: 0.000 ms
+prefill outh gemm: 0.002 ms
+prefill qh_kh_T gemm: 0.002 ms
+prefill scale: 0.000 ms
+prefill softmax: 0.000 ms
+prefill outh gemm: 0.006 ms
+prefill qh_kh_T gemm: 0.007 ms
+prefill scale: 0.000 ms
+prefill softmax: 0.000 ms
+prefill outh gemm: 0.005 ms
+prefill qh_kh_T gemm: 0.003 ms
+prefill scale: 0.000 ms
+prefill softmax: 0.000 ms
+prefill outh gemm: 0.002 ms
+prefill qh_kh_T gemm: 0.002 ms
+prefill scale: 0.000 ms
+prefill softmax: 0.000 ms
+prefill outh gemm: 0.002 ms
+prefill qh_kh_T gemm: 0.002 ms
+prefill scale: 0.000 ms
+prefill softmax: 0.000 ms
+prefill outh gemm: 0.002 ms
+prefill qh_kh_T gemm: 0.002 ms
+prefill scale: 0.000 ms
+prefill softmax: 0.000 ms
+prefill outh gemm: 0.002 ms
+prefill qh_kh_T gemm: 0.002 ms
+prefill scale: 0.000 ms
+prefill softmax: 0.000 ms
+prefill outh gemm: 0.002 ms
+prefill qh_kh_T gemm: 0.002 ms
+prefill scale: 0.000 ms
+prefill softmax: 0.000 ms
+prefill outh gemm: 0.002 ms
+prefill qh_kh_T gemm: 0.002 ms
+prefill scale: 0.000 ms
+prefill softmax: 0.000 ms
+prefill outh gemm: 0.002 ms
+prefill qh_kh_T gemm: 0.002 ms
+prefill scale: 0.000 ms
+prefill softmax: 0.000 ms
+prefill outh gemm: 0.002 ms
+prefill o_proj gemm: 0.160 ms
+prefill o_proj add: 0.001 ms
+prefill qh_kh_T gemm: 0.002 ms
+prefill scale: 0.000 ms
+prefill softmax: 0.001 ms
+prefill outh gemm: 0.002 ms
+prefill qh_kh_T gemm: 0.002 ms
+prefill scale: 0.000 ms
+prefill softmax: 0.000 ms
+prefill outh gemm: 0.002 ms
+prefill qh_kh_T gemm: 0.002 ms
+prefill scale: 0.000 ms
+prefill softmax: 0.000 ms
+prefill outh gemm: 0.001 ms
+prefill qh_kh_T gemm: 0.002 ms
+prefill scale: 0.000 ms
+prefill softmax: 0.000 ms
+prefill outh gemm: 0.002 ms
+prefill qh_kh_T gemm: 0.002 ms
+prefill scale: 0.000 ms
+prefill softmax: 0.000 ms
+prefill outh gemm: 0.001 ms
+prefill qh_kh_T gemm: 0.002 ms
+prefill scale: 0.000 ms
+prefill softmax: 0.000 ms
+prefill outh gemm: 0.002 ms
+prefill qh_kh_T gemm: 0.003 ms
+prefill scale: 0.000 ms
+prefill softmax: 0.000 ms
+prefill outh gemm: 0.002 ms
+prefill qh_kh_T gemm: 0.002 ms
+prefill scale: 0.000 ms
+prefill softmax: 0.000 ms
+prefill outh gemm: 0.001 ms
+prefill qh_kh_T gemm: 0.002 ms
+prefill scale: 0.000 ms
+prefill softmax: 0.000 ms
+prefill outh gemm: 0.002 ms
+prefill qh_kh_T gemm: 0.002 ms
+prefill scale: 0.000 ms
+prefill softmax: 0.000 ms
+prefill outh gemm: 0.001 ms
+prefill qh_kh_T gemm: 0.002 ms
+prefill scale: 0.000 ms
+prefill softmax: 0.000 ms
+prefill outh gemm: 0.002 ms
+prefill qh_kh_T gemm: 0.002 ms
+prefill scale: 0.000 ms
+prefill softmax: 0.000 ms
+prefill outh gemm: 0.001 ms
+prefill o_proj gemm: 0.168 ms
+prefill o_proj add: 0.001 ms
+prefill qh_kh_T gemm: 0.003 ms
+prefill scale: 0.000 ms
+prefill softmax: 0.001 ms
+prefill outh gemm: 0.002 ms
+prefill qh_kh_T gemm: 0.002 ms
+prefill scale: 0.000 ms
+prefill softmax: 0.000 ms
+prefill outh gemm: 0.002 ms
+prefill qh_kh_T gemm: 0.002 ms
+prefill scale: 0.000 ms
+prefill softmax: 0.000 ms
+prefill outh gemm: 0.002 ms
+prefill qh_kh_T gemm: 0.002 ms
+prefill scale: 0.000 ms
+prefill softmax: 0.000 ms
+prefill outh gemm: 0.004 ms
+prefill qh_kh_T gemm: 0.002 ms
+prefill scale: 0.000 ms
+prefill softmax: 0.000 ms
+prefill outh gemm: 0.002 ms
+prefill qh_kh_T gemm: 0.002 ms
+prefill scale: 0.000 ms
+prefill softmax: 0.000 ms
+prefill outh gemm: 0.001 ms
+prefill qh_kh_T gemm: 0.002 ms
+prefill scale: 0.000 ms
+prefill softmax: 0.000 ms
+prefill outh gemm: 0.002 ms
+prefill qh_kh_T gemm: 0.002 ms
+prefill scale: 0.000 ms
+prefill softmax: 0.000 ms
+prefill outh gemm: 0.002 ms
+prefill qh_kh_T gemm: 0.002 ms
+prefill scale: 0.000 ms
+prefill softmax: 0.000 ms
+prefill outh gemm: 0.001 ms
+prefill qh_kh_T gemm: 0.002 ms
+prefill scale: 0.000 ms
+prefill softmax: 0.000 ms
+prefill outh gemm: 0.002 ms
+prefill qh_kh_T gemm: 0.002 ms
+prefill scale: 0.000 ms
+prefill softmax: 0.000 ms
+prefill outh gemm: 0.001 ms
+prefill qh_kh_T gemm: 0.002 ms
+prefill scale: 0.000 ms
+prefill softmax: 0.000 ms
+prefill outh gemm: 0.002 ms
+prefill o_proj gemm: 0.158 ms
+prefill o_proj add: 0.001 ms
+prefill qh_kh_T gemm: 0.002 ms
+prefill scale: 0.000 ms
+prefill softmax: 0.001 ms
+prefill outh gemm: 0.002 ms
+prefill qh_kh_T gemm: 0.002 ms
+prefill scale: 0.000 ms
+prefill softmax: 0.000 ms
+prefill outh gemm: 0.002 ms
+prefill qh_kh_T gemm: 0.002 ms
+prefill scale: 0.000 ms
+prefill softmax: 0.000 ms
+prefill outh gemm: 0.002 ms
+prefill qh_kh_T gemm: 0.002 ms
+prefill scale: 0.000 ms
+prefill softmax: 0.000 ms
+prefill outh gemm: 0.002 ms
+prefill qh_kh_T gemm: 0.002 ms
+prefill scale: 0.000 ms
+prefill softmax: 0.000 ms
+prefill outh gemm: 0.001 ms
+prefill qh_kh_T gemm: 0.002 ms
+prefill scale: 0.000 ms
+prefill softmax: 0.000 ms
+prefill outh gemm: 0.002 ms
+prefill qh_kh_T gemm: 0.002 ms
+prefill scale: 0.000 ms
+prefill softmax: 0.000 ms
+prefill outh gemm: 0.002 ms
+prefill qh_kh_T gemm: 0.002 ms
+prefill scale: 0.000 ms
+prefill softmax: 0.000 ms
+prefill outh gemm: 0.001 ms
+prefill qh_kh_T gemm: 0.002 ms
+prefill scale: 0.000 ms
+prefill softmax: 0.000 ms
+prefill outh gemm: 0.003 ms
+prefill qh_kh_T gemm: 0.006 ms
+prefill scale: 0.000 ms
+prefill softmax: 0.000 ms
+prefill outh gemm: 0.005 ms
+prefill qh_kh_T gemm: 0.004 ms
+prefill scale: 0.000 ms
+prefill softmax: 0.000 ms
+prefill outh gemm: 0.003 ms
+prefill qh_kh_T gemm: 0.002 ms
+prefill scale: 0.000 ms
+prefill softmax: 0.000 ms
+prefill outh gemm: 0.002 ms
+prefill o_proj gemm: 0.165 ms
+prefill o_proj add: 0.001 ms
+prefill graph execute: 35.911 ms
+
+=== Timing ===
+Prefill (5 tokens) : 35.918 ms
+Decode total        : 1094.107 ms (49 steps)
+Decode per token    : 22.329 ms
+Total               : 1130.025 ms
+generate rc=0, tokens: 464 3797 3332 319 262 4314 11 290 262 3797 373 991 16039 13 198 198 1 40 1101 7926 11 314 1101 7926 553 673 531 13 366 40 1101 7926 13 314 1101 7926 13 314 1101 7926 13 314 1101 7926 13 314 1101 7926 13 314 1101 7926 13 314 1101 
+tadd=46508 tgemm=18507917 tgelu=0 tln=163305 temb=0 tattn=9163863 tffn=0
+
+=== Profile Summary ===
+Operator                  Time (ms)    Share
+---------------------- ------------ --------
+GEMM                         18.508   51.57%
+ATTENTION                     9.164   25.53%
+FUSED_GEMM_ADD_GELU           8.010   22.32%
+LAYERNORM                     0.163    0.46%
+ADD                           0.047    0.13%
+---------------------- ------------ --------
+TOTAL                        35.891  100.00%

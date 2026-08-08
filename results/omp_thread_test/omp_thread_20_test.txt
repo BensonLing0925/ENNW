@@ -1,0 +1,7 @@
+prefill graph execute: 47.816 ms
+prefill graph execute: 53.193 ms
+prefill graph execute: 1484.968 ms
+prefill graph execute: 44.237 ms
+prefill graph execute: 401.234 ms
+prefill graph execute: 81.700 ms
+Decode per token    : 249.181 ms

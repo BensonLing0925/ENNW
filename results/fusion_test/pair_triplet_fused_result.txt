@@ -1,0 +1,169 @@
+(base) bensonling@bensonling-Victus-by-HP-Laptop-16-d1xxx:~/ENNW$ ./sst2_eval --weights distilbert_sst2.bin --data sst2_val.bin
+Dataset: 872 samples, seq_len=64  (evaluating 872)
+Weights:  511.4 MB
+[distilbert_io] embeddings loaded
+[distilbert_io] layer 0 loaded
+[distilbert_io] layer 1 loaded
+[distilbert_io] layer 2 loaded
+[distilbert_io] layer 3 loaded
+[distilbert_io] layer 4 loaded
+[distilbert_io] layer 5 loaded
+[distilbert_io] all weights loaded from 'distilbert_sst2.bin'
+[distilbert_io] SST-2 classification head loaded
+Workspace: 19.88 MB
+
+[Optimize] Fused 12 ADD+LAYERNORM pair(s) into FUSED_ADD_NORM
+[Optimize] Fused 6 GEMM+ADD+GELU triplet(s) into FUSED_GEMM_ADD_GELU
+Node [ 0]: TK_OP_ATTENTION         ws_before=196608  In=0x5e167dcaba60  Out=0x5e167dcabe20
+Node [ 1]: TK_OP_FUSED_ADD_NORM    ws_before=1671168  In=0x5e167dcaba60  Out=0x5e167dcaba60
+Node [ 2]: TK_OP_QUANTIZE          ws_before=3637248  In=0x5e167dcaba60  Out=0x5e167dcabfd0
+Node [ 3]: TK_OP_FUSED_GEMM_ADD_GELU  ws_before=3637248  In=0x5e167dcabfd0  Out=0x5e167dcabf30
+Node [ 4]: TK_OP_QUANTIZE          ws_before=3637248  In=0x5e167dcabf30  Out=0x5e167dcac020
+Node [ 5]: TK_OP_GEMM              ws_before=3637248  In=0x5e167dcac020  Out=0x5e167dcabf80
+Node [ 6]: TK_OP_ADD               ws_before=3637248  In=0x5e167dcabf80  Out=0x5e167dcabf80
+Node [ 7]: TK_OP_FUSED_ADD_NORM    ws_before=3637248  In=0x5e167dcaba60  Out=0x5e167dcaba60
+Node [ 8]: TK_OP_ATTENTION         ws_before=3637248  In=0x5e167dcaba60  Out=0x5e167dcac510
+Node [ 9]: TK_OP_FUSED_ADD_NORM    ws_before=5111808  In=0x5e167dcaba60  Out=0x5e167dcaba60
+Node [10]: TK_OP_QUANTIZE          ws_before=7077888  In=0x5e167dcaba60  Out=0x5e167dcac6c0
+Node [11]: TK_OP_FUSED_GEMM_ADD_GELU  ws_before=7077888  In=0x5e167dcac6c0  Out=0x5e167dcac620
+Node [12]: TK_OP_QUANTIZE          ws_before=7077888  In=0x5e167dcac620  Out=0x5e167dcac710
+Node [13]: TK_OP_GEMM              ws_before=7077888  In=0x5e167dcac710  Out=0x5e167dcac670
+Node [14]: TK_OP_ADD               ws_before=7077888  In=0x5e167dcac670  Out=0x5e167dcac670
+Node [15]: TK_OP_FUSED_ADD_NORM    ws_before=7077888  In=0x5e167dcaba60  Out=0x5e167dcaba60
+Node [16]: TK_OP_ATTENTION         ws_before=7077888  In=0x5e167dcaba60  Out=0x5e167dcacc00
+Node [17]: TK_OP_FUSED_ADD_NORM    ws_before=8552448  In=0x5e167dcaba60  Out=0x5e167dcaba60
+Node [18]: TK_OP_QUANTIZE          ws_before=10518528  In=0x5e167dcaba60  Out=0x5e167dcacdb0
+Node [19]: TK_OP_FUSED_GEMM_ADD_GELU  ws_before=10518528  In=0x5e167dcacdb0  Out=0x5e167dcacd10
+Node [20]: TK_OP_QUANTIZE          ws_before=10518528  In=0x5e167dcacd10  Out=0x5e167dcace00
+Node [21]: TK_OP_GEMM              ws_before=10518528  In=0x5e167dcace00  Out=0x5e167dcacd60
+Node [22]: TK_OP_ADD               ws_before=10518528  In=0x5e167dcacd60  Out=0x5e167dcacd60
+Node [23]: TK_OP_FUSED_ADD_NORM    ws_before=10518528  In=0x5e167dcaba60  Out=0x5e167dcaba60
+Node [24]: TK_OP_ATTENTION         ws_before=10518528  In=0x5e167dcaba60  Out=0x5e167dcad2f0
+Node [25]: TK_OP_FUSED_ADD_NORM    ws_before=11993088  In=0x5e167dcaba60  Out=0x5e167dcaba60
+Node [26]: TK_OP_QUANTIZE          ws_before=13959168  In=0x5e167dcaba60  Out=0x5e167dcad4a0
+Node [27]: TK_OP_FUSED_GEMM_ADD_GELU  ws_before=13959168  In=0x5e167dcad4a0  Out=0x5e167dcad400
+Node [28]: TK_OP_QUANTIZE          ws_before=13959168  In=0x5e167dcad400  Out=0x5e167dcad4f0
+Node [29]: TK_OP_GEMM              ws_before=13959168  In=0x5e167dcad4f0  Out=0x5e167dcad450
+Node [30]: TK_OP_ADD               ws_before=13959168  In=0x5e167dcad450  Out=0x5e167dcad450
+Node [31]: TK_OP_FUSED_ADD_NORM    ws_before=13959168  In=0x5e167dcaba60  Out=0x5e167dcaba60
+Node [32]: TK_OP_ATTENTION         ws_before=13959168  In=0x5e167dcaba60  Out=0x5e167dcad9e0
+Node [33]: TK_OP_FUSED_ADD_NORM    ws_before=15433728  In=0x5e167dcaba60  Out=0x5e167dcaba60
+Node [34]: TK_OP_QUANTIZE          ws_before=17399808  In=0x5e167dcaba60  Out=0x5e167dcadb90
+Node [35]: TK_OP_FUSED_GEMM_ADD_GELU  ws_before=17399808  In=0x5e167dcadb90  Out=0x5e167dcadaf0
+Node [36]: TK_OP_QUANTIZE          ws_before=17399808  In=0x5e167dcadaf0  Out=0x5e167dcadbe0
+Node [37]: TK_OP_GEMM              ws_before=17399808  In=0x5e167dcadbe0  Out=0x5e167dcadb40
+Node [38]: TK_OP_ADD               ws_before=17399808  In=0x5e167dcadb40  Out=0x5e167dcadb40
+Node [39]: TK_OP_FUSED_ADD_NORM    ws_before=17399808  In=0x5e167dcaba60  Out=0x5e167dcaba60
+Node [40]: TK_OP_ATTENTION         ws_before=17399808  In=0x5e167dcaba60  Out=0x5e167dcae0d0
+Node [41]: TK_OP_FUSED_ADD_NORM    ws_before=18874368  In=0x5e167dcaba60  Out=0x5e167dcaba60
+Node [42]: TK_OP_QUANTIZE          ws_before=20840448  In=0x5e167dcaba60  Out=0x5e167dcae280
+Node [43]: TK_OP_FUSED_GEMM_ADD_GELU  ws_before=20840448  In=0x5e167dcae280  Out=0x5e167dcae1e0
+Node [44]: TK_OP_QUANTIZE          ws_before=20840448  In=0x5e167dcae1e0  Out=0x5e167dcae2d0
+Node [45]: TK_OP_GEMM              ws_before=20840448  In=0x5e167dcae2d0  Out=0x5e167dcae230
+Node [46]: TK_OP_ADD               ws_before=20840448  In=0x5e167dcae230  Out=0x5e167dcae230
+Node [47]: TK_OP_FUSED_ADD_NORM    ws_before=20840448  In=0x5e167dcaba60  Out=0x5e167dcaba60
+[Info] Graph: 48 active nodes (72 total, 24 fused away)
+[Info] Runtime prepared. Switched to inference mode.
+  [  10/ 872]  acc: 100.0%  last: 94ms  avg: 116ms  ETA: 100s
+  [  20/ 872]  acc: 95.0%  last: 103ms  avg: 110ms  ETA: 94s
+  [  30/ 872]  acc: 96.7%  last: 116ms  avg: 114ms  ETA: 96s
+  [  40/ 872]  acc: 95.0%  last: 693ms  avg: 135ms  ETA: 112s
+  [  50/ 872]  acc: 96.0%  last: 147ms  avg: 173ms  ETA: 142s
+  [  60/ 872]  acc: 96.7%  last: 322ms  avg: 182ms  ETA: 148s
+  [  70/ 872]  acc: 95.7%  last: 150ms  avg: 184ms  ETA: 148s
+  [  80/ 872]  acc: 95.0%  last: 147ms  avg: 195ms  ETA: 155s
+  [  90/ 872]  acc: 93.3%  last: 136ms  avg: 192ms  ETA: 150s
+  [ 100/ 872]  acc: 91.0%  last: 152ms  avg: 188ms  ETA: 145s
+  [ 110/ 872]  acc: 91.8%  last: 332ms  avg: 188ms  ETA: 143s
+  [ 120/ 872]  acc: 90.0%  last: 673ms  avg: 201ms  ETA: 151s
+  [ 130/ 872]  acc: 88.5%  last: 189ms  avg: 201ms  ETA: 149s
+  [ 140/ 872]  acc: 88.6%  last: 322ms  avg: 205ms  ETA: 150s
+  [ 150/ 872]  acc: 88.7%  last: 190ms  avg: 207ms  ETA: 150s
+  [ 160/ 872]  acc: 88.8%  last: 208ms  avg: 208ms  ETA: 148s
+  [ 170/ 872]  acc: 89.4%  last: 198ms  avg: 209ms  ETA: 147s
+  [ 180/ 872]  acc: 88.9%  last: 214ms  avg: 210ms  ETA: 145s
+  [ 190/ 872]  acc: 88.9%  last: 192ms  avg: 210ms  ETA: 143s
+  [ 200/ 872]  acc: 89.0%  last: 179ms  avg: 211ms  ETA: 142s
+  [ 210/ 872]  acc: 89.0%  last: 224ms  avg: 211ms  ETA: 140s
+  [ 220/ 872]  acc: 89.1%  last: 128ms  avg: 208ms  ETA: 136s
+  [ 230/ 872]  acc: 89.6%  last: 153ms  avg: 208ms  ETA: 134s
+  [ 240/ 872]  acc: 89.6%  last: 155ms  avg: 207ms  ETA: 131s
+  [ 250/ 872]  acc: 89.2%  last: 161ms  avg: 211ms  ETA: 131s
+  [ 260/ 872]  acc: 89.6%  last: 154ms  avg: 209ms  ETA: 128s
+  [ 270/ 872]  acc: 89.6%  last: 171ms  avg: 207ms  ETA: 125s
+  [ 280/ 872]  acc: 88.9%  last: 161ms  avg: 209ms  ETA: 123s
+  [ 290/ 872]  acc: 88.6%  last: 181ms  avg: 207ms  ETA: 120s
+  [ 300/ 872]  acc: 88.7%  last: 175ms  avg: 209ms  ETA: 119s
+  [ 310/ 872]  acc: 89.0%  last: 181ms  avg: 207ms  ETA: 117s
+  [ 320/ 872]  acc: 89.1%  last: 120ms  avg: 206ms  ETA: 114s
+  [ 330/ 872]  acc: 89.1%  last: 136ms  avg: 204ms  ETA: 110s
+  [ 340/ 872]  acc: 89.1%  last: 137ms  avg: 204ms  ETA: 108s
+  [ 350/ 872]  acc: 89.4%  last: 132ms  avg: 202ms  ETA: 106s
+  [ 360/ 872]  acc: 89.2%  last: 164ms  avg: 201ms  ETA: 103s
+  [ 370/ 872]  acc: 89.5%  last: 159ms  avg: 201ms  ETA: 101s
+  [ 380/ 872]  acc: 89.5%  last: 141ms  avg: 200ms  ETA: 98s
+  [ 390/ 872]  acc: 89.7%  last: 138ms  avg: 199ms  ETA: 96s
+  [ 400/ 872]  acc: 90.0%  last: 160ms  avg: 198ms  ETA: 93s
+  [ 410/ 872]  acc: 90.2%  last: 173ms  avg: 197ms  ETA: 91s
+  [ 420/ 872]  acc: 90.2%  last: 258ms  avg: 202ms  ETA: 91s
+  [ 430/ 872]  acc: 90.2%  last: 176ms  avg: 208ms  ETA: 92s
+  [ 440/ 872]  acc: 90.5%  last: 368ms  avg: 210ms  ETA: 91s
+  [ 450/ 872]  acc: 90.0%  last: 311ms  avg: 211ms  ETA: 89s
+  [ 460/ 872]  acc: 90.2%  last: 183ms  avg: 210ms  ETA: 87s
+  [ 470/ 872]  acc: 90.2%  last: 153ms  avg: 210ms  ETA: 84s
+  [ 480/ 872]  acc: 90.2%  last: 225ms  avg: 209ms  ETA: 82s
+  [ 490/ 872]  acc: 90.2%  last: 166ms  avg: 210ms  ETA: 80s
+  [ 500/ 872]  acc: 90.0%  last: 173ms  avg: 210ms  ETA: 78s
+  [ 510/ 872]  acc: 90.0%  last: 157ms  avg: 209ms  ETA: 76s
+  [ 520/ 872]  acc: 90.0%  last: 149ms  avg: 208ms  ETA: 73s
+  [ 530/ 872]  acc: 90.2%  last: 184ms  avg: 208ms  ETA: 71s
+  [ 540/ 872]  acc: 90.4%  last: 553ms  avg: 208ms  ETA: 69s
+  [ 550/ 872]  acc: 90.2%  last: 152ms  avg: 209ms  ETA: 67s
+  [ 560/ 872]  acc: 90.4%  last: 230ms  avg: 210ms  ETA: 66s
+  [ 570/ 872]  acc: 90.4%  last: 341ms  avg: 211ms  ETA: 64s
+  [ 580/ 872]  acc: 90.3%  last: 227ms  avg: 212ms  ETA: 62s
+  [ 590/ 872]  acc: 90.3%  last: 1019ms  avg: 220ms  ETA: 62s
+  [ 600/ 872]  acc: 90.5%  last: 220ms  avg: 220ms  ETA: 60s
+  [ 610/ 872]  acc: 90.7%  last: 173ms  avg: 223ms  ETA: 58s
+  [ 620/ 872]  acc: 90.5%  last: 207ms  avg: 223ms  ETA: 56s
+  [ 630/ 872]  acc: 90.5%  last: 207ms  avg: 223ms  ETA: 54s
+  [ 640/ 872]  acc: 90.6%  last: 160ms  avg: 225ms  ETA: 52s
+  [ 650/ 872]  acc: 90.5%  last: 240ms  avg: 228ms  ETA: 51s
+  [ 660/ 872]  acc: 90.5%  last: 183ms  avg: 227ms  ETA: 48s
+  [ 670/ 872]  acc: 90.4%  last: 152ms  avg: 226ms  ETA: 46s
+  [ 680/ 872]  acc: 90.6%  last: 136ms  avg: 225ms  ETA: 43s
+  [ 690/ 872]  acc: 90.6%  last: 159ms  avg: 225ms  ETA: 41s
+  [ 700/ 872]  acc: 90.3%  last: 203ms  avg: 225ms  ETA: 39s
+  [ 710/ 872]  acc: 90.3%  last: 163ms  avg: 224ms  ETA: 36s
+  [ 720/ 872]  acc: 90.4%  last: 160ms  avg: 224ms  ETA: 34s
+  [ 730/ 872]  acc: 90.4%  last: 152ms  avg: 225ms  ETA: 32s
+  [ 740/ 872]  acc: 90.3%  last: 161ms  avg: 224ms  ETA: 30s
+  [ 750/ 872]  acc: 90.1%  last: 138ms  avg: 223ms  ETA: 27s
+  [ 760/ 872]  acc: 90.3%  last: 181ms  avg: 222ms  ETA: 25s
+  [ 770/ 872]  acc: 90.1%  last: 150ms  avg: 221ms  ETA: 23s
+  [ 780/ 872]  acc: 90.1%  last: 130ms  avg: 220ms  ETA: 20s
+  [ 790/ 872]  acc: 90.3%  last: 142ms  avg: 219ms  ETA: 18s
+  [ 800/ 872]  acc: 90.2%  last: 143ms  avg: 219ms  ETA: 16s
+  [ 810/ 872]  acc: 90.4%  last: 147ms  avg: 219ms  ETA: 14s
+  [ 820/ 872]  acc: 90.2%  last: 139ms  avg: 218ms  ETA: 11s
+  [ 830/ 872]  acc: 90.1%  last: 135ms  avg: 217ms  ETA: 9s
+  [ 840/ 872]  acc: 90.2%  last: 160ms  avg: 216ms  ETA: 7s
+  [ 850/ 872]  acc: 90.2%  last: 141ms  avg: 215ms  ETA: 5s
+  [ 860/ 872]  acc: 90.3%  last: 152ms  avg: 215ms  ETA: 3s
+  [ 870/ 872]  acc: 90.5%  last: 139ms  avg: 214ms  ETA: 0s
+
+=== SST-2 Evaluation Results ===
+Samples : 872
+Correct : 788
+Accuracy: 90.37%
+
+Timing:
+  Total  : 186.39 s
+  Per sample: 213.7 ms
+
+Confusion matrix:
+  TP (pos->pos): 397
+  TN (neg->neg): 391
+  FP (neg->pos): 37
+  FN (pos->neg): 47
+

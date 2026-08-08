@@ -1,0 +1,35 @@
+config size: 666
+num_layers=12 hidden_dim=768 n_heads=12 vocab_size=50257 max_seq_len=1024
+Header size: 14283
+config size: 666
+[OK] Number of layer matched
+[gpt2_io] 160 tensors loaded
+[gpt2_io] layer 12 loaded
+[gpt2_io] all weights loaded from 'data/gpt2/gpt2_model.safetensors'
+load rc=0
+dry run rc=0
+[Optimize] Fused 12 GEMM+ADD+GELU triplet(s) into FUSED_GEMM_ADD_GELU
+[Info] Graph: 122 active nodes (146 total, 24 fused away)
+[Info] Runtime prepared. Switched to inference mode.
+Workspace peak: 4.39 MB (4600960 bytes)
+rc=0
+logits[0..7]: -94.150467 -91.764816 -96.022469 -96.601364 -95.943871 -96.883568 -93.256599 -93.036354 
+
+=== Timing ===
+Prefill (5 tokens) : 541.910 ms
+Decode total        : 32078.520 ms (49 steps)
+Decode per token    : 654.664 ms
+Total               : 32620.430 ms
+generate rc=0, tokens: 464 3797 3332 319 262 4314 11 290 262 3797 373 991 16039 13 198 198 1 40 1101 7926 11 314 1101 7926 553 673 531 13 366 40 1101 7926 13 314 1101 7926 13 314 1101 7926 13 314 1101 7926 13 314 1101 7926 13 314 1101 7926 13 314 1101 
+tadd=56889 tgemm=34915088 tgelu=0 tln=181023 temb=0 tattn=486267870 tffn=0
+
+=== Profile Summary ===
+Operator                  Time (ms)    Share
+---------------------- ------------ --------
+ATTENTION                   486.268   89.74%
+GEMM                         34.915    6.44%
+FUSED_GEMM_ADD_GELU          20.457    3.78%
+LAYERNORM                     0.181    0.03%
+ADD                           0.057    0.01%
+---------------------- ------------ --------
+TOTAL                       541.878  100.00%

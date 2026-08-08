@@ -10,6 +10,7 @@ weight_files/
 *.weights
 *.safetensors
 *.txt
+!results/**/*.txt
 
 # AI data
 data/
