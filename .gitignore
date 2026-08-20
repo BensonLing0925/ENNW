@@ -15,6 +15,9 @@ weight_files/
 # AI data
 data/
 
+# temp files, including sched .data files
+temp/
+
 # raylib third-party (only need src/ to build, not examples/projects)
 src/raylib/examples/
 src/raylib/projects/
@@ -24,3 +27,4 @@ __pycache__/
 .ipynb_checkpoints/
 
 .claude/
+tools/gpt2/gpt2_onnx/

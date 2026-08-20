@@ -281,31 +281,18 @@ int tk_tf_attention_forward(struct tk_rt_ctx* ctx,
                     khT_data[j * seq + s] = kh_data[s * hdim + j];
 
             /* score = qh [seq, hdim] x kh_T [hdim, seq] -> [seq, seq] */
-            uint64_t t_qh_kh_T_start = tk_get_now_ns();
             ctx->ops->gemm(ctx, qh, kh_T, score);
-            uint64_t t_qh_kh_T = tk_get_now_ns() - t_qh_kh_T_start;
-            printf("prefill qh_kh_T gemm: %.3f ms\n", t_qh_kh_T / 1e6);
             // ctx->ops->scale(ctx, score, scale);
-            uint64_t t_scale_start = tk_get_now_ns();
             tk_ops_scale(score, scale);
-            uint64_t t_scale = tk_get_now_ns() - t_scale_start;
-            printf("prefill scale: %.3f ms\n", scale / 1e6);
 
 			if (tf->config.use_causal) {
 				tk_tensor_causal_mask(score);
 			}
 
-            uint64_t t_softmax_start = tk_get_now_ns();
             tk_ops_softmax(score, score);
-            uint64_t t_softmax = tk_get_now_ns() - t_softmax_start;
-            printf("prefill softmax: %.3f ms\n", t_softmax / 1e6);
 
             /* out_h = score [seq, seq] x vh [seq, hdim] -> [seq, hdim] */
-            uint64_t t_outh_start = tk_get_now_ns();
             ctx->ops->gemm(ctx, score, vh, out_h);
-            uint64_t t_outh = tk_get_now_ns() - t_outh_start;
-            printf("prefill outh gemm: %.3f ms\n", t_outh / 1e6);
-            
 
             /* Scatter back into atten_out */
             scalar_t* oh = (scalar_t*)out_h->data;
@@ -327,16 +314,10 @@ int tk_tf_attention_forward(struct tk_rt_ctx* ctx,
 
         RT_CHECK(ctx->ops->quantize(ctx, atten_out, ao_quant, tf->o_proj_in_act_scale));
         
-        uint64_t t_o_proj_start = tk_get_now_ns();
         RT_CHECK(ctx->ops->gemm(ctx, ao_quant, tf->o_proj_weights, proj_out));
-        uint64_t t_o_proj = tk_get_now_ns() - t_o_proj_start;
-        printf("prefill o_proj gemm: %.3f ms\n", t_o_proj / 1e6);
 
         if (tf->o_proj_bias) {
-            uint64_t t_o_proj_add_start = tk_get_now_ns();
             RT_CHECK(ctx->ops->add(ctx, proj_out, tf->o_proj_bias, proj_out));
-            uint64_t t_o_proj_add = tk_get_now_ns() - t_o_proj_add_start;
-            printf("prefill o_proj add: %.3f ms\n", t_o_proj_add / 1e6);
         }
 
         *attn_out_ptr = proj_out;

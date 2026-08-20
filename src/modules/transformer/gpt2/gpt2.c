@@ -109,18 +109,11 @@ int tk_gpt2_forward(struct tk_rt_ctx* ctx,
 
     // RT_CHECK(tk_gpt2_emb_forward(ctx, gpt2->emb, input_ids, pos_offset, &hidden));
     
-    uint64_t t_emb_forward_start = tk_get_now_ns();
     RT_CHECK(tk_emb_forward(ctx, gpt2->emb, input_ids, pos_offset, &hidden));
-    uint64_t t_emb_forward = tk_get_now_ns() - t_emb_forward_start;
-    if (mode == TK_GPT2_PREFILL)
-        printf("prefilling embedding forward: %.3f ms\n", t_emb_forward / 1e6);
 
     if (!gpt2->lm_head_ready) {
 		/* weight tying */ 
-        uint64_t t_lm_transpose_start = tk_get_now_ns();
 		RT_CHECK(tk_tensor_transpose(ctx->meta_arena, gpt2->emb->word_emb->weights, 0, 1, &gpt2->lm_head_weight));
-        uint64_t t_lm_transpose = tk_get_now_ns() - t_lm_transpose_start;
-        printf("lm head allocation: %.3f ms\n", t_lm_transpose / 1e6);
 		gpt2->lm_head_ready = 1;
     }
 

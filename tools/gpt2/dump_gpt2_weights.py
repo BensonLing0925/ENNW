@@ -17,7 +17,7 @@ from transformers import GPT2Model
 def value_check(model):
 	print(model.state_dict()["wte.weight"].flatten()[:8])
 	print(model.state_dict()["h.0.ln_1.weight"][:8])
-	print(model.state_dict()["h.3.attn.c_attn.weight"][:, :8][0])   # 注意 Q 是切片，要对应你的拆分逻辑
+	print(model.state_dict()["h.3.attn.c_attn.weight"][:, :8][0])
 	print(model.state_dict()["h.5.mlp.c_fc.weight"].flatten()[:8])
 	print(model.state_dict()["ln_f.weight"][:8])
 

@@ -80,6 +80,9 @@ int tk_ops_gemm(struct tk_tensor* src1, struct tk_tensor* src2, struct tk_tensor
     int src1_q = src1->shape[src1->ndims-1];
     int src2_q = src2->shape[src2->ndims-2];
     int src2_r = src2->shape[src2->ndims-1];
+
+    size_t work = src1_p * src1_q * src2_r;
+
     // check inner dimension between 2 dimensions
     if (src1_q != src2_q)
         RT_FAIL(RT_EINVAL, "GEMM inner dimension shape mismatch. src1 inner dim: %d, src2 inner dim: %d\n", 
@@ -169,6 +172,7 @@ int tk_ops_gemm(struct tk_tensor* src1, struct tk_tensor* src2, struct tk_tensor
             */
             int tile_q = 32;
             int tile_r = 32;
+
             _Pragma("omp parallel for")
             for (int p = 0; p < src1_p; ++p) {
                 scalar_t* dest_row = dest_ptr + p * src2_r;
