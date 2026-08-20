@@ -4,7 +4,6 @@
 #include "float.h"
 #include "math.h"
 #include "tensor.h"
-#include "pooling.h"
 
 /* input: a list of integer
  * output: a list of corresponding vectors

@@ -34,8 +34,6 @@ OPS_DIR         := $(SRC_DIR)/ops
 NNUTILS_DIR     := $(SRC_DIR)/nn_utils
 ERROR_DIR       := $(SRC_DIR)/error
 PROF_DIR		:= $(SRC_DIR)/profiler
-RAYLIB_DIR  := $(SRC_DIR)/raylib/src
-RAYLIB_LIB  := $(RAYLIB_DIR)/libraylib.a
 
 CFG_DIR      := config
 CJSON_DIR    := $(CFG_DIR)/cJSON
@@ -49,7 +47,6 @@ BIN_DIR		:= bin
 $(BIN_DIR):
 	mkdir -p $(BIN_DIR)
 
-TARGET                  := $(BIN_DIR)/nn$(EXEEXT)
 DISTILBERT_INFER_TARGET := $(BIN_DIR)/distilbert_infer$(EXEEXT)
 SST2_EVAL_TARGET        := $(BIN_DIR)/sst2_eval$(EXEEXT)
 OPS_TEST_TARGET			:= $(BIN_DIR)/ops_test$(EXEEXT)
@@ -117,9 +114,6 @@ ifeq ($(PROF), 1)
 endif
 
 # ---- Source groups ----
-# nn-specific sources (has main in NN.c), exclude Trie.c
-NN_SRC := $(filter-out $(SRC_DIR)/Trie.c, $(wildcard $(SRC_DIR)/*.c))
-
 # distilbert_infer-specific source (its own main)
 DISTILBERT_INFER_SRC := $(EXAMPLES_DIR)/distilbert_infer.c
 
@@ -144,7 +138,6 @@ SRC_C89 := $(CJSON_DIR)/cJSON.c
 
 # Object files
 LIB_OBJ              := $(LIB_SRC:.c=.o)
-NN_OBJ               := $(NN_SRC:.c=.o)
 DISTILBERT_INFER_OBJ := $(DISTILBERT_INFER_SRC:.c=.o)
 SST2_INFER_OBJ       := $(SST2_INFER_SRC:.c=.o)
 SST2_EVAL_OBJ        := $(SST2_EVAL_SRC:.c=.o)
@@ -156,12 +149,9 @@ OBJ_C89              := $(SRC_C89:.c=.o)
 
 # ---- Default target ----
 .PHONY: all
-all: $(TARGET) $(DISTILBERT_INFER_TARGET) $(SST2_INFER_TARGET) $(SST2_EVAL_TARGET) $(OPS_TEST_TARGET) $(GPT2_TEST_TARGET) $(GPT2_IO_TEST_TARGET) $(OMP_TEST_TARGET)
+all: $(DISTILBERT_INFER_TARGET) $(SST2_INFER_TARGET) $(SST2_EVAL_TARGET) $(OPS_TEST_TARGET) $(GPT2_TEST_TARGET) $(GPT2_IO_TEST_TARGET) $(OMP_TEST_TARGET)
 
 # ---- Link ----
-$(TARGET): $(NN_OBJ) $(LIB_OBJ) $(OBJ_C89) | $(BIN_DIR)
-	$(CC) $^ -o $@ $(LDLIBS)
-
 $(DISTILBERT_INFER_TARGET): $(DISTILBERT_INFER_OBJ) $(LIB_OBJ) $(OBJ_C89) | $(BIN_DIR)
 	$(CC) $^ -o $@ $(LDLIBS)
 
@@ -185,25 +175,17 @@ $(OMP_TEST_TARGET): $(OMP_TEST_OBJ) $(LIB_OBJ) $(OBJ_C89) | $(BIN_DIR)
 
 # ---- Pattern rules by standard ----
 # All C23 objects (lib, nn, examples)
-$(LIB_OBJ) $(NN_OBJ) $(DISTILBERT_INFER_OBJ) $(SST2_INFER_OBJ) $(SST2_EVAL_OBJ) $(OPS_TEST_OBJ) $(GPT2_TEST_OBJ) $(GPT2_IO_TEST_OBJ) $(OMP_TEST_OBJ): %.o: %.c
+$(LIB_OBJ) $(DISTILBERT_INFER_OBJ) $(SST2_INFER_OBJ) $(SST2_EVAL_OBJ) $(OPS_TEST_OBJ) $(GPT2_TEST_OBJ) $(GPT2_IO_TEST_OBJ) $(OMP_TEST_OBJ): %.o: %.c
 	$(CC) $(CFLAGS_C23) -c $< -o $@
 
 # Compile cJSON with C89
 $(OBJ_C89): %.o: %.c
 	$(CC) $(CFLAGS_C89) -c $< -o $@
-	
-
-# compile raylib only when raylib.a does not exist
-$(RAYLIB_LIB):
-	$(MAKE) -C $(RAYLIB_DIR) PLATFORM=PLATFORM_DESKTOP
 
 # ---- Helpers ----
 .DEFAULT_GOAL := all
 
 .PHONY: clean run run-distilbert run-sst2 run-sst2-eval print
-
-run: $(TARGET)
-	./$(TARGET)
 
 run-distilbert: $(DISTILBERT_INFER_TARGET)
 	./$(DISTILBERT_INFER_TARGET)
@@ -224,14 +206,12 @@ run-omp-test: $(OMP_TEST_TARGET)
 	./$(OMP_TEST_TARGET)
 
 clean:
-	-$(RM) $(LIB_OBJ) $(NN_OBJ) $(DISTILBERT_INFER_OBJ) $(SST2_INFER_OBJ) $(SST2_EVAL_OBJ) \
+	-$(RM) $(LIB_OBJ) $(DISTILBERT_INFER_OBJ) $(SST2_INFER_OBJ) $(SST2_EVAL_OBJ) \
 	       $(OPS_TEST_OBJ) $(GPT2_TEST_OBJ) $(GPT2_IO_TEST_OBJ) $(OMP_TEST_OBJ) $(OBJ_C89)
 	-$(RM) -r $(BIN_DIR)
 
 print:
-	@echo TARGET=$(TARGET)
 	@echo DISTILBERT_INFER_TARGET=$(DISTILBERT_INFER_TARGET)
 	@echo LIB_SRC=$(LIB_SRC)
-	@echo NN_SRC=$(NN_SRC)
 	@echo SRC_C89=$(SRC_C89)
 

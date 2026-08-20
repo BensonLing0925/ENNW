@@ -5,7 +5,6 @@
 #include "math.h"
 #include "tensor.h"
 #include "tensor_check.h"
-#include "pooling.h"
 #include "tk_profiler.h"
 
 // caller should allocate the correct dest data shape and space
@@ -576,51 +575,6 @@ int tk_ops_onehot(struct tk_tensor* labels, struct tk_tensor* out) {
             out_ptr[i * num_classes + label_val] = 1.0;
         }
     }
-    return 0;
-}
-
-int tk_ops_pooling(struct tk_pooling_params* pooling, struct tk_tensor* src, struct tk_tensor* dest) {
-
-    int input_c = pooling->input_c;
-    int input_h = pooling->input_h;
-    int input_w = pooling->input_w;
-
-    int size_h = pooling->kernel_h;
-    int size_w = pooling->kernel_w;
-
-    int stride_h = pooling->stride_h;
-    int stride_w = pooling->stride_w;
-
-    int pooled_h = pooling->pooled_h;
-    int pooled_w = pooling->pooled_w;
-
-    TK_DISPATCH_TYPES(src->dtype, "tk_ops_pooling", {
-        // Inside this block, 'scalar_t' is defined as the correct type
-        scalar_t* src_ptr = (scalar_t*)src->data;
-        scalar_t* dest_ptr = (scalar_t*)dest->data;
-
-        for (int c = 0; c < input_c; c++) {
-            for (int ph = 0; ph < pooled_h; ph++) {
-                for (int pw = 0; pw < pooled_w; pw++) {
-                    
-                    double biggest = -DBL_MAX;
-                    for (int f_y = 0; f_y < size_h; f_y++) {
-                        for (int f_x = 0; f_x < size_w; f_x++) {
-                            int src_y = ph * stride_h + f_y;
-                            int src_x = pw * stride_w + f_x;
-                            
-                            // Bounds check (optional but recommended)
-                            if (src_y < input_h && src_x < input_w) {
-                                double val = (double)src_ptr[c * input_h * input_w + src_y * input_w + src_x];
-                                if (val > biggest) biggest = val;
-                            }
-                        }
-                    }
-                    dest_ptr[c * pooled_h * pooled_w + ph * pooled_w + pw] = (scalar_t)biggest;
-                }
-            }
-        }
-    });
     return 0;
 }
 
