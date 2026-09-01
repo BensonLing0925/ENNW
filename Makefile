@@ -31,12 +31,12 @@ EMB_DIR         := $(TRANSFORMER_DIR)/embedding
 DISTILBERT_DIR  := $(TRANSFORMER_DIR)/distilbert
 GPT2_DIR  		:= $(TRANSFORMER_DIR)/gpt2
 OPS_DIR         := $(SRC_DIR)/ops
-NNUTILS_DIR     := $(SRC_DIR)/nn_utils
 ERROR_DIR       := $(SRC_DIR)/error
 PROF_DIR		:= $(SRC_DIR)/profiler
 
-CFG_DIR      := config
-CJSON_DIR    := $(CFG_DIR)/cJSON
+THIRD_PARTY_DIR	:= $(SRC_DIR)/third_party
+CJSON_DIR    := $(THIRD_PARTY_DIR)/cJSON
+CFG_DIR		 := $(SRC_DIR)/config
 
 EXAMPLES_DIR 	:= examples
 TEST_DIR		:= test
@@ -55,7 +55,7 @@ GPT2_IO_TEST_TARGET			:= $(BIN_DIR)/gpt2_io_test$(EXEEXT)
 OMP_TEST_TARGET			:= $(BIN_DIR)/omp_test$(EXEEXT)
 
 # ---- Include paths ----
-INCLUDES := -I$(SRC_DIR) -I$(MODULES_DIR) -I$(FC_DIR) -I$(CONV_DIR) -I$(NNUTILS_DIR) \
+INCLUDES := -I$(SRC_DIR) -I$(MODULES_DIR) -I$(FC_DIR) -I$(CONV_DIR) \
             -I$(CFG_DIR) -I$(CJSON_DIR) -I$(MEM_DIR) -I$(ERROR_DIR) \
             -I$(OPS_DIR) -I$(RT_DIR) -I$(RT_WS_DIR) -I$(PL_DIR) -I$(TRANSFORMER_DIR) \
             -I$(WEIGHTIO_DIR) -I$(EMB_DIR) -I$(DISTILBERT_DIR) -I$(EXAMPLES_DIR)	 \
@@ -94,7 +94,6 @@ endif
 LIB_SRC := $(wildcard $(FC_DIR)/*.c) \
            $(wildcard $(CONV_DIR)/*.c) \
            $(wildcard $(PL_DIR)/*.c) \
-           $(wildcard $(NNUTILS_DIR)/*.c) \
            $(wildcard $(OPS_DIR)/*.c) \
            $(wildcard $(RT_DIR)/*.c) \
            $(wildcard $(RT_WS_DIR)/*.c) \

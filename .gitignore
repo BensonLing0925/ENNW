@@ -2,7 +2,7 @@
 bin/
 *.exe
 *.o
-nn
+*.a
 
 # unnecessary weights
 weight_files/
