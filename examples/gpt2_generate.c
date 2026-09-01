@@ -2,43 +2,16 @@
 #include "gpt2_io.h"
 #include "gpt2.h"
 
-void test_prefill(struct tk_gpt2* model, struct tk_rt_ctx* ctx, struct tk_gpt2_config cfg) {
-    // The cat sat on the
-	int prompt_ids[] = {464, 3797, 3332, 319, 262};
-	int prompt_len = 5;
-	struct tk_tensor* input = NULL;
-	int shape[1] = { prompt_len };
-	tk_tensor_alloc(ctx->meta_arena, TK_I32, shape, 1, &input);
-	memcpy(input->data, prompt_ids, sizeof(int32_t) * prompt_len);
+static int* prompt_str_to_arr(const char* prompt_str) {
+    int token_id;
+    char* str = strdup(prompt_str);
+    
 
-	struct tk_tensor* logits_dry = NULL;
-	tk_rt_ctx_set_mode(ctx, RT_DRYRUN);
-	int rc_dry = tk_gpt2_forward(ctx, model, input, &logits_dry, TK_GPT2_PREFILL);
-	printf("dry run rc=%d\n", rc_dry);
-	if (rc_dry != 0) {
-		rt_err_print(stderr); 
-    	fprintf(stderr, "dry run failed, aborting\n");
-    	return;
-	}
 
-	tk_rt_prepare(ctx);
-    printf("Workspace peak: %.2f MB (%zu bytes)\n",
-       (double)ctx->ws->peak_offset / (1024.0 * 1024.0), ctx->ws->peak_offset);
-
-    for ( int test = 0 ; test < 5 ; ++test) {
-        ctx->ws->cur_offset = 0;
-        struct tk_tensor* logits = NULL;
-        int rc = tk_gpt2_forward(ctx, model, input, &logits, TK_GPT2_PREFILL);
-        printf("rc=%d\n", rc);
-
-        float* last_row = (float*)logits->data + (size_t)(prompt_len - 1) * cfg.vocab_size;
-        printf("logits[0..7]: ");
-        for (int i = 0; i < 8; ++i) printf("%f ", last_row[i]);
-        printf("\n");
-    }
+    free(str);
 }
 
-void test_generate(struct tk_gpt2* model, struct tk_rt_ctx* ctx, struct tk_gpt2_config cfg) {
+void run_generate(struct tk_gpt2* model, struct tk_rt_ctx* ctx, struct tk_gpt2_config cfg) {
     int prompt_ids[] = {464, 3797, 3332, 319, 262};
     int prompt_len = 5;
 
@@ -67,15 +40,28 @@ void test_generate(struct tk_gpt2* model, struct tk_rt_ctx* ctx, struct tk_gpt2_
 }
 
 int main(int argc, char* argv[]) {
+
+    // default configurations
 	const char* st_path  = (argc > 1) ? argv[1] : "data/gpt2/gpt2_model.safetensors";
     const char* cfg_path = (argc > 2) ? argv[2] : "model_configs/gpt2_config.json";
+    const char* prompt_str = "464, 3797, 3332, 319, 262";
+    int omp_threads = 4;
+    int use_prof = 0;
+
+    for ( int i = 0 ; i < argc ; ++i ) {
+        if (strcmp(argv[i], "--model") == 0 && i + 1 < argc) st_path = argv[++i];
+        if (strcmp(argv[i], "--config") == 0 && i + 1 < argc) cfg_path = argv[++i];
+        if (strcmp(argv[i], "--prompt") == 0 && i + 1 < argc) prompt_str = argv[++i];
+        if (strcmp(argv[i], "--max_token") == 0 && i + 1 < argc) max_token = argv[++i];
+        if (strcmp(argv[i], "--omp_thread") == 0 && i + 1 < argc) omp_threads = argv[++i];
+        if (strcmp(argv[i], "--use_prof") == 0 && i + 1 < argc) use_prof = argv[++i]; 
+    }
 
     struct arena root_arena;
     arena_init(&root_arena);
     struct tk_rt_ctx* ctx = tk_runtime_ctx_create(&root_arena);
     ctx->compute_dtype = TK_F32;
-
-    ctx->use_prof = 1;
+    ctx->use_prof = use_prof;
 
     struct tk_gpt2_config cfg;
     if (tk_gpt2_config_from_json(cfg_path, &cfg) != 0) {
@@ -93,10 +79,7 @@ int main(int argc, char* argv[]) {
     int rc = tk_gpt2_safetensors_load(st_path, cfg_path, &cfg, model);
     printf("load rc=%d\n", rc);
 
-	test_prefill(model, ctx, cfg);
-
-	test_generate(model, ctx, cfg);
-
+	run_generate(model, ctx, cfg);
 	tk_rt_ctx_destroy(ctx);
 	arena_destroy(&root_arena);
 

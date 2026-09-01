@@ -6,10 +6,10 @@ ENNW minimizes runtime dependencies by implementing all core logic and operators
 
 ## Current Status
 
-[OK] DistilBERT encoder — INT8 quantization, operator fusion, arena-based memory management
-[OK] GPT-2 decoder — causal masking, multi-layer KV cache, weight-tied LM head
-[WIP] GPT-2 weight loading from exported checkpoints
-[ ] FPGA-accelerated operator offload on KV260
+[OK] DistilBERT encoder — INT8 quantization, operator fusion, arena-based memory management  
+[OK] GPT-2 decoder — causal masking, multi-layer KV cache, weight-tied LM head  
+[OK] GPT-2 weight loading from exported checkpoints  
+[WIP] FPGA-accelerated operator offload on KV260  
 
 ## Key Result
 
@@ -30,7 +30,7 @@ Predictable Memory Model - arena-based allocation eliminates dynamic runtime hea
 Attention-native - scaled dot-product attention and other crucial tensor operations are implemented from scratch
 Readable codebase - each layer is a single, auditable .c file.
 
-This project was built to deeply understand what happens below PyTorch.
+This project was built to also deeply understand what happens below PyTorch.
 
 ## Build & Run
 
