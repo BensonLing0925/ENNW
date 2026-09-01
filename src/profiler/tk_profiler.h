@@ -2,6 +2,7 @@
 #define TK_PROFILER_H
 
 #include <stdatomic.h>
+#include "tk_time.h"
 #include "arena.h"
 #include "rt_context.h"
 
@@ -57,8 +58,6 @@ struct tk_prof_manager {
     int max_threads;
 };
 
-uint64_t tk_get_now_ns(void);
-
 #ifdef PROF
     #define TK_ENABLE_PROFILER
 #endif
@@ -78,10 +77,12 @@ uint64_t tk_get_now_ns(void);
     void event_print(struct tk_event* ev, size_t mem_diff);
     void thread_print(struct tk_prof_thread_buf* buf);
     struct tk_prof_manager* tk_prof_get_my_manager(void);
+    void tk_prof_set_label(const char* label);
     void   tk_prof_set_offset(size_t offset);
 	size_t tk_prof_get_offset(void);
 	void tk_prof_set_last_omp_threads(int n);
 	int  tk_prof_get_last_omp_threads(void);
+    void tk_prof_summarize(struct tk_prof_manager* mgr);
     #define TK_PROF_SCOPE(ctx, type, label, offset) \
         do { \
             tk_prof_emit(ctx, type, label, offset); \
@@ -99,10 +100,12 @@ uint64_t tk_get_now_ns(void);
     static inline void event_print(struct tk_event* ev, size_t mem_diff) {}
     static inline void thread_print(struct tk_prof_thread_buf* buf) {}
     static inline struct tk_prof_manager* tk_prof_get_my_manager(void) {}
+    static inline void tk_prof_set_label(const char* label) {}
     static inline void   tk_prof_set_offset(size_t offset) {}
 	static inline size_t tk_prof_get_offset(void) {}
 	static inline void tk_prof_set_last_omp_threads(int n) {}
 	static inline int  tk_prof_get_last_omp_threads(void) {}
+    static inline void tk_prof_summarize(struct tk_prof_manager* mgr) { (void)mgr; }
     #define TK_PROF_SCOPE(ctx, type, label, offset) do {} while(0)
 #endif
 

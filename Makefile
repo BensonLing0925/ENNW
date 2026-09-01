@@ -33,6 +33,7 @@ GPT2_DIR  		:= $(TRANSFORMER_DIR)/gpt2
 OPS_DIR         := $(SRC_DIR)/ops
 ERROR_DIR       := $(SRC_DIR)/error
 PROF_DIR		:= $(SRC_DIR)/profiler
+PLATFORM_DIR	:= $(SRC_DIR)/platform
 
 THIRD_PARTY_DIR	:= $(SRC_DIR)/third_party
 CJSON_DIR    := $(THIRD_PARTY_DIR)/cJSON
@@ -56,7 +57,7 @@ OMP_TEST_TARGET			:= $(BIN_DIR)/omp_test$(EXEEXT)
 
 # ---- Include paths ----
 INCLUDES := -I$(SRC_DIR) -I$(MODULES_DIR) -I$(FC_DIR) -I$(CONV_DIR) \
-            -I$(CFG_DIR) -I$(CJSON_DIR) -I$(MEM_DIR) -I$(ERROR_DIR) \
+            -I$(CFG_DIR) -I$(CJSON_DIR) -I$(MEM_DIR) -I$(ERROR_DIR) -I$(PLATFORM_DIR)\
             -I$(OPS_DIR) -I$(RT_DIR) -I$(RT_WS_DIR) -I$(PL_DIR) -I$(TRANSFORMER_DIR) \
             -I$(WEIGHTIO_DIR) -I$(EMB_DIR) -I$(DISTILBERT_DIR) -I$(EXAMPLES_DIR)	 \
 			-I$(RT_SG_DIR) -I$(GPT2_DIR) -I$(PROF_DIR) 
@@ -70,7 +71,7 @@ ifeq ($(PROF),1)
 endif 
 
 # ---- Common flags ----
-CFLAGS_COMMON := -Wall -Wextra $(INCLUDES) $(PROF_FLAGS)
+CFLAGS_COMMON := -Wall -Wextra -Werror=implicit-function-declaration  $(INCLUDES) $(PROF_FLAGS)
 
 ifeq ($(VERBOSE),1)
     CFLAGS_COMMON += -DTK_RT_VERBOSE=1
@@ -102,6 +103,7 @@ LIB_SRC := $(wildcard $(FC_DIR)/*.c) \
            $(wildcard $(EMB_DIR)/*.c) \
            $(wildcard $(DISTILBERT_DIR)/*.c) \
            $(wildcard $(GPT2_DIR)/*.c) \
+		   $(PLATFORM_DIR)/tk_time.c \
            $(CFG_DIR)/config.c \
            $(MEM_DIR)/arena.c \
            $(ERROR_DIR)/rt_error.c \

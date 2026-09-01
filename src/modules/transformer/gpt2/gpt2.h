@@ -39,6 +39,8 @@ struct tk_gpt2_config {
 	int use_causal;
 };
 
+int argmax_f32(const float* data, int n);
+
 /* Create and configure model structs (no weight allocation) */
 int tk_gpt2_config(struct tk_rt_ctx* ctx,
                          struct tk_gpt2_config config,

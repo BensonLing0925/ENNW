@@ -1,4 +1,5 @@
 #include "read_safetensors.h"
+#include "tk_profiler.h"
 #include "gpt2_io.h"
 #include "gpt2.h"
 
@@ -42,13 +43,6 @@ void test_generate(struct tk_gpt2* model, struct tk_rt_ctx* ctx, struct tk_gpt2_
     int prompt_ids[] = {464, 3797, 3332, 319, 262};
     int prompt_len = 5;
 
-    ctx->manager = tk_prof_create(32, 1024);
-    if (!ctx->manager) {
-        fprintf(stderr, "Failed to create profiler manager\n");
-        return;
-    }
-    tk_prof_bind_manager(ctx->manager);
-
     struct tk_tensor* prompt = NULL;
     int shape[1] = { prompt_len };
     tk_tensor_alloc(ctx->meta_arena, TK_I32, shape, 1, &prompt);
@@ -63,7 +57,7 @@ void test_generate(struct tk_gpt2* model, struct tk_rt_ctx* ctx, struct tk_gpt2_
     for (int i = 0; i < out_count; ++i) printf("%d ", out_tokens[i]);
     printf("\n");
 
-    tk_prof_summarize(ctx->manager);
+    if (ctx->manager) tk_prof_summarize(ctx->manager);
 }
 
 int main(int argc, char* argv[]) {
@@ -72,10 +66,14 @@ int main(int argc, char* argv[]) {
 
     struct arena root_arena;
     arena_init(&root_arena);
-    struct tk_rt_ctx* ctx = tk_runtime_ctx_create(&root_arena);
+    struct tk_rt_ctx_config ctx_config = {
+        .use_int8           = 0,
+        .use_prof           = 1,
+        .use_graph_optimize = 1,
+        .graph_capacity     = 1024,
+    };
+    struct tk_rt_ctx* ctx = tk_runtime_ctx_create_config(&root_arena, ctx_config);
     ctx->compute_dtype = TK_F32;
-
-    ctx->use_prof = 1;
 
     struct tk_gpt2_config cfg;
     if (tk_gpt2_config_from_json(cfg_path, &cfg) != 0) {

@@ -6,6 +6,12 @@
 #include "tk_ops.h"
 #include "math.h"
 
+void test_causal_masking_basic();
+void test_causal_no_future_leakage(); 
+void test_kv_cache_matches_full_recompute();
+void test_kv_cache_multistep();
+void test_kv_cache_multilayer();
+
 int main() {
 	test_causal_masking_basic();
 	test_causal_no_future_leakage(); 

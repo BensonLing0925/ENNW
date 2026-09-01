@@ -6,6 +6,7 @@
 #include "tk_ops.h"
 #include "tensor.h"
 #include "tensor_ops.h"
+#include "tensor_check.h"
 #include "rt_context.h"
 #include "rt_workspaces.h"
 

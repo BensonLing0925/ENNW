@@ -38,17 +38,18 @@ This project was built to also deeply understand what happens below PyTorch.
 Assuming you have a C compiler (GCC/MinGW) and Python with PyTorch installed:
 ```
 ```bash
-# 1. Clone & Enter the repository
+# Clone & Enter the repository
 git clone "https://github.com/BensonLing0925/ENNW.git"
 cd ENNW
 
-# 2. Setup Environment (Dataset & Weights)
-python tools/download_mnist.py
-python tools/export_weights.py --config tools/config_infer.json --out weights.bin 
+# Download GPT-2 weights (~500 MB)
+mkdir -p data/gpt2 && cd data/gpt2
+wget https://huggingface.co/gpt2/resolve/main/model.safetensors -O gpt2_model.safetensors
+cd ../..
 
 # 3. Build & Inference
-make
-./nn tools/config_infer.json
+make clean && make PROF=1
+OMP_NUM_THREADS=4 ./bin/gpt2_io_test
 ```
 
 ## Makefile commands
