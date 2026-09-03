@@ -172,26 +172,41 @@ int tk_ops_gemm(struct tk_tensor* src1, struct tk_tensor* src2, struct tk_tensor
             int tile_q = 32;
             int tile_r = 32;
 
-            _Pragma("omp parallel for")
-            for (int p = 0; p < src1_p; ++p) {
-                scalar_t* dest_row = dest_ptr + p * src2_r;
-                memset(dest_row, 0, src2_r * sizeof(scalar_t));
+			if (src1_p > 1) {
+				_Pragma("omp parallel for")
+				for (int p = 0; p < src1_p; ++p) {
+					scalar_t* dest_row = dest_ptr + p * src2_r;
+					memset(dest_row, 0, src2_r * sizeof(scalar_t));
 
-                for (int qq = 0; qq < src1_q; qq += tile_q) {
-                    int q_limit = (qq + tile_q > src1_q) ? src1_q : (qq + tile_q);
-                    
-                    for (int rr = 0; rr < src2_r; rr += tile_r) {
-                        int r_limit = (rr + tile_r > src2_r) ? src2_r : (rr + tile_r);
+					for (int qq = 0; qq < src1_q; qq += tile_q) {
+						int q_limit = (qq + tile_q > src1_q) ? src1_q : (qq + tile_q);
+						
+						for (int rr = 0; rr < src2_r; rr += tile_r) {
+							int r_limit = (rr + tile_r > src2_r) ? src2_r : (rr + tile_r);
 
-                        for (int q = qq; q < q_limit; ++q) {
-                            scalar_t val = src1_ptr[p * src1_q + q];
-                            for (int r = rr; r < r_limit; ++r) {
-                                dest_row[r] += val * src2_ptr[q * src2_r + r];
-                            }
-                        }
-                    }
-                }
-            }
+							for (int q = qq; q < q_limit; ++q) {
+								scalar_t val = src1_ptr[p * src1_q + q];
+								for (int r = rr; r < r_limit; ++r) {
+									dest_row[r] += val * src2_ptr[q * src2_r + r];
+								}
+							}
+						}
+					}
+				}
+			}
+			else {
+				scalar_t* dest_row = dest_ptr;
+				_Pragma("omp parallel for")
+				for (int rr = 0; rr < src2_r; rr += tile_r) {
+					int r_limit = (rr + tile_r > src2_r) ? src2_r : (rr + tile_r);
+					memset(dest_row + rr, 0, (r_limit - rr) * sizeof(scalar_t));
+					for (int q = 0; q < src1_q; ++q) {
+						scalar_t val = src1_ptr[q];
+						for (int r = rr; r < r_limit; ++r)
+							dest_row[r] += val * src2_ptr[q * src2_r + r];
+					}
+				}
+			}
         }
     });
     return 0;
@@ -352,42 +367,57 @@ int tk_ops_fused_gemm_bias_gelu(struct tk_tensor* src1, struct tk_tensor* src2,
 
             int tile_q = 32;
             int tile_r = 32;
-            _Pragma("omp parallel for")
-            for (int p = 0; p < src1_p; ++p) {
-                scalar_t* dest_row = dest_ptr + p * src2_r;
-                memset(dest_row, 0, src2_r * sizeof(scalar_t));
+			if (src1_p > 1) {
+				_Pragma("omp parallel for")
+				for (int p = 0; p < src1_p; ++p) {
+					scalar_t* dest_row = dest_ptr + p * src2_r;
+					memset(dest_row, 0, src2_r * sizeof(scalar_t));
 
-                for (int qq = 0; qq < src1_q; qq += tile_q) {
-                    int q_limit = (qq + tile_q > src1_q) ? src1_q : (qq + tile_q);
-                    
-                    for (int rr = 0; rr < src2_r; rr += tile_r) {
-                        int r_limit = (rr + tile_r > src2_r) ? src2_r : (rr + tile_r);
+					for (int qq = 0; qq < src1_q; qq += tile_q) {
+						int q_limit = (qq + tile_q > src1_q) ? src1_q : (qq + tile_q);
+						
+						for (int rr = 0; rr < src2_r; rr += tile_r) {
+							int r_limit = (rr + tile_r > src2_r) ? src2_r : (rr + tile_r);
 
-                        for (int q = qq; q < q_limit; ++q) {
-                            scalar_t val = src1_ptr[p * src1_q + q];
-                            for (int r = rr; r < r_limit; ++r) {
-                                dest_row[r] += val * src2_ptr[q * src2_r + r];
-                            }
-                        }
-                    }
-                }
-                
-                // add bias immediately to achieve cache locality 
-                // bias need to be broadcasted (only one row)
-                for ( int i = 0 ; i < src2_r ; ++i ) {
-                    dest_row[i] += bias_ptr[i];
-                }
+							for (int q = qq; q < q_limit; ++q) {
+								scalar_t val = src1_ptr[p * src1_q + q];
+								for (int r = rr; r < r_limit; ++r) {
+									dest_row[r] += val * src2_ptr[q * src2_r + r];
+								}
+							}
+						}
+					}
+					// add bias immediately to achieve cache locality 
+					// bias need to be broadcasted (only one row)
+					for ( int i = 0 ; i < src2_r ; ++i ) {
+						dest_row[i] += bias_ptr[i];
+					}
+					_gelu_fn((void*)dest_row, (void*)dest_row, dest->dtype, src2_r);
+					// printf("[fused] gelu_fn ptr = %p\n", (void*)_gelu_fn);
+				}
+			}
+			else {
+			    scalar_t* dest_row = dest_ptr;
+			    _Pragma("omp parallel for")
+			    for (int rr = 0; rr < src2_r; rr += tile_r) {
+				int r_limit = (rr + tile_r > src2_r) ? src2_r : (rr + tile_r);
+				int r_len   = r_limit - rr;
 
-                // GELU takes a number and output a number
-				/*
-                for ( int i = 0 ; i < src2_r ; ++i ) {
-                        double x = (double)dest_row[i];
-                        dest_row[i] = (scalar_t)(0.5 * x * (1.0 + erf(x * 0.7071067811865476)));
-                }
-				*/
-				_gelu_fn((void*)dest_row, (void*)dest_row, dest->dtype, src2_r);
-				// printf("[fused] gelu_fn ptr = %p\n", (void*)_gelu_fn);
-            }
+				memset(dest_row + rr, 0, r_len * sizeof(scalar_t));
+
+				for (int q = 0; q < src1_q; ++q) {
+				    scalar_t val = src1_ptr[q];
+				    for (int r = rr; r < r_limit; ++r)
+					dest_row[r] += val * src2_ptr[q * src2_r + r];
+				}
+
+				for (int i = rr; i < r_limit; ++i)
+				    dest_row[i] += bias_ptr[i];
+
+				_gelu_fn((void*)(dest_row + rr), (void*)(dest_row + rr),
+					 dest->dtype, r_len);
+			    }
+			}
         }
     });
     return 0;
