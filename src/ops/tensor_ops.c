@@ -118,60 +118,10 @@ int tk_ops_gemm(struct tk_tensor* src1, struct tk_tensor* src2, struct tk_tensor
             scalar_t* src2_ptr = src2_base + b * batch_stride_s2;
             scalar_t* dest_ptr  = dest_base  + b * batch_stride_dest;
 
-            // this part can be optimized using omp for parallelism
-            /*
-            for ( int p = 0 ; p < src1->shape[src1->ndims-2] ; ++p )
-                for ( int r = 0 ; r < src2->shape[src2->ndims-1] ; ++r ) {
-                    scalar_t sum = 0;
-                    for ( int q = 0 ; q < src1_q ; ++q ) {
-                        sum += src1_ptr[p * src1_q + q] *
-                               // src2_ptr read column, tend to miss cache
-                               // maybe consider transpose it to dramatically increate cache hit
-                               src2_ptr[q * src2_r + r];
-                    } 
-                    dest_ptr[p * src2_r + r] = sum;
-                }
-            */
-
-            /* cache friendly version of naive gemm */
-            /*
-            for ( int p = 0 ; p < src1_p ; ++p )
-                for ( int q = 0 ; q < src1_q ; ++q ) {
-                    scalar_t val = src1_ptr[p * src1_q + q];
-                    for ( int r = 0 ; r < src2_r ; ++r ) {
-                        dest_ptr[p * src2_r + r] += val * src2_ptr[q * src2_r + r];
-                    } 
-                }
-            */
-
-            /* TILING gemm */
-            /*
-            int tile_q = 32;
-            int tile_r = 32;
-            // tile gemm is accumulated, clear zero first
-            memset(dest_ptr, 0, src1_p * src2_r * sizeof(scalar_t));
-
-            for ( int qq = 0 ; qq < src1_q ; qq += tile_q ) {
-                int q_limit = (qq + tile_q > src1_q) ? src1_q : (qq + tile_q);
-                for ( int rr = 0 ; rr < src2_r ; rr += tile_r ) {
-                    int r_limit = (rr + tile_r > src2_r) ? src2_r : (rr + tile_r);
-                    _Pragma("omp parallel for")
-                    for ( int p = 0 ; p < src1_p ; ++p ) {
-                        for ( int q = qq ; q < q_limit ; ++q ) {
-                            scalar_t val = src1_ptr[p * src1_q + q];
-
-                            for ( int r = rr ; r < r_limit ; ++r ) {
-                                dest_ptr[p * src2_r + r] += val * src2_ptr[q * src2_r + r];
-                            }
-                        }
-                    }
-                    
-                }
-            }
-            */
             int tile_q = 32;
             int tile_r = 32;
 
+			// prefill
 			if (src1_p > 1) {
 				_Pragma("omp parallel for")
 				for (int p = 0; p < src1_p; ++p) {
@@ -195,6 +145,30 @@ int tk_ops_gemm(struct tk_tensor* src1, struct tk_tensor* src2, struct tk_tensor
 				}
 			}
 			else {
+				_Pragma("omp parallel")
+				{
+					int num_threads = omp_get_num_threads();
+					int chunk = (src2_r + num_threads - 1) / num_threads;
+					// get the thread number to calculate its r range
+					int r_start = omp_get_thread_num() * chunk;
+					int r_thread_limit = (r_start + chunk) < src2_r ? (r_start + chunk) : src2_r; 
+					memset(dest_ptr + r_start, 0, (r_thread_limit - r_start) * sizeof(scalar_t));
+					for ( int qq = 0 ; qq < src1_q ; qq += tile_q ) {
+						int q_limit = (qq + tile_q) < src1_q ? (qq + tile_q) : src1_q;
+						for ( int rr = r_start ; rr < r_thread_limit ; rr += tile_r ) {
+							int r_tile_limit = (rr + tile_r) < r_thread_limit ? (rr + tile_r) : r_thread_limit;
+							for ( int q = qq ; q < q_limit ; ++q ) {
+								scalar_t val = src1_ptr[q];
+								for ( int r = rr ; r < r_tile_limit ; ++r ) {
+									dest_ptr[r] += val * src2_ptr[q * src2_r + r];
+								}
+							}
+						}
+					}			
+				}
+			}
+			/* decode
+			else {
 				scalar_t* dest_row = dest_ptr;
 				_Pragma("omp parallel for")
 				for (int rr = 0; rr < src2_r; rr += tile_r) {
@@ -207,6 +181,7 @@ int tk_ops_gemm(struct tk_tensor* src1, struct tk_tensor* src2, struct tk_tensor
 					}
 				}
 			}
+			*/
         }
     });
     return 0;
