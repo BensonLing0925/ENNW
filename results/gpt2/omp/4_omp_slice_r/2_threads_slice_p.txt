@@ -1,0 +1,115 @@
+ubuntu@kria:~/ENNW$ OMP_NUM_THREADS=2 ./bin/gpt2_io_test
+config size: 666
+num_layers=12 hidden_dim=768 n_heads=12 vocab_size=50257 max_seq_len=1024
+Header size: 14283
+config size: 666
+[OK] Number of layer matched
+[gpt2_io] 160 tensors loaded
+[gpt2_io] layer 12 loaded
+[gpt2_io] all weights loaded from 'data/gpt2/gpt2_model.safetensors'
+load rc=0
+dry run rc=0
+[Optimize] Fused 12 GEMM+ADD+GELU triplet(s) into FUSED_GEMM_ADD_GELU
+[Info] Graph: 122 active nodes (146 total, 24 fused away)
+[Info] Runtime prepared. Switched to inference mode.
+Workspace peak: 4.39 MB (4600960 bytes)
+prefill graph execute: 2607.860 ms
+rc=0
+logits[0..7]: -94.150490 -91.764824 -96.022491 -96.601372 -95.943878 -96.883598 -93.256615 -93.036354 
+prefill graph execute: 2603.271 ms
+rc=0
+logits[0..7]: -94.150490 -91.764824 -96.022491 -96.601372 -95.943878 -96.883598 -93.256615 -93.036354 
+prefill graph execute: 2603.356 ms
+rc=0
+logits[0..7]: -94.150490 -91.764824 -96.022491 -96.601372 -95.943878 -96.883598 -93.256615 -93.036354 
+prefill graph execute: 2601.050 ms
+rc=0
+logits[0..7]: -94.150490 -91.764824 -96.022491 -96.601372 -95.943878 -96.883598 -93.256615 -93.036354 
+prefill graph execute: 2600.923 ms
+rc=0
+logits[0..7]: -94.150490 -91.764824 -96.022491 -96.601372 -95.943878 -96.883598 -93.256615 -93.036354 
+prefill graph execute: 2600.893 ms
+
+=== Timing ===
+Prefill (5 tokens) : 2600.989 ms
+Decode total        : 46138.747 ms (49 steps)
+Decode per token    : 941.607 ms
+Total               : 48739.737 ms
+generate rc=0, tokens: 464 3797 3332 319 262 4314 11 290 262 3797 373 991 16039 13 198 198 1 40 1101 7926 11 314 1101 7926 553 673 531 13 366 40 1101 7926 13 314 1101 7926 13 314 1101 7926 13 314 1101 7926 13 314 1101 7926 13 314 1101 7926 13 314 1101 
+ubuntu@kria:~/ENNW$ OMP_NUM_THREADS=2 ./bin/gpt2_io_test
+config size: 666
+num_layers=12 hidden_dim=768 n_heads=12 vocab_size=50257 max_seq_len=1024
+Header size: 14283
+config size: 666
+[OK] Number of layer matched
+[gpt2_io] 160 tensors loaded
+[gpt2_io] layer 12 loaded
+[gpt2_io] all weights loaded from 'data/gpt2/gpt2_model.safetensors'
+load rc=0
+dry run rc=0
+[Optimize] Fused 12 GEMM+ADD+GELU triplet(s) into FUSED_GEMM_ADD_GELU
+[Info] Graph: 122 active nodes (146 total, 24 fused away)
+[Info] Runtime prepared. Switched to inference mode.
+Workspace peak: 4.39 MB (4600960 bytes)
+prefill graph execute: 2605.968 ms
+rc=0
+logits[0..7]: -94.150490 -91.764824 -96.022491 -96.601372 -95.943878 -96.883598 -93.256615 -93.036354 
+prefill graph execute: 2601.416 ms
+rc=0
+logits[0..7]: -94.150490 -91.764824 -96.022491 -96.601372 -95.943878 -96.883598 -93.256615 -93.036354 
+prefill graph execute: 2599.089 ms
+rc=0
+logits[0..7]: -94.150490 -91.764824 -96.022491 -96.601372 -95.943878 -96.883598 -93.256615 -93.036354 
+prefill graph execute: 2601.844 ms
+rc=0
+logits[0..7]: -94.150490 -91.764824 -96.022491 -96.601372 -95.943878 -96.883598 -93.256615 -93.036354 
+prefill graph execute: 2599.000 ms
+rc=0
+logits[0..7]: -94.150490 -91.764824 -96.022491 -96.601372 -95.943878 -96.883598 -93.256615 -93.036354 
+prefill graph execute: 2601.675 ms
+
+=== Timing ===
+Prefill (5 tokens) : 2601.761 ms
+Decode total        : 46252.795 ms (49 steps)
+Decode per token    : 943.935 ms
+Total               : 48854.556 ms
+generate rc=0, tokens: 464 3797 3332 319 262 4314 11 290 262 3797 373 991 16039 13 198 198 1 40 1101 7926 11 314 1101 7926 553 673 531 13 366 40 1101 7926 13 314 1101 7926 13 314 1101 7926 13 314 1101 7926 13 314 1101 7926 13 314 1101 7926 13 314 1101 
+ubuntu@kria:~/ENNW$ OMP_NUM_THREADS=2 ./bin/gpt2_io_test
+config size: 666
+num_layers=12 hidden_dim=768 n_heads=12 vocab_size=50257 max_seq_len=1024
+Header size: 14283
+config size: 666
+[OK] Number of layer matched
+[gpt2_io] 160 tensors loaded
+[gpt2_io] layer 12 loaded
+[gpt2_io] all weights loaded from 'data/gpt2/gpt2_model.safetensors'
+load rc=0
+dry run rc=0
+[Optimize] Fused 12 GEMM+ADD+GELU triplet(s) into FUSED_GEMM_ADD_GELU
+[Info] Graph: 122 active nodes (146 total, 24 fused away)
+[Info] Runtime prepared. Switched to inference mode.
+Workspace peak: 4.39 MB (4600960 bytes)
+prefill graph execute: 2608.235 ms
+rc=0
+logits[0..7]: -94.150490 -91.764824 -96.022491 -96.601372 -95.943878 -96.883598 -93.256615 -93.036354 
+prefill graph execute: 2598.874 ms
+rc=0
+logits[0..7]: -94.150490 -91.764824 -96.022491 -96.601372 -95.943878 -96.883598 -93.256615 -93.036354 
+prefill graph execute: 2602.096 ms
+rc=0
+logits[0..7]: -94.150490 -91.764824 -96.022491 -96.601372 -95.943878 -96.883598 -93.256615 -93.036354 
+prefill graph execute: 2598.373 ms
+rc=0
+logits[0..7]: -94.150490 -91.764824 -96.022491 -96.601372 -95.943878 -96.883598 -93.256615 -93.036354 
+prefill graph execute: 2597.309 ms
+rc=0
+logits[0..7]: -94.150490 -91.764824 -96.022491 -96.601372 -95.943878 -96.883598 -93.256615 -93.036354 
+prefill graph execute: 2599.181 ms
+
+=== Timing ===
+Prefill (5 tokens) : 2599.275 ms
+Decode total        : 46198.674 ms (49 steps)
+Decode per token    : 942.830 ms
+Total               : 48797.949 ms
+generate rc=0, tokens: 464 3797 3332 319 262 4314 11 290 262 3797 373 991 16039 13 198 198 1 40 1101 7926 11 314 1101 7926 553 673 531 13 366 40 1101 7926 13 314 1101 7926 13 314 1101 7926 13 314 1101 7926 13 314 1101 7926 13 314 1101 7926 13 314 1101 
+
