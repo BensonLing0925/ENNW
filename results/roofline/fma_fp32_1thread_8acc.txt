@@ -1,0 +1,317 @@
+ubuntu@kria:~/ENNW$ ./bin/roofline 
+Number of iterations: 2097152
+Number of accumulators: 8
+Warmup runs: 5
+Warmup checksum 0:
+103066.390625 321203.343750 524288.000000 741763.187500 926025.812500 1158826.875000 1334271.375000 1572864.000000 
+Warmup checksum 1:
+103066.390625 321203.343750 524288.000000 741763.187500 926025.812500 1158826.875000 1334271.375000 1572864.000000 
+Warmup checksum 2:
+103066.390625 321203.343750 524288.000000 741763.187500 926025.812500 1158826.875000 1334271.375000 1572864.000000 
+Warmup checksum 3:
+103066.390625 321203.343750 524288.000000 741763.187500 926025.812500 1158826.875000 1334271.375000 1572864.000000 
+Warmup checksum 4:
+103066.390625 321203.343750 524288.000000 741763.187500 926025.812500 1158826.875000 1334271.375000 1572864.000000 
+Warmup finished
+103066.390625 321203.343750 524288.000000 741763.187500 926025.812500 1158826.875000 1334271.375000 1572864.000000 Elapsed: 12.635 ms
+Throughput: 10.623006 GFLOP/s
+103066.390625 321203.343750 524288.000000 741763.187500 926025.812500 1158826.875000 1334271.375000 1572864.000000 Elapsed: 12.634 ms
+Throughput: 10.623452 GFLOP/s
+103066.390625 321203.343750 524288.000000 741763.187500 926025.812500 1158826.875000 1334271.375000 1572864.000000 Elapsed: 12.669 ms
+Throughput: 10.593785 GFLOP/s
+103066.390625 321203.343750 524288.000000 741763.187500 926025.812500 1158826.875000 1334271.375000 1572864.000000 Elapsed: 12.650 ms
+Throughput: 10.609730 GFLOP/s
+103066.390625 321203.343750 524288.000000 741763.187500 926025.812500 1158826.875000 1334271.375000 1572864.000000 Elapsed: 12.661 ms
+Throughput: 10.600705 GFLOP/s
+103066.390625 321203.343750 524288.000000 741763.187500 926025.812500 1158826.875000 1334271.375000 1572864.000000 Elapsed: 12.633 ms
+Throughput: 10.624672 GFLOP/s
+103066.390625 321203.343750 524288.000000 741763.187500 926025.812500 1158826.875000 1334271.375000 1572864.000000 Elapsed: 12.633 ms
+Throughput: 10.624655 GFLOP/s
+103066.390625 321203.343750 524288.000000 741763.187500 926025.812500 1158826.875000 1334271.375000 1572864.000000 Elapsed: 12.641 ms
+Throughput: 10.617696 GFLOP/s
+103066.390625 321203.343750 524288.000000 741763.187500 926025.812500 1158826.875000 1334271.375000 1572864.000000 Elapsed: 12.632 ms
+Throughput: 10.625150 GFLOP/s
+103066.390625 321203.343750 524288.000000 741763.187500 926025.812500 1158826.875000 1334271.375000 1572864.000000 Elapsed: 12.638 ms
+Throughput: 10.620089 GFLOP/s
+
+ubuntu@kria:~/ENNW$ objdump -d --disassemble=main ./bin/roofline
+
+./bin/roofline:     file format elf64-littleaarch64
+
+
+Disassembly of section .init:
+
+Disassembly of section .plt:
+
+Disassembly of section .text:
+
+00000000000016c0 <main>:
+    16c0:	a9b37bfd 	stp	x29, x30, [sp, #-208]!
+    16c4:	d2a00402 	mov	x2, #0x200000              	// #2097152
+    16c8:	d0000121 	adrp	x1, 27000 <cJSON_CreateStringArray+0xc0>
+    16cc:	910003fd 	mov	x29, sp
+    16d0:	91286021 	add	x1, x1, #0xa18
+    16d4:	52800020 	mov	w0, #0x1                   	// #1
+    16d8:	a90153f3 	stp	x19, x20, [sp, #16]
+    16dc:	d2800014 	mov	x20, #0x0                   	// #0
+    16e0:	a9025bf5 	stp	x21, x22, [sp, #32]
+    16e4:	d0000136 	adrp	x22, 27000 <cJSON_CreateStringArray+0xc0>
+    16e8:	d0000135 	adrp	x21, 27000 <cJSON_CreateStringArray+0xc0>
+    16ec:	f9001bf7 	str	x23, [sp, #48]
+    16f0:	fd001fea 	str	d10, [sp, #56]
+    16f4:	6d0427e8 	stp	d8, d9, [sp, #64]
+    16f8:	97ffff6e 	bl	14b0 <__printf_chk@plt>
+    16fc:	52800102 	mov	w2, #0x8                   	// #8
+    1700:	d0000121 	adrp	x1, 27000 <cJSON_CreateStringArray+0xc0>
+    1704:	52800020 	mov	w0, #0x1                   	// #1
+    1708:	9128e021 	add	x1, x1, #0xa38
+    170c:	97ffff69 	bl	14b0 <__printf_chk@plt>
+    1710:	d28000a2 	mov	x2, #0x5                   	// #5
+    1714:	d0000121 	adrp	x1, 27000 <cJSON_CreateStringArray+0xc0>
+    1718:	52800020 	mov	w0, #0x1                   	// #1
+    171c:	91296021 	add	x1, x1, #0xa58
+    1720:	97ffff64 	bl	14b0 <__printf_chk@plt>
+    1724:	4f02f601 	fmov	v1.4s, #2.500000000000000000e-01
+    1728:	d0000120 	adrp	x0, 27000 <cJSON_CreateStringArray+0xc0>
+    172c:	3dc2b813 	ldr	q19, [x0, #2784]
+    1730:	d0000120 	adrp	x0, 27000 <cJSON_CreateStringArray+0xc0>
+    1734:	3dc2bc12 	ldr	q18, [x0, #2800]
+    1738:	d0000120 	adrp	x0, 27000 <cJSON_CreateStringArray+0xc0>
+    173c:	3dc2c011 	ldr	q17, [x0, #2816]
+    1740:	d0000121 	adrp	x1, 27000 <cJSON_CreateStringArray+0xc0>
+    1744:	4f000402 	movi	v2.4s, #0x0
+    1748:	d2a00400 	mov	x0, #0x200000              	// #2097152
+    174c:	3dc2c434 	ldr	q20, [x1, #2832]
+    1750:	d0000121 	adrp	x1, 27000 <cJSON_CreateStringArray+0xc0>
+    1754:	4f03f509 	fmov	v9.4s, #7.500000000000000000e-01
+    1758:	3dc2c830 	ldr	q16, [x1, #2848]
+    175c:	d0000121 	adrp	x1, 27000 <cJSON_CreateStringArray+0xc0>
+    1760:	4ea21c43 	mov	v3.16b, v2.16b
+    1764:	4ea21c44 	mov	v4.16b, v2.16b
+    1768:	4ea21c45 	mov	v5.16b, v2.16b
+    176c:	4ea21c46 	mov	v6.16b, v2.16b
+    1770:	4ea21c47 	mov	v7.16b, v2.16b
+    1774:	4ea21c48 	mov	v8.16b, v2.16b
+    1778:	4ea21c40 	mov	v0.16b, v2.16b
+    177c:	3dc2cc2a 	ldr	q10, [x1, #2864]
+    1780:	f1000400 	subs	x0, x0, #0x1
+    1784:	4e21ce60 	fmla	v0.4s, v19.4s, v1.4s
+    1788:	4e21ce48 	fmla	v8.4s, v18.4s, v1.4s
+    178c:	4e21cc27 	fmla	v7.4s, v1.4s, v1.4s
+    1790:	4e21ce26 	fmla	v6.4s, v17.4s, v1.4s
+    1794:	4e21ce85 	fmla	v5.4s, v20.4s, v1.4s
+    1798:	4e21ce04 	fmla	v4.4s, v16.4s, v1.4s
+    179c:	4e21cd43 	fmla	v3.4s, v10.4s, v1.4s
+    17a0:	4e21cd22 	fmla	v2.4s, v9.4s, v1.4s
+    17a4:	54fffee1 	b.ne	1780 <main+0xc0>  // b.any
+    17a8:	aa1403e2 	mov	x2, x20
+    17ac:	9129c2c1 	add	x1, x22, #0xa70
+    17b0:	52800020 	mov	w0, #0x1                   	// #1
+    17b4:	ad02a3e0 	stp	q0, q8, [sp, #80]
+    17b8:	912a22b3 	add	x19, x21, #0xa88
+    17bc:	ad039be7 	stp	q7, q6, [sp, #112]
+    17c0:	91000694 	add	x20, x20, #0x1
+    17c4:	ad0493e5 	stp	q5, q4, [sp, #144]
+    17c8:	ad058be3 	stp	q3, q2, [sp, #176]
+    17cc:	97ffff39 	bl	14b0 <__printf_chk@plt>
+    17d0:	aa1303e1 	mov	x1, x19
+    17d4:	3dc017e0 	ldr	q0, [sp, #80]
+    17d8:	52800020 	mov	w0, #0x1                   	// #1
+    17dc:	6e20d400 	faddp	v0.4s, v0.4s, v0.4s
+    17e0:	6e20d400 	faddp	v0.4s, v0.4s, v0.4s
+    17e4:	1e22c000 	fcvt	d0, s0
+    17e8:	97ffff32 	bl	14b0 <__printf_chk@plt>
+    17ec:	3dc01be8 	ldr	q8, [sp, #96]
+    17f0:	aa1303e1 	mov	x1, x19
+    17f4:	52800020 	mov	w0, #0x1                   	// #1
+    17f8:	6e28d508 	faddp	v8.4s, v8.4s, v8.4s
+    17fc:	6e28d508 	faddp	v8.4s, v8.4s, v8.4s
+    1800:	1e22c100 	fcvt	d0, s8
+    1804:	97ffff2b 	bl	14b0 <__printf_chk@plt>
+    1808:	3dc01fe7 	ldr	q7, [sp, #112]
+    180c:	aa1303e1 	mov	x1, x19
+    1810:	52800020 	mov	w0, #0x1                   	// #1
+    1814:	6e27d4e7 	faddp	v7.4s, v7.4s, v7.4s
+    1818:	6e27d4e7 	faddp	v7.4s, v7.4s, v7.4s
+    181c:	1e22c0e0 	fcvt	d0, s7
+    1820:	97ffff24 	bl	14b0 <__printf_chk@plt>
+    1824:	3dc023e6 	ldr	q6, [sp, #128]
+    1828:	aa1303e1 	mov	x1, x19
+    182c:	52800020 	mov	w0, #0x1                   	// #1
+    1830:	6e26d4c6 	faddp	v6.4s, v6.4s, v6.4s
+    1834:	6e26d4c6 	faddp	v6.4s, v6.4s, v6.4s
+    1838:	1e22c0c0 	fcvt	d0, s6
+    183c:	97ffff1d 	bl	14b0 <__printf_chk@plt>
+    1840:	3dc027e5 	ldr	q5, [sp, #144]
+    1844:	aa1303e1 	mov	x1, x19
+    1848:	52800020 	mov	w0, #0x1                   	// #1
+    184c:	6e25d4a5 	faddp	v5.4s, v5.4s, v5.4s
+    1850:	6e25d4a5 	faddp	v5.4s, v5.4s, v5.4s
+    1854:	1e22c0a0 	fcvt	d0, s5
+    1858:	97ffff16 	bl	14b0 <__printf_chk@plt>
+    185c:	3dc02be4 	ldr	q4, [sp, #160]
+    1860:	aa1303e1 	mov	x1, x19
+    1864:	52800020 	mov	w0, #0x1                   	// #1
+    1868:	6e24d484 	faddp	v4.4s, v4.4s, v4.4s
+    186c:	6e24d484 	faddp	v4.4s, v4.4s, v4.4s
+    1870:	1e22c080 	fcvt	d0, s4
+    1874:	97ffff0f 	bl	14b0 <__printf_chk@plt>
+    1878:	3dc02fe3 	ldr	q3, [sp, #176]
+    187c:	aa1303e1 	mov	x1, x19
+    1880:	52800020 	mov	w0, #0x1                   	// #1
+    1884:	6e23d463 	faddp	v3.4s, v3.4s, v3.4s
+    1888:	6e23d463 	faddp	v3.4s, v3.4s, v3.4s
+    188c:	1e22c060 	fcvt	d0, s3
+    1890:	97ffff08 	bl	14b0 <__printf_chk@plt>
+    1894:	3dc033e2 	ldr	q2, [sp, #192]
+    1898:	aa1303e1 	mov	x1, x19
+    189c:	52800020 	mov	w0, #0x1                   	// #1
+    18a0:	6e22d442 	faddp	v2.4s, v2.4s, v2.4s
+    18a4:	6e22d442 	faddp	v2.4s, v2.4s, v2.4s
+    18a8:	1e22c040 	fcvt	d0, s2
+    18ac:	97ffff01 	bl	14b0 <__printf_chk@plt>
+    18b0:	52800140 	mov	w0, #0xa                   	// #10
+    18b4:	97fffeef 	bl	1470 <putchar@plt>
+    18b8:	d0000120 	adrp	x0, 27000 <cJSON_CreateStringArray+0xc0>
+    18bc:	f100169f 	cmp	x20, #0x5
+    18c0:	4f02f601 	fmov	v1.4s, #2.500000000000000000e-01
+    18c4:	3dc2b813 	ldr	q19, [x0, #2784]
+    18c8:	d0000120 	adrp	x0, 27000 <cJSON_CreateStringArray+0xc0>
+    18cc:	3dc2bc12 	ldr	q18, [x0, #2800]
+    18d0:	d0000120 	adrp	x0, 27000 <cJSON_CreateStringArray+0xc0>
+    18d4:	3dc2c011 	ldr	q17, [x0, #2816]
+    18d8:	54fff341 	b.ne	1740 <main+0x80>  // b.any
+    18dc:	d0000120 	adrp	x0, 27000 <cJSON_CreateStringArray+0xc0>
+    18e0:	912a4000 	add	x0, x0, #0xa90
+    18e4:	97ffff4f 	bl	1620 <puts@plt>
+    18e8:	d2800154 	mov	x20, #0xa                   	// #10
+    18ec:	d2d09001 	mov	x1, #0x848000000000        	// #145685290680320
+    18f0:	d2e83400 	mov	x0, #0x41a0000000000000    	// #4728779608739020800
+    18f4:	f2e825c1 	movk	x1, #0x412e, lsl #48
+    18f8:	d0000137 	adrp	x23, 27000 <cJSON_CreateStringArray+0xc0>
+    18fc:	9e67002a 	fmov	d10, x1
+    1900:	9e670009 	fmov	d9, x0
+    1904:	d0000136 	adrp	x22, 27000 <cJSON_CreateStringArray+0xc0>
+    1908:	4f000402 	movi	v2.4s, #0x0
+    190c:	3d8017e2 	str	q2, [sp, #80]
+    1910:	940073f4 	bl	1e8e0 <tk_get_now_ns>
+    1914:	aa0003f3 	mov	x19, x0
+    1918:	d0000120 	adrp	x0, 27000 <cJSON_CreateStringArray+0xc0>
+    191c:	d0000122 	adrp	x2, 27000 <cJSON_CreateStringArray+0xc0>
+    1920:	3dc017e2 	ldr	q2, [sp, #80]
+    1924:	d2a00401 	mov	x1, #0x200000              	// #2097152
+    1928:	3dc2c015 	ldr	q21, [x0, #2816]
+    192c:	d0000120 	adrp	x0, 27000 <cJSON_CreateStringArray+0xc0>
+    1930:	3dc2bc56 	ldr	q22, [x2, #2800]
+    1934:	3dc2c414 	ldr	q20, [x0, #2832]
+    1938:	d0000120 	adrp	x0, 27000 <cJSON_CreateStringArray+0xc0>
+    193c:	4f03f508 	fmov	v8.4s, #7.500000000000000000e-01
+    1940:	3dc2c813 	ldr	q19, [x0, #2848]
+    1944:	d0000120 	adrp	x0, 27000 <cJSON_CreateStringArray+0xc0>
+    1948:	4f02f601 	fmov	v1.4s, #2.500000000000000000e-01
+    194c:	3dc2cc11 	ldr	q17, [x0, #2864]
+    1950:	d0000120 	adrp	x0, 27000 <cJSON_CreateStringArray+0xc0>
+    1954:	4ea21c43 	mov	v3.16b, v2.16b
+    1958:	3dc2b812 	ldr	q18, [x0, #2784]
+    195c:	4ea21c44 	mov	v4.16b, v2.16b
+    1960:	4ea21c45 	mov	v5.16b, v2.16b
+    1964:	4ea21c46 	mov	v6.16b, v2.16b
+    1968:	4ea21c47 	mov	v7.16b, v2.16b
+    196c:	4ea21c50 	mov	v16.16b, v2.16b
+    1970:	4ea21c40 	mov	v0.16b, v2.16b
+    1974:	d503201f 	nop
+    1978:	4e21ce40 	fmla	v0.4s, v18.4s, v1.4s
+    197c:	f1000421 	subs	x1, x1, #0x1
+    1980:	4e21ced0 	fmla	v16.4s, v22.4s, v1.4s
+    1984:	4e21cc27 	fmla	v7.4s, v1.4s, v1.4s
+    1988:	4e21cea6 	fmla	v6.4s, v21.4s, v1.4s
+    198c:	4e21ce85 	fmla	v5.4s, v20.4s, v1.4s
+    1990:	4e21ce64 	fmla	v4.4s, v19.4s, v1.4s
+    1994:	4e21ce23 	fmla	v3.4s, v17.4s, v1.4s
+    1998:	4e21cd02 	fmla	v2.4s, v8.4s, v1.4s
+    199c:	54fffee1 	b.ne	1978 <main+0x2b8>  // b.any
+    19a0:	ad028fe2 	stp	q2, q3, [sp, #80]
+    19a4:	ad0397e4 	stp	q4, q5, [sp, #112]
+    19a8:	ad049fe6 	stp	q6, q7, [sp, #144]
+    19ac:	ad0583f0 	stp	q16, q0, [sp, #176]
+    19b0:	940073cc 	bl	1e8e0 <tk_get_now_ns>
+    19b4:	cb130002 	sub	x2, x0, x19
+    19b8:	3dc033e0 	ldr	q0, [sp, #192]
+    19bc:	9e630048 	ucvtf	d8, x2
+    19c0:	912a22b3 	add	x19, x21, #0xa88
+    19c4:	52800020 	mov	w0, #0x1                   	// #1
+    19c8:	aa1303e1 	mov	x1, x19
+    19cc:	6e20d400 	faddp	v0.4s, v0.4s, v0.4s
+    19d0:	6e20d400 	faddp	v0.4s, v0.4s, v0.4s
+    19d4:	1e22c000 	fcvt	d0, s0
+    19d8:	97fffeb6 	bl	14b0 <__printf_chk@plt>
+    19dc:	3dc02ff0 	ldr	q16, [sp, #176]
+    19e0:	aa1303e1 	mov	x1, x19
+    19e4:	52800020 	mov	w0, #0x1                   	// #1
+    19e8:	6e30d610 	faddp	v16.4s, v16.4s, v16.4s
+    19ec:	6e30d610 	faddp	v16.4s, v16.4s, v16.4s
+    19f0:	1e22c200 	fcvt	d0, s16
+    19f4:	97fffeaf 	bl	14b0 <__printf_chk@plt>
+    19f8:	3dc02be7 	ldr	q7, [sp, #160]
+    19fc:	aa1303e1 	mov	x1, x19
+    1a00:	52800020 	mov	w0, #0x1                   	// #1
+    1a04:	6e27d4e7 	faddp	v7.4s, v7.4s, v7.4s
+    1a08:	6e27d4e7 	faddp	v7.4s, v7.4s, v7.4s
+    1a0c:	1e22c0e0 	fcvt	d0, s7
+    1a10:	97fffea8 	bl	14b0 <__printf_chk@plt>
+    1a14:	3dc027e6 	ldr	q6, [sp, #144]
+    1a18:	aa1303e1 	mov	x1, x19
+    1a1c:	52800020 	mov	w0, #0x1                   	// #1
+    1a20:	6e26d4c6 	faddp	v6.4s, v6.4s, v6.4s
+    1a24:	6e26d4c6 	faddp	v6.4s, v6.4s, v6.4s
+    1a28:	1e22c0c0 	fcvt	d0, s6
+    1a2c:	97fffea1 	bl	14b0 <__printf_chk@plt>
+    1a30:	3dc023e5 	ldr	q5, [sp, #128]
+    1a34:	aa1303e1 	mov	x1, x19
+    1a38:	52800020 	mov	w0, #0x1                   	// #1
+    1a3c:	6e25d4a5 	faddp	v5.4s, v5.4s, v5.4s
+    1a40:	6e25d4a5 	faddp	v5.4s, v5.4s, v5.4s
+    1a44:	1e22c0a0 	fcvt	d0, s5
+    1a48:	97fffe9a 	bl	14b0 <__printf_chk@plt>
+    1a4c:	3dc01fe4 	ldr	q4, [sp, #112]
+    1a50:	aa1303e1 	mov	x1, x19
+    1a54:	52800020 	mov	w0, #0x1                   	// #1
+    1a58:	6e24d484 	faddp	v4.4s, v4.4s, v4.4s
+    1a5c:	6e24d484 	faddp	v4.4s, v4.4s, v4.4s
+    1a60:	1e22c080 	fcvt	d0, s4
+    1a64:	97fffe93 	bl	14b0 <__printf_chk@plt>
+    1a68:	3dc01be3 	ldr	q3, [sp, #96]
+    1a6c:	aa1303e1 	mov	x1, x19
+    1a70:	52800020 	mov	w0, #0x1                   	// #1
+    1a74:	6e23d463 	faddp	v3.4s, v3.4s, v3.4s
+    1a78:	6e23d463 	faddp	v3.4s, v3.4s, v3.4s
+    1a7c:	1e22c060 	fcvt	d0, s3
+    1a80:	97fffe8c 	bl	14b0 <__printf_chk@plt>
+    1a84:	3dc017e2 	ldr	q2, [sp, #80]
+    1a88:	aa1303e1 	mov	x1, x19
+    1a8c:	52800020 	mov	w0, #0x1                   	// #1
+    1a90:	6e22d442 	faddp	v2.4s, v2.4s, v2.4s
+    1a94:	6e22d442 	faddp	v2.4s, v2.4s, v2.4s
+    1a98:	1e22c040 	fcvt	d0, s2
+    1a9c:	97fffe85 	bl	14b0 <__printf_chk@plt>
+    1aa0:	1e6a1900 	fdiv	d0, d8, d10
+    1aa4:	912a82e1 	add	x1, x23, #0xaa0
+    1aa8:	52800020 	mov	w0, #0x1                   	// #1
+    1aac:	97fffe81 	bl	14b0 <__printf_chk@plt>
+    1ab0:	1e681920 	fdiv	d0, d9, d8
+    1ab4:	912ae2c1 	add	x1, x22, #0xab8
+    1ab8:	52800020 	mov	w0, #0x1                   	// #1
+    1abc:	97fffe7d 	bl	14b0 <__printf_chk@plt>
+    1ac0:	f1000694 	subs	x20, x20, #0x1
+    1ac4:	54fff221 	b.ne	1908 <main+0x248>  // b.any
+    1ac8:	52800000 	mov	w0, #0x0                   	// #0
+    1acc:	fd401fea 	ldr	d10, [sp, #56]
+    1ad0:	a94153f3 	ldp	x19, x20, [sp, #16]
+    1ad4:	a9425bf5 	ldp	x21, x22, [sp, #32]
+    1ad8:	f9401bf7 	ldr	x23, [sp, #48]
+    1adc:	6d4427e8 	ldp	d8, d9, [sp, #64]
+    1ae0:	a8cd7bfd 	ldp	x29, x30, [sp], #208
+    1ae4:	d65f03c0 	ret
+
+Disassembly of section .fini:
+
