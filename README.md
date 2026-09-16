@@ -25,7 +25,7 @@ across both configurations.
 | 948 -> 452 ms | `omp parallel for` on the M loop; M = 1 during decode, so three of four threads idle at the barrier | parallelise over the output dimension |
 | 452 -> 269 ms | removing the tile loop touched 768 pages per tile, exceeding the 512-entry L2 TLB | restore tiling inside each thread's contiguous chunk |
 
-[Read the performance case study ->](results/README.md)  
+[Read the performance case study](results/gpt2/README.md)  
 
 The case study documents the profiling process, implementation changes,
 measurement setup, and raw results behind these numbers.
