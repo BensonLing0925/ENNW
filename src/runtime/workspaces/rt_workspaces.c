@@ -24,20 +24,6 @@ int tk_ws_alloc(struct tk_workspace* ws, size_t size, void** out) {
     // calculate alignment (64-alignment)
     size_t aligned_size = (size + 63) & ~63;
 
-    // during dry run: just move offset, out = NULL (not an error)
-    // during actual run: check capacity and return real address
-	/*
-    if (!ws->is_dryrun) {
-        // something very wrong here
-        // meaning dry run's estimated size is incorrect
-        if (ws->cur_offset + aligned_size > ws->capacity) {
-            RT_FAIL(RT_EOOM, "Insufficient workspace memory during inference");
-        }
-        *out = (uint8_t*)ws->arena_base + ws->cur_offset;
-    } else {
-        *out = NULL;
-    }
-	*/
     if (!ws->is_dryrun) {
         if (ws->cur_offset + aligned_size > ws->capacity)
             RT_FAIL(RT_EOOM, "Insufficient workspace memory during inference");

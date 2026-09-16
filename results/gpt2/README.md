@@ -42,7 +42,7 @@ that are inside of an Attention node do not reflect on other operators' record)
 
 ### Hypothesis:
 H1: The LM Head computation, which has 5(prompt_len) x 768(hidden_dim) x 50257(vocab_size), causes such latency.
-Rejected: LM Head executes exactly once per prefill, making it a fixed cost. A fixed cost cannot produce run-to-run variance.
+Rejected: LM Head executes exactly once per prefill, making it a fixed cost. A fixed cost cannot produce run-to-run variance.  
 H2: System-related factors caused the fluctuation, need more thorough investigation.
 
 ---
@@ -97,7 +97,7 @@ Key figures (six consecutive prefill runs per configuration):
 | 20 | 227.2 ms | **44.2 - 1485.0 ms (34x)** | 249.2 ms |
 
 Three important observations:
-1. **Fluctuation only happened when using 20 threads**: precisely the point where
+1. **Fluctuation only happened when using 20 threads**: according to my experiments, 20 is precisely the point where
   thread count equals the number of logical processors. Every other setting is
   stable within a few percent.
 2. **Prefill saturates at 8 threads** (2.37x over single-threaded) and regresses
@@ -145,7 +145,7 @@ The scheduling slice distribution initially looked like supporting evidence:
 | slices < 0.1 ms | 25.3% | **99.8%** |
 
 25.3% of slices under 0.1 ms seemed like a busy-wait signature. The control run
-disproves this — passive is *more* fragmented yet 3x faster.
+disproves this - passive is *more* fragmented yet 3x faster.
 
 Slice length is not the discriminator. What matters is whether a slice occupies
 a core, which is captured by CPU time and average cores busy. Fragmentation
@@ -187,3 +187,39 @@ thread doing real work competes for scheduling.
 The clearest case is `[1,768]x[768,768]`, where M = 1 leaves exactly one
 parallel iteration: 70 us at 4 threads, 1483-6035 us at 20. Nineteen threads
 with no work to do slow the one thread that has work by up to 86x.
+
+## Solving M-dimension parallelism problem
+`4_omp_slice_r`
+
+The previous microbenchmarks showed that the existing GEMM parallelization strategy is fundamentally unsuitable for autoregressive decoding. To fundamentally address the inefficient use of parallelism during the decode stage, a structural refactoring of GEMM was necessary. Autoregressive decoding produces one token at a time, making GEMM's M dimension equal to 1 (`p` in the implementation), which is one of the main differences between the prefill and decode stages.
+
+By applying parallelism over a different dimension instead of the M dimension (`p`), more cores can perform useful work during decoding.
+
+I first used a simple `if-else` to separate the GEMM and GEMV-like decode cases. I then moved the OpenMP parallel region from `p` to the output dimension (`r` in the implementation). The `q` dimension is the reduction dimension, meaning that different `q` iterations contribute to the same output element. Parallelizing `q` directly would therefore cause multiple threads to concurrently update the same destination element, creating a race condition.
+
+Instead, I parallelized the `rr` loop, which tiles the output-column dimension `r`. Different `rr` iterations operate on disjoint output regions, allowing threads to perform the full `q` reduction independently without shared writes while still exposing sufficient parallelism.
+
+| Loop to parallelize | Number of threads | Median decode latency | Speed up |
+|---|---|---|---|
+| p | 4 | 948.11 ms/token | 1.00 |
+| r | 4 | **452.01** ms/token | **2.1** |
+
+At this point, I feel like I'm gradually shifting my focus from system optimization to kernel design and profiling.
+
+## Another anomaly: loop r parallelism is slower than loop p parallelism when num thread = 1
+`5_omp_slice_r_qtiled`
+
+| Loop to parallelize | Number of threads | Median decode latency |
+|---|---|---|
+| p | 4 | 948.11 ms/token |
+| r | 4 | 452.01 ms/token |
+| p | 2 | 942.83 ms/token |
+| r | 2 | 656.99 ms/token |
+| p | 1 | 936.97 ms/token |
+| r | 1 | **1209.77 ms/token** |
+
+This phenomenon is classified as an anomaly becasue using single thread to run parallel regions theoretically degrades parallel to sequential execution(Though with some overhead). There is no reason for these two configurations with thread = 1 to have such massive latency gap.
+
+On closer inspection between before and after the code refactoring, I discovered that I also factored out q tiling. Maybe q tiling has some unexpected effect on inference latency. The difference between the two cases is fundamentally memory access pattern. The one without the `q` tiling required each `rr` to access all the rows. Using FFN up-projection as an example, inside a tile of `rr`, a thread need to access 32 * 4 = 128 bytes of data for each 768 rows. This implies a row contains 3072 x 4 = 12288 bytes. Since the system is row-major, and the system use paging with 4KB, an entire row requires 3 pages.
+
+Each core has its own main TLB with 512 entries. When no tiling, a thread need to access 768 pages accross different rows in each `rr` iteration. Under simplified LRU TLB model, there are only 512 entries in a TLB, creating the potential for recurring TLB replacement and refill. After the first `rr` tiling finished, the second iteration may casue a cache miss because the first page might be evicted. Cache miss will cause a page tree walk to convert and find the physical memory page. While the latency seems neglectible, frequent cache misses accumulated 768(`q`) x 96(`rr`) times, a sum that can contribute to inference latency.
