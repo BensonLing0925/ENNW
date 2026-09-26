@@ -14,8 +14,29 @@
             case TK_I32: { typedef int32_t  scalar_t; __VA_ARGS__ break; } \
             case TK_I16:  { typedef int16_t scalar_t; __VA_ARGS__ break; } \
             case TK_I8:  { typedef int8_t scalar_t; __VA_ARGS__ break; } \
-            case TK_U8:  { typedef int8_t scalar_t; __VA_ARGS__ break; } \
-            default: printf("Unsupported type in %s", name); \
+            case TK_U8:  { typedef uint8_t scalar_t; __VA_ARGS__ break; } \
+            default: \
+                RT_FAIL(RT_EINVAL, "Unsupported dtype in %s", name); \
+        } \
+    } while (0)
+
+// this macro is used for user to decide control flow
+#define TK_DISPATCH_TYPES_OR(dtype, name, on_error, ...) \
+    do { \
+        switch (dtype) { \
+            case TK_F64: { typedef double   scalar_t; __VA_ARGS__; break; } \
+            case TK_F32: { typedef float    scalar_t; __VA_ARGS__; break; } \
+            case TK_I32: { typedef int32_t  scalar_t; __VA_ARGS__; break; } \
+            case TK_I16: { typedef int16_t  scalar_t; __VA_ARGS__; break; } \
+            case TK_I8:  { typedef int8_t   scalar_t; __VA_ARGS__; break; } \
+            case TK_U8:  { typedef uint8_t  scalar_t; __VA_ARGS__; break; } \
+            default: { \
+                RT_SET(RT_EINVAL, \
+                    "unsupported dtype %d in %s", \
+                    (dtype), (name)); \
+                on_error; \
+                break; \
+            } \
         } \
     } while (0)
 
