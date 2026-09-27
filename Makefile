@@ -39,6 +39,8 @@ FRONTEND_DIR	:= $(SRC_DIR)/frontend
 FRONT_ONNX_DIR	:= $(FRONTEND_DIR)/onnx
 FRONT_ONNX_GEN_DIR	:= $(FRONT_ONNX_DIR)/gen
 
+UTILS_DIR		:= $(SRC_DIR)/utils
+
 THIRD_PARTY_DIR	:= $(SRC_DIR)/third_party
 CJSON_DIR    := $(THIRD_PARTY_DIR)/cJSON
 # needed when using ONNX importer
@@ -63,6 +65,7 @@ GPT2_IO_TEST_TARGET			:= $(BIN_DIR)/gpt2_io_test$(EXEEXT)
 OMP_TEST_TARGET			:= $(BIN_DIR)/omp_test$(EXEEXT)
 ROOFLINE_TARGET			:= $(BIN_DIR)/roofline$(EXEEXT)
 ONNX_IMPORT_TARGET			:= $(BIN_DIR)/onnx_import_test$(EXEEXT)
+HASHMAP_TEST_TARGET			:= $(BIN_DIR)/hashmap_test$(EXEEXT)
 
 # ---- Include paths ----
 # Note: THIRD_PARTY_DIR but not PROTOBUFC_DIR because protobuf-c's
@@ -72,7 +75,7 @@ INCLUDES := -I$(SRC_DIR) -I$(MODULES_DIR) \
             -I$(OPS_DIR) -I$(RT_DIR) -I$(RT_WS_DIR) -I$(PL_DIR) -I$(TRANSFORMER_DIR) \
             -I$(WEIGHTIO_DIR) -I$(EMB_DIR) -I$(DISTILBERT_DIR) -I$(EXAMPLES_DIR)	 \
 			-I$(RT_SG_DIR) -I$(GPT2_DIR) -I$(PROF_DIR) -I$(THIRD_PARTY_DIR) -I$(FRONTEND_DIR) \
-			-I$(FRONT_ONNX_GEN_DIR) -I$(FILEIO_DIR)
+			-I$(FRONT_ONNX_GEN_DIR) -I$(FILEIO_DIR) -I$(UTILS_DIR)
 			
 # Math library (needed on Linux if using exp/sqrt/etc)
 LDLIBS ?= -lm -fopenmp 
@@ -121,7 +124,9 @@ LIB_SRC := $(wildcard $(PL_DIR)/*.c) \
 		   $(PROTOBUFC_DIR)/protobuf-c.c \
 		   $(wildcard $(FRONT_ONNX_DIR)/*.c) \
 		   $(wildcard $(FRONT_ONNX_GEN_DIR)/*.c) \
-		   $(wildcard $(FILEIO_DIR)/*.c)
+		   $(wildcard $(FILEIO_DIR)/*.c) \
+		   $(wildcard $(UTILS_DIR)/*.c) 
+		   
 
 ifeq ($(PROF), 1)
     PROF_CORE_SRC := $(filter-out $(PROF_DIR)/test_%.c $(PROF_DIR)/tk_profiler_view.c, $(wildcard $(PROF_DIR)/*.c))
@@ -153,6 +158,8 @@ ROOFLINE_SRC := $(BENCH_DIR)/roofline.c
 # onnx and gpt2 Xenova-specific source
 ONNX_IMPORT_TEST_SRC := $(TEST_DIR)/onnx_import_test.c
 
+HASHMAP_TEST_SRC	 := $(TEST_DIR)/hashmap_test.c
+
 # cJSON source (compile as C89)
 SRC_C89 := $(CJSON_DIR)/cJSON.c
 
@@ -167,11 +174,12 @@ GPT2_IO_TEST_OBJ         := $(GPT2_IO_TEST_SRC:.c=.o)
 OMP_TEST_OBJ			:= $(OMP_TEST_SRC:.c=.o)
 ROOFLINE_OBJ			:= $(ROOFLINE_SRC:.c=.o)
 ONNX_IMPORT_TEST_OBJ	:= $(ONNX_IMPORT_TEST_SRC:.c=.o)
+HASHMAP_TEST_OBJ	:= $(HASHMAP_TEST_SRC:.c=.o)
 OBJ_C89              := $(SRC_C89:.c=.o)
 
 # ---- Default target ----
 .PHONY: all
-all: $(DISTILBERT_INFER_TARGET) $(SST2_INFER_TARGET) $(SST2_EVAL_TARGET) $(OPS_TEST_TARGET) $(GPT2_TEST_TARGET) $(GPT2_IO_TEST_TARGET) $(OMP_TEST_TARGET) $(ROOFLINE_TARGET) $(ONNX_IMPORT_TARGET)
+all: $(DISTILBERT_INFER_TARGET) $(SST2_INFER_TARGET) $(SST2_EVAL_TARGET) $(OPS_TEST_TARGET) $(GPT2_TEST_TARGET) $(GPT2_IO_TEST_TARGET) $(OMP_TEST_TARGET) $(ROOFLINE_TARGET) $(ONNX_IMPORT_TARGET) $(HASHMAP_TEST_TARGET)
 
 # ---- Link ----
 $(DISTILBERT_INFER_TARGET): $(DISTILBERT_INFER_OBJ) $(LIB_OBJ) $(OBJ_C89) | $(BIN_DIR)
@@ -201,9 +209,12 @@ $(ROOFLINE_TARGET): $(ROOFLINE_OBJ) $(LIB_OBJ) $(OBJ_C89) | $(BIN_DIR)
 $(ONNX_IMPORT_TARGET): $(ONNX_IMPORT_TEST_OBJ) $(LIB_OBJ) $(OBJ_C89) | $(BIN_DIR)
 	$(CC) $^ -o $@ $(LDLIBS)
 
+$(HASHMAP_TEST_TARGET): $(HASHMAP_TEST_OBJ) $(LIB_OBJ) $(OBJ_C89) | $(BIN_DIR)
+	$(CC) $^ -o $@ $(LDLIBS)
+
 # ---- Pattern rules by standard ----
 # All C23 objects (lib, nn, examples)
-$(LIB_OBJ) $(DISTILBERT_INFER_OBJ) $(SST2_INFER_OBJ) $(SST2_EVAL_OBJ) $(OPS_TEST_OBJ) $(GPT2_TEST_OBJ) $(GPT2_IO_TEST_OBJ) $(OMP_TEST_OBJ) $(ROOFLINE_OBJ) $(ONNX_IMPORT_TEST_OBJ): %.o: %.c
+$(LIB_OBJ) $(DISTILBERT_INFER_OBJ) $(SST2_INFER_OBJ) $(SST2_EVAL_OBJ) $(OPS_TEST_OBJ) $(GPT2_TEST_OBJ) $(GPT2_IO_TEST_OBJ) $(OMP_TEST_OBJ) $(ROOFLINE_OBJ) $(ONNX_IMPORT_TEST_OBJ) $(HASHMAP_TEST_OBJ): %.o: %.c
 	$(CC) $(CFLAGS_C23) -c $< -o $@
 
 # Compile cJSON with C89
@@ -239,10 +250,13 @@ run-roofline: $(ROOFLINE_TARGET)
 run-onnx-import-test: $(ONNX_IMPORT_TARGET)
 	./$(ONNX_IMPORT_TARGET)
 
+run-hashmap-test: $(HASHMAP_TEST_TARGET)
+	./$(HASHMAP_TEST_TARGET)
+
 clean:
 	-$(RM) $(LIB_OBJ) $(DISTILBERT_INFER_OBJ) $(SST2_INFER_OBJ) $(SST2_EVAL_OBJ) \
 	       $(OPS_TEST_OBJ) $(GPT2_TEST_OBJ) $(GPT2_IO_TEST_OBJ) $(OMP_TEST_OBJ) \
-		   $(ROOFLINE_OBJ) $(ONNX_IMPORT_TEST_OBJ) $(OBJ_C89)
+		   $(ROOFLINE_OBJ) $(ONNX_IMPORT_TEST_OBJ) $(HASHMAP_TEST_OBJ) $(OBJ_C89) 
 	-$(RM) -r $(BIN_DIR)
 
 print:
