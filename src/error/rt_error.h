@@ -66,11 +66,11 @@ const struct rt_err_status *rt_err_last(void);
             return _rc; \
     } while (0)
 
-#define RT_CHECK_GOTO(expr, label) \
-    do { \
-        int _rc = (expr); \
-        if (_rc < 0) \
-            goto label; \
+#define RT_CHECK_GOTO(expr, rc, label) \
+    do {                               \
+        (rc) = (expr);                 \
+        if ((rc) < 0)                  \
+            goto label;                \
     } while (0)
 
 #endif

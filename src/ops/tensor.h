@@ -5,12 +5,14 @@
 #include "arena.h"
 
 #define TK_DEBUG_SIZE 15
+#define TK_DIM_DYNAMIC (-1)
 
 #define TK_DISPATCH_TYPES(dtype, name, ...) \
     do { \
         switch(dtype) { \
             case TK_F64: { typedef double scalar_t; __VA_ARGS__ break; } \
             case TK_F32: { typedef float  scalar_t; __VA_ARGS__ break; } \
+            case TK_I64: { typedef int64_t  scalar_t; __VA_ARGS__ break; } \
             case TK_I32: { typedef int32_t  scalar_t; __VA_ARGS__ break; } \
             case TK_I16:  { typedef int16_t scalar_t; __VA_ARGS__ break; } \
             case TK_I8:  { typedef int8_t scalar_t; __VA_ARGS__ break; } \
@@ -20,12 +22,13 @@
         } \
     } while (0)
 
-// this macro is used for user to decide control flow
+// this macro is used when user want to decide the control flow of the program
 #define TK_DISPATCH_TYPES_OR(dtype, name, on_error, ...) \
     do { \
         switch (dtype) { \
             case TK_F64: { typedef double   scalar_t; __VA_ARGS__; break; } \
             case TK_F32: { typedef float    scalar_t; __VA_ARGS__; break; } \
+            case TK_I64: { typedef int64_t  scalar_t; __VA_ARGS__ break; } \
             case TK_I32: { typedef int32_t  scalar_t; __VA_ARGS__; break; } \
             case TK_I16: { typedef int16_t  scalar_t; __VA_ARGS__; break; } \
             case TK_I8:  { typedef int8_t   scalar_t; __VA_ARGS__; break; } \
@@ -44,34 +47,62 @@ enum tk_dtype {
     TK_NONE,
     TK_F64,
     TK_F32,
+    TK_I64,
     TK_I32,
     TK_I16,
     TK_I8,
     TK_U8
 };
 
-struct tk_tensor {
+// a placeholder for now
+struct tk_tensor_type {
     enum tk_dtype dtype;
-    void* data;
     int ndims;
     int* shape;
-    int* strides;
+};
 
+struct tk_tensor {
+    // migrating these fields to struct tk_tensor_type
+    // to separate the value and the type
+    enum tk_dtype dtype;
+    int ndims;
+    int* shape;
+
+    // a middle ground for separating static tensor type information
+    // and actual runtime shape(likely migrate to tk_buffer,
+    // but that's a head of the codebase for now
+    int* rt_shape;
+
+    void* data;
+    int* strides;
     /* --- quantize --- */
     float scale;
 };
 
+static enum tk_dtype tk_tensor_dtype(struct tk_tensor* t) {
+    return t->dtype;
+}
+
+static int tk_tensor_ndims(struct tk_tensor* t) {
+    return t->ndims;
+}
+
+static int* tk_tensor_shape(struct tk_tensor* t) {
+    return t->shape;
+}
+
 uint64_t shape_size_calc(int* shape, int ndims);
 void strides_calc(int* strides, int* shape, int ndims);
+int tk_tensor_create(struct arena* a, enum tk_dtype dtype, const int* shape, int ndims, struct tk_tensor** out);
 int tk_tensor_alloc(struct arena* a,
                     enum tk_dtype dtype,
-                    int* shape,
+                    const int* shape,
                     int ndims,
                     struct tk_tensor** out);
 
 int tk_tensor_reshape(struct arena* a, struct tk_tensor* src, struct tk_tensor** dest_ptr, int* new_shape, int new_ndims);
 int tk_tensor_is_contiguous(struct tk_tensor* tk);
-size_t tk_get_dtype_size(enum tk_dtype dtype);
+size_t tk_dtype_size(enum tk_dtype dtype);
 void tk_tensor_data_reorder(struct tk_tensor* src, struct tk_tensor* dest);
 int tk_tensor_view(struct arena* a, struct tk_tensor* src, int* new_shape, int new_ndims, struct tk_tensor** out);
 int tk_tensor_copy(struct arena* meta_a, struct arena* data_a, struct tk_tensor* src, struct tk_tensor** out);

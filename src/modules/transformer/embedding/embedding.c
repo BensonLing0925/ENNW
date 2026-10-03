@@ -38,7 +38,7 @@ int tk_emb_forward(struct tk_rt_ctx* ctx, struct tk_emb_block* emb,
     pos_view->shape   = out_shape;
     pos_view->strides = emb->pos_emb->weights->strides;
     pos_view->data    = (uint8_t*)emb->pos_emb->weights->data
-                       + (size_t)pos_offset * hidden_dim * tk_get_dtype_size(pos_view->dtype);
+                       + (size_t)pos_offset * hidden_dim * tk_dtype_size(pos_view->dtype);
 
     RT_CHECK(ctx->ops->add(ctx, emb_out, pos_view, emb_out));
 	if (emb->config.use_ln) {

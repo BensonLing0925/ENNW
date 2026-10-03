@@ -1,6 +1,7 @@
 #include "rt_error.h"
 #include "arena.h"
 #include "tensor.h"
+#include "tensor_check.h"
 #include <inttypes.h>
 #include <math.h>
 #include <stdio.h>
@@ -8,7 +9,7 @@
 
 // stack alloc
 #define TK_TENSOR_INIT(tensor) \
-    { TK_NONE, NULL, 0, NULL, NULL }
+    { TK_NONE, 0, NULL, NULL, NULL, NULL, 0.0f }
 
 #define TK_TENSOR_CREATE(name) \
     struct tk_tensor name = TK_TENSOR_INIT(name)
@@ -42,10 +43,12 @@ int tk_tensor_is_contiguous(struct tk_tensor* tk) {
     return 1;
 }
 
-size_t tk_get_dtype_size(enum tk_dtype dtype) {
+size_t tk_dtype_size(enum tk_dtype dtype) {
     switch(dtype) {
         case TK_F64: return sizeof(double);
         case TK_F32: return sizeof(float);
+        case TK_I64: return sizeof(int64_t);
+        case TK_I32: return sizeof(int32_t);
         case TK_I16: return sizeof(int16_t);
         case TK_I8:  return sizeof(int8_t);
         case TK_U8:  return sizeof(uint8_t);
@@ -83,29 +86,84 @@ void tk_tensor_data_reorder(struct tk_tensor* src, struct tk_tensor* dest) {
     free(indices);
 }
 
-// heap alloc
-int tk_tensor_alloc(struct arena* a,
-                    enum tk_dtype dtype,
-                    int* shape,
-                    int ndims,
+// Create a logical tensor without backing data.
+// Shape may contain static or dynamic dimensions.
+int tk_tensor_create(struct arena* a, enum tk_dtype dtype,
+                     const int* shape, int ndims, 
+                     struct tk_tensor** out) {
+
+    if (!a || !out)
+        RT_FAIL(RT_EINVAL, "arena or out is NULL");
+    
+    if (ndims < 0)
+        RT_FAIL(RT_EINVAL, "ndims cannot be negative");
+
+    struct tk_tensor* tensor = arena_alloc(a, sizeof(struct tk_tensor));
+    tensor->ndims = ndims;
+    tensor->dtype = dtype; 
+    if (ndims > 0) {
+        tensor->shape = arena_alloc(a, sizeof(int) * ndims);
+        tensor->rt_shape = arena_alloc(a, sizeof(int) * ndims);
+        if (!tensor->shape)
+            RT_FAIL(RT_EOOM, "Out of memory");
+        memcpy(tensor->shape, shape, sizeof(int) * ndims);
+    }
+    tensor->data = NULL;
+    tensor->strides = NULL;
+    *out = tensor;
+
+    return 0;
+}
+
+// arena allocation
+// should only be called when the shape of the tensor
+// is known(no dynamic dim in shape)
+int tk_tensor_alloc(struct arena* a, enum tk_dtype dtype,
+                    const int* shape, int ndims,
                     struct tk_tensor** out) {
+    if (!a || !out)
+        RT_FAIL(RT_EINVAL, "arena or out is NULL");
+
+    *out = NULL;
+
+    if (ndims < 0)
+        RT_FAIL(RT_EINVAL, "ndims cannot be negative");
+    else if (ndims > 0 && !shape)
+        RT_FAIL(RT_EINVAL, "shape is NULL for non-scalar tensor");
+
+    if (!tk_shape_is_static(shape, ndims))
+        RT_FAIL(RT_EINVAL, "dynamic-shaped tensor cannot be allocated with tk_tensor_alloc; use tk_tensor_create instead");
+
     struct tk_tensor* tk = arena_alloc(a, sizeof(struct tk_tensor));
     if (!tk) {
         RT_FAIL(RT_EOOM, "Out of memory");
     }
 
+    *tk = (struct tk_tensor){0};
+    // it is a tensor
+    if (ndims > 0) {
+        tk->strides = (int*) arena_alloc(a, sizeof(int) * ndims);
+        if (!tk->strides)
+            RT_FAIL(RT_EOOM, "Out of memory");
+        strides_calc(tk->strides, shape, ndims);
+        tk->shape = arena_alloc(a, sizeof(int) * ndims);
+        if (!tk->shape)
+            RT_FAIL(RT_EOOM, "Out of memory");
+        memcpy(tk->shape, shape, sizeof(int) * ndims);
+    }
+    // else it is a scalar
+    // initialization already set shape and strides to NULL
+
+    tk->ndims = ndims;
+    tk->dtype = dtype;
+
     uint64_t size = shape_size_calc(shape, ndims);
 
     TK_DISPATCH_TYPES(dtype, __func__, {
                 tk->data = (void*) arena_alloc(a, sizeof(scalar_t) * size);
-                tk->strides = (int*) arena_alloc(a, sizeof(int) * ndims);
-                strides_calc(tk->strides, shape, ndims);
-                tk->dtype = dtype;
+                if (!tk->data)
+                    RT_FAIL(RT_EOOM, "Out of memory");
                 });
-
-    tk->ndims = ndims;
-    tk->shape = arena_alloc(a, sizeof(int) * ndims);
-    memcpy(tk->shape, shape, sizeof(int) * ndims);
 
     *out = tk;
     return 0;
@@ -150,7 +208,7 @@ int tk_tensor_reshape(struct arena* a, struct tk_tensor* src, struct tk_tensor**
 int tk_tensor_transpose(struct arena* a, struct tk_tensor* src, int dim1, int dim2,
                          struct tk_tensor** out) {
     if (src->ndims <= dim1 || src->ndims <= dim2)
-        RT_FAIL(RT_EINVAL, "Out of bound dimension index. src->ndims: %d, dim1: %d, dim2: %d\n",
+        RT_FAIL(RT_EINVAL, "Out of bound dimension index. src->ndims: %d, dim1: %d, dim2: %d",
                             src->ndims, dim1, dim2);
 
     /* build a NEW shape/strides array — do not touch src's own metadata */
@@ -220,7 +278,7 @@ int tk_tensor_copy(struct arena* meta_a, struct arena* data_a, struct tk_tensor*
     memcpy(dst, src, sizeof(struct tk_tensor));
 
     uint64_t num_elements = shape_size_calc(src->shape, src->ndims);
-    uint64_t bytes = num_elements * tk_get_dtype_size(src->dtype);
+    uint64_t bytes = num_elements * tk_dtype_size(src->dtype);
 
     dst->data = arena_alloc(data_a, bytes);
     if (!dst->data)
@@ -275,7 +333,7 @@ static void tk_tensor_padding_data_move(struct tk_tensor* dest, struct tk_tensor
 void tk_tensor_padding(struct tk_tensor* src, struct tk_tensor* dest, int pad_h, int pad_w) {
     if (pad_h == 0 && pad_w == 0) {
         /* No padding — simple copy */
-        uint64_t bytes = shape_size_calc(src->shape, src->ndims) * tk_get_dtype_size(src->dtype);
+        uint64_t bytes = shape_size_calc(src->shape, src->ndims) * tk_dtype_size(src->dtype);
         memcpy(dest->data, src->data, (size_t)bytes);
         return;
     }
@@ -289,7 +347,7 @@ void tk_tensor_padding(struct tk_tensor* src, struct tk_tensor* dest, int pad_h,
 
     int dst_h = in_h + 2 * pad_h;
     int dst_w = in_w + 2 * pad_w;
-    size_t elem = tk_get_dtype_size(src->dtype);
+    size_t elem = tk_dtype_size(src->dtype);
 
     tk_tensor_fill_zero(dest);
 
@@ -326,7 +384,7 @@ void tk_tensor_relu(struct tk_tensor* src) {
     }
 
     size_t pic_plane_size = (size_t)src->shape[src->ndims-2] * src->shape[src->ndims-1];
-    size_t elem_size = tk_get_dtype_size(src->dtype);
+    size_t elem_size = tk_dtype_size(src->dtype);
 
     for (int p = 0; p < planes; ++p) {
         struct tk_tensor pic_view = *src;
@@ -346,7 +404,7 @@ int tk_tensor_load_data(struct tk_tensor* dest, FILE* fp, size_t size) {
                             cur_size, size);
     }
 
-    fread(dest->data, tk_get_dtype_size(dest->dtype), size, fp);
+    fread(dest->data, tk_dtype_size(dest->dtype), size, fp);
     return 0;
 }
 
@@ -357,6 +415,12 @@ void tk_tensor_type_print(enum tk_dtype dtype) {
             break;
         case TK_F32:
             printf("TK_F32");
+            break;
+        case TK_I64:
+            printf("TK_I64");
+            break;
+        case TK_I32:
+            printf("TK_I32");
             break;
         case TK_I16:
             printf("TK_I16");
@@ -377,6 +441,7 @@ const char* tk_tensor_dtype_to_str(enum tk_dtype dtype) {
     switch(dtype) {
         case TK_F64: return "TK_F64";
         case TK_F32: return "TK_F32";
+        case TK_I64: return "TK_I64";
         case TK_I32: return "TK_I32";
         case TK_I16: return "TK_I16";
         case TK_I8:  return "TK_I8";
@@ -389,6 +454,7 @@ enum tk_dtype tk_dtype_from_str(const char* s) {
     if (!s) return TK_F64;
     if (strcmp(s, "f64") == 0 || strcmp(s, "F64") == 0) return TK_F64;
     if (strcmp(s, "f32") == 0 || strcmp(s, "F32") == 0) return TK_F32;
+    if (strcmp(s, "i64") == 0 || strcmp(s, "I64") == 0) return TK_I64;
     if (strcmp(s, "i32") == 0 || strcmp(s, "I32") == 0) return TK_I32;
     if (strcmp(s, "i16") == 0 || strcmp(s, "I16") == 0) return TK_I16;
     if (strcmp(s, "i8")  == 0 || strcmp(s, "I8")  == 0) return TK_I8;
@@ -410,6 +476,12 @@ void tk_tensor_data_print(struct tk_tensor* src) {
                 case TK_F64:
                 case TK_F32:
                     printf("%.6f", (double)data_ptr[i]);
+                    break;
+                case TK_I64:
+                    printf("%d", (int)(int64_t)data_ptr[i]);
+                    break;
+                case TK_I32:
+                    printf("%d", (int)(int32_t)data_ptr[i]);
                     break;
                 case TK_I16:
                     printf("%d", (int)(int16_t)data_ptr[i]);

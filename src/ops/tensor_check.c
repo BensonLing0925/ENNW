@@ -82,3 +82,41 @@ int tk_check_gemm_shape(struct tk_tensor* src1, struct tk_tensor* src2,
 int tk_check_weight_is_i8(struct tk_tensor* weight) {
     return weight->dtype == TK_I8;
 }
+
+int tk_tensor_validate(struct tk_tensor *t) {
+    if (!t)
+        RT_FAIL(RT_EINVAL, "tensor is NULL");
+
+    if (t->ndims == 0 && t->shape != NULL)
+        RT_FAIL(RT_EINVAL,
+                "scalar tensor should not have a shape array");
+
+    if (t->ndims > 0 && t->shape == NULL)
+        RT_FAIL(RT_EINVAL,
+                "tensor has dimensions but shape is NULL");
+
+    return 0;
+}
+
+int tk_shape_is_static(int* shape, int ndims) {
+    if (ndims < 0)
+        return 0;
+
+    if (ndims > 0 && !shape)
+        return 0;
+
+    for (int i = 0; i < ndims; ++i) {
+        if (shape[i] == TK_DIM_DYNAMIC)
+            return 0;
+    }
+
+    return 1;
+}
+
+int tk_tensor_is_static_shape(struct tk_tensor* tensor) {
+    if (!tensor) {
+        fprintf(stderr, "tensor is NULL");
+        return 0;
+    }
+    return tk_shape_is_static(tk_tensor_shape(tensor), tk_tensor_ndims(tensor));
+}

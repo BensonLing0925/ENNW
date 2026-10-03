@@ -59,7 +59,7 @@ int tk_ws_tensor_alloc(struct tk_workspace* ws, struct arena* meta_arena, enum t
     // for dry run, tk_ws_alloc sets out = NULL (not an error)
     // for actual run, tk_ws_alloc sets out = real address
     // both move offset
-    uint64_t total_bytes = shape_size_calc(shape, ndims) * tk_get_dtype_size(dtype);
+    uint64_t total_bytes = shape_size_calc(shape, ndims) * tk_dtype_size(dtype);
     RT_CHECK(tk_ws_alloc(ws, total_bytes, &tk->data));
 
     *out = tk;

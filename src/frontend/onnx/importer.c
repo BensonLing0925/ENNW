@@ -3,6 +3,7 @@
 #include "rt_context.h"
 #include "tensor.h"
 #include "onnx.proto3.pb-c.h"
+#include "onnx/importer.h"
 #include <stdio.h>
 #include <stdlib.h>
 
@@ -41,6 +42,8 @@ static enum tk_dtype tk_onnx_to_tk_dtype(int32_t onnx_dtype) {
             return TK_I16;
         case 6:
             return TK_I32;
+        case 7:
+            return TK_I64;
         case 11:
             return TK_F64;
         default:
@@ -48,158 +51,223 @@ static enum tk_dtype tk_onnx_to_tk_dtype(int32_t onnx_dtype) {
     }
 }
 
+// specifically for raw_data copy
+static int tk_onnx_raw_copy(Onnx__TensorProto* t, struct tk_tensor* tensor) {
+    if (!t || !tensor || !t->raw_data.data) {
+        RT_FAIL(RT_EINVAL, "Invalid tensor/raw data");
+    }
+    if (t->raw_data.len == 0) {
+        RT_FAIL(RT_EINVAL, "ONNX tensor raw_data is empty");
+    }
+    // validate size
+    size_t expected = shape_size_calc(tensor->shape, tensor->ndims) * tk_dtype_size(tensor->dtype);
+    if (expected != t->raw_data.len) {
+        RT_FAIL(RT_EINVAL, "Number of bytes mismatched between onnx and tk tensor");
+    }
+    memcpy(tensor->data, t->raw_data.data, t->raw_data.len);
+    return 0;
+}
+
 // use specifically for debug and
 // figuring out the field in which the tensor's data stored
-void tk_onnx_tensor_probe(const Onnx__TensorProto *tp)
-{
-    printf("name: %s\n", tp->name);
-    printf("dtype: %d\n", tp->data_type);
+int tk_onnx_tensor_data_copy(const Onnx__TensorProto *t, struct tk_tensor* tensor) {
 
-    printf("dims:");
-    for (size_t i = 0; i < tp->n_dims; ++i)
-        printf(" %ld", (long)tp->dims[i]);
-    printf("\n");
+    if (t->data_location == ONNX__TENSOR_PROTO__DATA_LOCATION__EXTERNAL) {
+        fprintf(stderr, "Unsupported Data Location\n");
+        return;
+    }
+    // explicitly set means store in raw_data field
+    // DEFAULT - data stored inside the protobuf message. Data is stored in raw_data (if set) otherwise in type-specified field.
+    else if (t->raw_data.len > 0) {
+        RT_CHECK(tk_onnx_raw_copy(t, tensor)); 
+        return 0;
+    }
+    // type field check
+    else {
+        size_t numel = shape_size_calc(tensor->shape, tensor->ndims);
 
-    printf("raw_data: %zu bytes\n", tp->raw_data.len);
+        switch (t->data_type) {
 
-    printf("float_data:  %zu\n", tp->n_float_data);
-    printf("int32_data:  %zu\n", tp->n_int32_data);
-    printf("int64_data:  %zu\n", tp->n_int64_data);
-    printf("double_data: %zu\n", tp->n_double_data);
-    printf("uint64_data: %zu\n", tp->n_uint64_data);
-    printf("string_data: %zu\n", tp->n_string_data);
+            case ONNX__TENSOR_PROTO__DATA_TYPE__FLOAT:
+                if (t->n_float_data != numel)
+                    RT_FAIL(RT_EINVAL, "FLOAT element count mismatch");
+                memcpy(tensor->data,
+                       t->float_data,
+                       numel * sizeof(float));
+                break;
 
-    printf("external_data: %zu\n", tp->n_external_data);
+            case ONNX__TENSOR_PROTO__DATA_TYPE__DOUBLE:
+                if (t->n_double_data != numel)
+                    RT_FAIL(RT_EINVAL, "DOUBLE element count mismatch");
+                memcpy(tensor->data,
+                       t->double_data,
+                       numel * sizeof(double));
+                break;
 
-    if (tp->segment) {
-        printf("segment: [%ld, %ld)\n",
-               (long)tp->segment->begin,
-               (long)tp->segment->end);
-    } else {
-        printf("segment: none\n");
+            case ONNX__TENSOR_PROTO__DATA_TYPE__INT32:
+                if (t->n_int32_data != numel)
+                    RT_FAIL(RT_EINVAL, "INT32 element count mismatch");
+                memcpy(tensor->data,
+                       t->int32_data,
+                       numel * sizeof(int32_t));
+                break;
+
+            case ONNX__TENSOR_PROTO__DATA_TYPE__INT8: {
+                if (t->n_int32_data != numel)
+                    RT_FAIL(RT_EINVAL, "INT8 element count mismatch");
+                int8_t *dst = tensor->data;
+                for (size_t i = 0; i < numel; ++i)
+                    dst[i] = (int8_t)t->int32_data[i];
+                break;
+            }
+
+            case ONNX__TENSOR_PROTO__DATA_TYPE__UINT8: {
+                if (t->n_int32_data != numel)
+                    RT_FAIL(RT_EINVAL, "UINT8 element count mismatch");
+                uint8_t *dst = tensor->data;
+                for (size_t i = 0; i < numel; ++i)
+                    dst[i] = (uint8_t)t->int32_data[i];
+                break;
+            }
+
+            case ONNX__TENSOR_PROTO__DATA_TYPE__INT16: {
+                if (t->n_int32_data != numel)
+                    RT_FAIL(RT_EINVAL, "INT16 element count mismatch");
+                int16_t *dst = tensor->data;
+                for (size_t i = 0; i < numel; ++i)
+                    dst[i] = (int16_t)t->int32_data[i];
+                break;
+            }
+
+            case ONNX__TENSOR_PROTO__DATA_TYPE__INT64:
+                if (t->n_int64_data != numel)
+                    RT_FAIL(RT_EINVAL, "INT64 element count mismatch");
+                memcpy(tensor->data,
+                       t->int64_data,
+                       numel * sizeof(int64_t));
+                break;
+
+            default:
+                RT_FAIL(RT_EINVAL,
+                        "Unsupported ONNX tensor dtype %d",
+                        t->data_type);
+        }
+
+        return 0;
     }
 }
 
 // called when parsing initializers
 // callee allocate tensors
 // out only needs to be a valid pointer
-int tk_onnx_to_tensor(struct tk_rt_ctx* ctx, Onnx__TensorProto* tp, struct tk_tensor** out) {
+int tk_onnx_to_tensor(struct tk_rt_ctx* ctx, Onnx__TensorProto* t, struct tk_tensor** out) {
     struct tk_tensor* tensor = NULL;
-    enum tk_dtype dtype = tk_onnx_to_tk_dtype(tp->data_type);
-    RT_CHECK(tk_tensor_alloc(ctx->data_arena, dtype, tp->dims, tp->n_dims, out));
+    enum tk_dtype dtype = tk_onnx_to_tk_dtype(t->data_type);
+    RT_CHECK(tk_tensor_alloc(ctx->data_arena, dtype, t->dims, t->n_dims, &tensor));
+    RT_CHECK(tk_onnx_tensor_data_copy(t, tensor));
     *out = tensor;
     return 0;
 }
 
-/*
-int main(int argc, char* argv[]) {
-    if (argc != 2) {
-        printf("usage: ./executable model.onnx\n");
-        return 0;
-    }
-
-    struct file_data* r = data_read(argv[1]);
-    Onnx__ModelProto* model = onnx__model_proto__unpack(
-            NULL, r->bytes, r->data);
-    printf("ir_version: %ld\n", model->ir_version);
-
-    for (size_t i = 0; i < model->n_opset_import; ++i) {
-        Onnx__OperatorSetIdProto *opset = model->opset_import[i];
-
-        printf("opset domain=%s version=%ld\n",
-               opset->domain ? opset->domain : "",
-               (long)opset->version);
-    }
-
-    printf("nodes: %zu\n", model->graph->n_node);
-    printf("initializers: %zu\n", model->graph->n_initializer);
-
-    printf("Printing Initializers...\n");
-    Onnx__TensorProto** tensors = model->graph->initializer;
-    for ( size_t t = 0 ; t < model->graph->n_initializer ; ++t ) {
-        Onnx__TensorProto* tensor = model->graph->initializer[t];
-        printf("tensor [%zu]: %s\n", t, tensor->name);
-        printf("Data type: %d\n", tensor->data_type);
-        printf("dims:");
-
-        for (size_t i = 0; i < tensor->n_dims; ++i)
-            printf(" %ld", (long)tensor->dims[i]);
-
-        printf("\n");
+// ONNX defined specific schema for different node->op_type
+// the schema also differs according to different opset version
+// currently using version 13 to first run the gpt2_q8_Xenova model
+static int tk_onnx_constant_to_tensor(struct tk_rt_ctx* ctx, Onnx__NodeProto* node, struct tk_onnx_scope* cur_scope) {
+    // for Constant, there should be only one output
+    if (!node->attribute)
+        RT_FAIL(RT_EINVAL, "Constant Node Missing Attribute\n");
+    Onnx__AttributeProto* attr = node->attribute[0];
+    struct tk_tensor* tensor = NULL;
+    switch (attr->type) {
+        case ONNX__ATTRIBUTE_PROTO__ATTRIBUTE_TYPE__TENSOR:
+            RT_CHECK(tk_onnx_to_tensor(ctx, attr->t, &tensor));
+            break;
+        default:
+            break;
 
     }
+    RT_CHECK(tk_scope_symbol_insert(cur_scope, node->output[0], strlen(node->output[0]), (void*)tensor));
+    return 0;
+}
 
+static int tk_onnx_shape_import(struct tk_rt_ctx* ctx, Onnx__NodeProto* node, struct tk_onnx_scope* cur_scope) {
+    // shape should have one input and one output
+    // input a tensor, output its shape with int64_t[]
+    if (node->n_input != 1 || node->n_output != 1)
+        RT_FAIL(RT_EINVAL, "Shape Node has wrong amount of input/output");
+    struct tk_tensor *input = tk_scope_symbol_find(cur_scope, node->input[0], strlen(node->input[0]));
+    
+    if (!input)
+        RT_FAIL(RT_EINVAL, "Input is not registered in the symbol table");
 
-    for (size_t i = 0; i < model->graph->n_node; ++i) {
-        Onnx__NodeProto *node = model->graph->node[i];
+    // since not all tensor's metadata is known(static)
+    // only adds entry but we are not done yet
 
-        printf("node[%zu]: %s\n",
-               i,
-               node->op_type ? node->op_type : "(null)");
+    /* if input:
+     * input->shape = [-1, -1];
+     * input->ndims = 2 (decided);
+     */
+    struct tk_tensor* tensor = NULL;
+    // shape output an 1D, int64 vector
+    int output_shape[] = {input->ndims};
+    RT_CHECK(tk_tensor_create(ctx->data_arena, TK_I64, output_shape, 1, &tensor));
+    RT_CHECK(tk_scope_symbol_insert(cur_scope, node->output[0], strlen(node->output[0]), (void*)tensor));
+    return 0;
+}
+
+int tk_onnx_node_import(struct tk_rt_ctx* ctx, Onnx__NodeProto* node, struct tk_onnx_scope* cur_scope) {
+    if (!node)
+        RT_FAIL(RT_EINVAL, "node is NULL");
+
+    if (!cur_scope)
+        RT_FAIL(RT_EINVAL, "cur_scope is NULL");
+    
+    if (!strcmp(node->op_type, "Constant"))
+        RT_CHECK(tk_onnx_constant_to_tensor(ctx, node, cur_scope));
+
+}
+
+// recursively called to handle nested graphs
+// each time called, create a new scope
+int tk_onnx_graph_import(struct tk_rt_ctx* ctx, Onnx__GraphProto* g, struct tk_onnx_scope* parent) {
+
+    struct tk_onnx_scope sc = {0};
+    RT_CHECK(tk_scope_init(&sc, parent));
+    int rc = 0;
+    
+    // initializer to scope's hashmap
+    for ( size_t t = 0 ; t < g->n_initializer ; ++t ) {
+        Onnx__TensorProto* tp = g->initializer[t];
+        struct tk_tensor* tensor = NULL;
+        RT_CHECK_GOTO(tk_onnx_to_tensor(ctx, tp, &tensor), rc, cleanup);
+        RT_CHECK_GOTO(tk_scope_symbol_insert(&sc, tp->name, strlen(tp->name), (void*)tensor), rc, cleanup);
     }
-
-    Onnx__NodeProto *node = model->graph->node[0];
-    printf("attributes: %zu\n", node->n_attribute);
-    for (size_t i = 0; i < node->n_attribute; ++i) {
-        Onnx__AttributeProto *attr = node->attribute[i];
-
-        printf("attr[%zu]: name=%s type=%d\n",
-               i,
-               attr->name ? attr->name : "(null)",
-               attr->type);
-    }
-
-    for (size_t i = 0; i < node->n_attribute; ++i) {
-        Onnx__AttributeProto *attr = node->attribute[i];
-
-        if (attr->type == ONNX__ATTRIBUTE_PROTO__ATTRIBUTE_TYPE__GRAPH) {
-            printf("%s:\n", attr->name);
-            printf("  nodes: %zu\n", attr->g->n_node);
-            printf("  initializers: %zu\n", attr->g->n_initializer);
-        }
-
-        Onnx__GraphProto *g = attr->g;
-        for (size_t j = 0; j < g->n_node; ++j) {
-            printf("  node[%zu]: %s. ",
-                   j,
-                   g->node[j]->op_type);
-            Onnx__NodeProto* node = g->node[j];
-            for (size_t input = 0 ; input < node->n_input ; ++input) {
-                if (input == 0 && input == node->n_input-1)
-                    printf("\n  Inputs: %s", node->input[input]);
-                else if (input == 0)
-                    printf("\n  Inputs: %s ", node->input[input]);
-                else if (input == node->n_input-1)
-                    printf("%s", node->input[input]);
-                else printf("%s ", node->input[input]);
-            }
-
-            for (size_t output = 0 ; output < node->n_output ; ++output) {
-                if (output == 0 && output == node->n_output-1)
-                    printf("\n  Outputs: %s\n", node->output[output]);
-                else if (output == 0)
-                    printf("\n  Outputs: %s ", node->output[output]);
-                else if (output == node->n_output-1)
-                    printf("%s\n", node->output[output]);
-                else printf("%s ", node->output[output]);
-            }
-            printf("  Number of attributes: %zu\n", node->n_attribute);
-            if (node->n_attribute > 0) {
-                for (size_t i = 0; i < node->n_attribute; ++i) {
-                    Onnx__AttributeProto *a = node->attribute[i];
-
-                    printf("  attr: %s type=%d i=%ld\n",
-                           a->name,
-                           a->type,
-                           (long)a->i);
+    // walk the graph and create nodes, recursively
+    for ( size_t n = 0 ; n < g->n_node ; ++n ) {
+        Onnx__NodeProto* node = g->node[n];
+        // attribute proto can only have one field with content
+        // enforcing C Union equivalent
+        tk_onnx_node_import(ctx, node, &sc);
+        /*
+        if (node->n_attribute >= 1) {
+            for ( size_t a = 0 ; a < node->n_attribute ; ++a ) {
+                Onnx__AttributeProto* attr = node->attribute[a];
+                switch (attr->type) {
+                    case ONNX__ATTRIBUTE_PROTO__ATTRIBUTE_TYPE__GRAPH:
+                        RT_CHECK_GOTO(tk_onnx_graph_import(ctx, attr->g, &sc), rc, cleanup);
+                        break;
+                    default:
+                        break;
                 }
             }
         }
+        */
+        // build the node
+        // ...
     }
+    return 0;
 
-    onnx__model_proto__free_unpacked(model, NULL);
-
-    free(r->data);
-    free(r);
+cleanup:
+    tk_scope_destroy(&sc);
+    return rc;
 }
-*/

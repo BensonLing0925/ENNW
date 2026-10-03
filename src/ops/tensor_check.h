@@ -14,5 +14,7 @@ int tk_check_gemm_shape(struct tk_tensor* src1, struct tk_tensor* src2,
                             struct tk_tensor* dest,
                             int* out_p, int* out_q, int* out_r);
 int tk_check_weight_is_i8(struct tk_tensor* weight);
-
+int tk_tensor_validate(struct tk_tensor *t);
+int tk_shape_is_static(int* shape, int ndims);
+int tk_tensor_is_static_shape(struct tk_tensor* tensor);
 #endif
