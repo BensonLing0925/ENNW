@@ -18,6 +18,9 @@ data/
 # temp files, including sched .data files
 temp/
 
+# IDE related
+*.swp
+
 # python cache
 __pycache__/
 .ipynb_checkpoints/

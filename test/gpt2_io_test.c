@@ -67,12 +67,15 @@ int main(int argc, char* argv[]) {
     struct arena root_arena;
     arena_init(&root_arena);
     struct tk_rt_ctx_config ctx_config = {
-        .use_int8           = 0,
+        .use_int8           = 1,
         .use_prof           = 1,
         .use_graph_optimize = 1,
         .graph_capacity     = 1024,
     };
     struct tk_rt_ctx* ctx = tk_runtime_ctx_create_config(&root_arena, ctx_config);
+    // this is very important, it dictate
+    // gpt2 tf_block weight types
+    // compute_dtype == TK_F64 if not set explicitly
     ctx->compute_dtype = TK_F32;
 
     struct tk_gpt2_config cfg;
